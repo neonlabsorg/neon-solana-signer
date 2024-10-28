@@ -1,0 +1,6 @@
+.gitignore
+.npmignore
+.prettierrc.json
+tsconfig.cjs.json
+tsconfig.esm.json
+tsconfig.types.json

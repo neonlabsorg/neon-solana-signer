@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "target": "es6",
+    "module": "es2020",
+    "moduleResolution": "node",
+    "lib": [
+      "es2020",
+      "dom"
+    ],
+    "paths": {
+      "@neonevm/solana-sign": [
+        "./dist"
+      ]
+    }
+  }
+}

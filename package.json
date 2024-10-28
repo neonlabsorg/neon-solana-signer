@@ -1,0 +1,41 @@
+{
+  "name": "@neonevm/solana-signer",
+  "description": "Javascript Library for Execute Neon transactions with Solana's signature",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "rm -rf ./dist && yarn lerna run build",
+    "test": "jest --detectOpenHandles"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neonlabsorg/neon-solana-signer.git"
+  },
+  "keywords": [
+    "neonlabs",
+    "neon-evm",
+    "solana"
+  ],
+  "dependencies": {
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.7.9",
+    "@typescript-eslint/eslint-plugin": "^8.11.0",
+    "@typescript-eslint/parser": "^8.11.0",
+    "dotenv": "^16.4.5",
+    "eslint": "^9.13.0",
+    "jest": "^29.7.0",
+    "lerna": "^8.1.8",
+    "prettier": "^3.3.3",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2"
+  }
+}
