@@ -15,7 +15,7 @@
     "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
     "prepack": "npm run build",
     "lint": "eslint ./dist",
-    "test": "jest --forceExit --detectOpenHandles",
+    "test": "jest",
     "test:watch": "jest --watch --detectOpenHandles"
   },
   "repository": {
@@ -25,11 +25,15 @@
   "homepage": "",
   "license": "ISC",
   "dependencies": {
+    "@solana/spl-token": "^0.4.9",
     "@solana/web3.js": "^1.95.4",
     "big.js": "^6.2.2",
-    "ethers": "^6.13.4"
+    "ethers": "^6.13.4",
+    "rlp": "^3.0.0"
   },
   "devDependencies": {
+    "@neonevm/token-transfer-core": "^4.3.3-devnet",
+    "@neonevm/token-transfer-ethers": "^4.3.3-devnet",
     "@types/big.js": "^6.2.2",
     "@types/jest": "^29.5.14",
     "base-x": "^5.0.0",

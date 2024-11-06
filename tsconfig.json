@@ -8,7 +8,7 @@
     "declaration": true,
     "allowJs": true,
     "sourceMap": true,
-    "target": "es6",
+    "target": "es2020",
     "module": "es2020",
     "moduleResolution": "node",
     "lib": [
@@ -23,10 +23,7 @@
   ],
   "paths": {
     "@neonevm/solana-sign": [
-      "./dist"
-    ],
-    "~/*": [
-      "./src/*"
+      "./src"
     ]
   }
 }

@@ -6,8 +6,11 @@ const config: Config.InitialOptions = {
   testRegex: '.spec.ts$',
   transform: { '^.+\\.(t|j)s$': 'ts-jest' },
   moduleFileExtensions: ['js', 'json', 'ts'],
-  moduleNameMapper: { '@neonevm/solana-sign': '<rootDir>/dist' },
-  testEnvironmentOptions: { path: '.env' }
+  moduleNameMapper: { '@neonevm/solana-sign': '<rootDir>/src' },
+  testEnvironmentOptions: { path: '.env' },
+  testTimeout: 12e4,
+  detectOpenHandles: false,
+  forceExit: false
 };
 export default config;
 

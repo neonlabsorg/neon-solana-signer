@@ -1,2 +1,3 @@
 export * from './api';
-export * from './tokens';
+export * from './token';
+export * from './instruction';

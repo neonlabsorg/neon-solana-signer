@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { GasToken, NeonProgramStatus, ProxyApiState, RPCResponse, RPCUrl } from '../models';
+import { GasToken, NeonAddressResponse, NeonProgramStatus, ProxyApiState, RPCResponse, RPCUrl } from '../models';
 import { uuid } from '../utils';
 
 export class NeonProxyRpcApi {
@@ -10,8 +10,8 @@ export class NeonProxyRpcApi {
   }
 
   // neon_getAccount
-  getAccount(): Promise<RPCResponse<any>> {
-    return this.neonRpc('neon_getAccount', []);
+  getAccount(account: string, nonce: number): Promise<RPCResponse<NeonAddressResponse>> {
+    return this.neonRpc('neon_getAccount', [account, nonce]);
   }
 
   // neon_getTransactionReceipt
@@ -32,16 +32,15 @@ export class NeonProxyRpcApi {
     return NeonProxyRpcApi.rpc<T>(this.rpcUrl, method, params);
   }
 
-  static async rpc<T>(url: string, method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
+  static rpc<T>(url: string, method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
     const id = uuid();
     const body = { id, jsonrpc: '2.0', method, params };
-    console.log('POST', url, JSON.stringify(body));
-    const response = await fetch(url, {
+    console.log(`curl -H 'Content-Type: application/json' -d '${JSON.stringify(body)}' -X POST ${url}`);
+    return fetch(url, {
       method: 'POST',
       mode: 'cors',
       body: JSON.stringify(body)
-    });
-    return await response.json();
+    }).then(r => r.json());
   }
 
   constructor(url: RPCUrl) {
