@@ -24,8 +24,8 @@ export class ScheduledTransaction {
   readonly neonSubType = 0x01;
   readonly data: ScheduledTransactionData;
   private readonly defaultData: Partial<ScheduledTransactionData> = {
-    value: toBeHex(0), // = 0;
-    chainId: toBeHex(NeonEVMChainId.testnetNeon),
+    value: '0x', // = 0;
+    chainId: toBeHex(NeonEVMChainId.testnetSol),
     gasLimit: toBeHex(9999999999), // = 9999999999;
     maxFeePerGas: toBeHex(100), // = 100;
     maxPriorityFeePerGas: toBeHex(10) // = 10;
@@ -39,10 +39,6 @@ export class ScheduledTransaction {
     }
 
     return encodeRlp(result);
-  }
-
-  decodeRpl(): RlpStructuredData {
-    return decodeRlp(this.encode());
   }
 
   serialize(): HexString {
@@ -82,5 +78,9 @@ export class ScheduledTransaction {
       model[key] = items[i];
     }
     return new ScheduledTransaction(model);
+  }
+
+  static decodeRpl(data: string): RlpStructuredData {
+    return decodeRlp(data);
   }
 }

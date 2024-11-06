@@ -95,6 +95,10 @@ export class NeonUser {
     return toSigner(this.solanaAccount);
   }
 
+  async getNonce(): Promise<number> {
+    return 0;
+  }
+
   constructor(solanaAccount: Keypair, neonEvmProgram: PublicKey, chainId: number) {
     this.solanaAccount = solanaAccount;
     this.neonEvmProgram = neonEvmProgram;

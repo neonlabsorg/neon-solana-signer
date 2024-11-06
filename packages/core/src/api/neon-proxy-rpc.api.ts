@@ -1,5 +1,13 @@
 import { PublicKey } from '@solana/web3.js';
-import { GasToken, NeonAddressResponse, NeonProgramStatus, ProxyApiState, RPCResponse, RPCUrl } from '../models';
+import {
+  GasToken,
+  NeonAddress,
+  NeonAddressResponse,
+  NeonProgramStatus,
+  ProxyApiState,
+  RPCResponse,
+  RPCUrl
+} from '../models';
 import { uuid } from '../utils';
 
 export class NeonProxyRpcApi {
@@ -26,6 +34,10 @@ export class NeonProxyRpcApi {
 
   async nativeTokenList(): Promise<GasToken[]> {
     return this.neonRpc<GasToken[]>('neon_getNativeTokenList', []).then(({ result }) => result);
+  }
+
+  getTransactionCount(neonWallet: NeonAddress): Promise<string> {
+    return this.neonRpc<string>('eth_getTransactionCount', [neonWallet, 'latest']).then(({ result }) => result);
   }
 
   async neonRpc<T>(method: string, params: unknown[] = []): Promise<RPCResponse<T>> {

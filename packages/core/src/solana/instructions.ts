@@ -83,7 +83,7 @@ export async function createScheduledNeonEvmTransaction(transactionData: CreateS
     treasuryPoolCount
   } = transactionData;
   const transaction = new Transaction();
-  const treasuryPool = new TreasuryPoolAddress(new PublicKey('C8SPT4zTVxWdCQTsk8f7RHaNDaPkx766x8icyzSUgzQ3'), 2);
+  const treasuryPool = TreasuryPoolAddress.find(neonEvmProgram, treasuryPoolCount);
   const [balanceAddress] = neonBalanceProgramAddressSync(neonWallet, neonEvmProgram, chainId);
   const [treeAccountAddress] = neonTreeAccountAddressSync(neonWallet, neonEvmProgram, neonWalletNonce);
   const [authorityPoolAddress] = neonAuthorityPoolAddressSync(neonEvmProgram);
