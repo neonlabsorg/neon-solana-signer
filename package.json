@@ -10,8 +10,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "rm -rf ./dist && yarn lerna run build",
-    "test": "jest --detectOpenHandles"
+    "build": "cd packages/core && yarn build",
+    "test": "cd packages/core && jest"
   },
   "repository": {
     "type": "git",

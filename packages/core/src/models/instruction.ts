@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { HexString, NeonAddress } from './api';
 import { TreasuryPoolAddress } from '../solana';
 
@@ -14,12 +14,12 @@ export interface CreateScheduledTransactionInstructionData {
 
 export interface CreateScheduledTransactionData {
   chainId: number;
-  connection: Connection;
   signerAddress: PublicKey;
+  tokenMintAddress: PublicKey;
   neonWallet: NeonAddress;
   neonWalletNonce: number;
   neonEvmProgram: PublicKey;
-  treasuryPoolCount: number;
+  treasuryPool: TreasuryPoolAddress;
   neonTransaction: HexString;
 }
 

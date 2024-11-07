@@ -1,6 +1,6 @@
 import { decodeRlp, encodeRlp, toBeHex } from 'ethers';
 import { HexString } from '../models';
-import { bufferConcat, hexToBuffer, NeonEVMChainId, numberToBuffer } from '../utils';
+import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer } from '../utils';
 import { RlpStructuredData } from 'ethers/src.ts/utils/rlp';
 
 export interface ScheduledTransactionData {
@@ -25,7 +25,7 @@ export class ScheduledTransaction {
   readonly data: ScheduledTransactionData;
   private readonly defaultData: Partial<ScheduledTransactionData> = {
     value: '0x', // = 0;
-    chainId: toBeHex(NeonEVMChainId.testnetSol),
+    chainId: toBeHex(NeonChainId.testnetSol),
     gasLimit: toBeHex(9999999999), // = 9999999999;
     maxFeePerGas: toBeHex(100), // = 100;
     maxPriorityFeePerGas: toBeHex(10) // = 10;

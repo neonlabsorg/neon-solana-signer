@@ -16,7 +16,8 @@ export function toSigner({ publicKey, secretKey }: Keypair): Signer {
 }
 
 export async function sendSolanaTransaction(connection: Connection, transaction: Transaction, signers: Signer[],
-                                            confirm = false, options?: SendOptions): Promise<TransactionSignature> {
+                                            confirm = false, options?: SendOptions, name = ''): Promise<TransactionSignature> {
+  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   transaction.sign(...signers);
   solanaTransactionLog(transaction);
   const signature = await connection.sendRawTransaction(transaction.serialize(), options);
@@ -24,12 +25,14 @@ export async function sendSolanaTransaction(connection: Connection, transaction:
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
     await connection.confirmTransaction({ blockhash, lastValidBlockHeight, signature });
   }
+  console.log(`Transaction${name ? ` ${name}` : ''} signature: ${signature}`);
+  console.log(`https://explorer.solana.com/tx/${signature}?cluster=custom&customUrl=http://localhost:8899`)
   return signature;
 }
 
-export async function requestAirdrop(connection: Connection, publicKey: PublicKey, lamports: number): Promise<number> {
+export async function solanaAirdrop(connection: Connection, publicKey: PublicKey, lamports: number): Promise<number> {
   let balance = await connection.getBalance(publicKey);
-  if (balance < 1e4) {
+  if (balance < 1e9) {
     await connection.requestAirdrop(publicKey, lamports);
     await delay(3e3);
     balance = await connection.getBalance(publicKey);

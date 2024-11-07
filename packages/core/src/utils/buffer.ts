@@ -55,20 +55,6 @@ export function toBytesInt32(number: number, littleEndian = true): ArrayBuffer {
   return arrayBuffer;
 }
 
-export function numberTo64BitLittleEndian(num: number): Uint8Array {
-  const buffer = new ArrayBuffer(8); // 64 bits = 8 bytes
-  const view = new DataView(buffer);
-
-  // Split the number into high and low 32-bit parts
-  const low = num % Math.pow(2, 32);
-  const high = Math.floor(num / Math.pow(2, 32));
-
-  view.setUint32(0, low, true); // true for little-endian
-  view.setUint32(4, high, true); // high part is set after low part
-
-  return new Uint8Array(buffer);
-}
-
 export function toBytesLittleEndian(num: number | bigint, byteLength: number): Buffer {
   const buffer = Buffer.alloc(byteLength);
   buffer.writeBigUInt64LE(BigInt(num), 0);

@@ -77,32 +77,44 @@ export class TreasuryPoolAddress {
   }
 }
 
-export class NeonUser {
-  solanaAccount: Keypair;
+export class SolanaNeonAccount {
   neonWallet: NeonAddress;
-  private neonEvmProgram: PublicKey;
-  private chainId: number;
+  publicKey: PublicKey;
+  neonEvmProgram: PublicKey;
+  tokenMint: PublicKey;
+  chainId: number;
+  private _keypair?: Keypair;
 
-  get balanceAccount(): PublicKey {
+  get balanceAddress(): PublicKey {
     return neonBalanceProgramAddressSync(this.neonWallet, this.neonEvmProgram, this.chainId)[0];
   }
 
-  get publicKey(): PublicKey {
-    return this.solanaAccount.publicKey;
+  get keypair(): Keypair {
+    if (!this._keypair) {
+      throw new Error(`Keypair isn't initialized`);
+    }
+    return this._keypair;
   }
 
   get signer(): Signer {
-    return toSigner(this.solanaAccount);
+    if (this._keypair) {
+      return toSigner(this._keypair);
+    }
+    return { publicKey: this.publicKey, secretKey: new Uint8Array() };
   }
 
-  async getNonce(): Promise<number> {
-    return 0;
+  static fromKeypair(keypair: Keypair, neonEvmProgram: PublicKey, mint: PublicKey, chainId: number): SolanaNeonAccount {
+    return new SolanaNeonAccount(keypair.publicKey, neonEvmProgram, mint, chainId, keypair);
   }
 
-  constructor(solanaAccount: Keypair, neonEvmProgram: PublicKey, chainId: number) {
-    this.solanaAccount = solanaAccount;
+  constructor(solanaAddress: PublicKey, neonEvmProgram: PublicKey, mint: PublicKey, chainId: number, keypair?: Keypair) {
+    this.publicKey = solanaAddress;
     this.neonEvmProgram = neonEvmProgram;
+    this.tokenMint = mint;
     this.chainId = chainId;
-    this.neonWallet = solanaToNeonAddress(this.solanaAccount.publicKey);
+    this.neonWallet = solanaToNeonAddress(this.publicKey);
+    if (keypair instanceof Keypair) {
+      this._keypair = keypair;
+    }
   }
 }

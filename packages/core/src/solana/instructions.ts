@@ -1,6 +1,6 @@
 import { AccountMeta, PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { createAccountWithSeedInstruction, createHolderAccountInstruction } from '@neonevm/token-transfer-core';
-import { getAssociatedTokenAddress, NATIVE_MINT } from '@solana/spl-token';
+import { getAssociatedTokenAddress } from '@solana/spl-token';
 import {
   CreateScheduledTransactionData,
   CreateScheduledTransactionInstructionData,
@@ -12,8 +12,7 @@ import {
   neonAuthorityPoolAddressSync,
   neonBalanceProgramAddressSync,
   neonTreeAccountAddressSync,
-  neonWalletProgramAddress,
-  TreasuryPoolAddress
+  neonWalletProgramAddress
 } from './account';
 
 export const enum EvmInstruction {
@@ -74,25 +73,20 @@ export function createScheduledTransactionMultipleInstruction(instructionData: C
 export async function createScheduledNeonEvmTransaction(transactionData: CreateScheduledTransactionData): Promise<Transaction> {
   const {
     chainId,
-    connection,
     signerAddress,
+    tokenMintAddress,
     neonEvmProgram,
     neonWallet,
     neonWalletNonce,
     neonTransaction,
-    treasuryPoolCount
+    treasuryPool
   } = transactionData;
   const transaction = new Transaction();
-  const treasuryPool = TreasuryPoolAddress.find(neonEvmProgram, treasuryPoolCount);
   const [balanceAddress] = neonBalanceProgramAddressSync(neonWallet, neonEvmProgram, chainId);
   const [treeAccountAddress] = neonTreeAccountAddressSync(neonWallet, neonEvmProgram, neonWalletNonce);
   const [authorityPoolAddress] = neonAuthorityPoolAddressSync(neonEvmProgram);
-  const associatedTokenAddress = await getAssociatedTokenAddress(NATIVE_MINT, authorityPoolAddress, true);
+  const associatedTokenAddress = await getAssociatedTokenAddress(tokenMintAddress, authorityPoolAddress, true);
 
-  const balanceAccount = await connection.getAccountInfo(balanceAddress);
-  if (!balanceAccount) {
-    transaction.add(createBalanceAccountInstruction(neonEvmProgram, signerAddress, neonWallet, chainId));
-  }
   transaction.add(createScheduledTransactionInstruction({
     neonEvmProgram,
     signerAddress,
@@ -123,7 +117,7 @@ export async function createHolderAccountTransaction(neonEvmProgram: PublicKey, 
 export function createBalanceAccountInstruction(neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonAddress: NeonAddress, chainId: number): TransactionInstruction {
   const [balanceAddress] = neonBalanceProgramAddressSync(neonAddress, neonEvmProgram, chainId);
   const [neonWalletAddress] = neonWalletProgramAddress(neonAddress, neonEvmProgram);
-  const keys = [
+  const keys: AccountMeta[] = [
     { pubkey: solanaWallet, isSigner: true, isWritable: true },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     { pubkey: balanceAddress, isSigner: false, isWritable: true },
@@ -134,4 +128,10 @@ export function createBalanceAccountInstruction(neonEvmProgram: PublicKey, solan
   const c = toBytesLittleEndian(chainId, 8);
   const data = bufferConcat([a, b, c]);
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data } as any);
+}
+
+export function createBalanceAccountTransaction(neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonAddress: NeonAddress, chainId: number): Transaction {
+  const transaction = new Transaction();
+  transaction.add(createBalanceAccountInstruction(neonEvmProgram, solanaWallet, neonAddress, chainId));
+  return transaction;
 }

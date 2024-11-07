@@ -1,3 +1,7 @@
 # Neon Solana Transfer Core
 
-> **Node**: Coming soon
+```shell
+yarn install # install vendors 
+yarn test # run tests
+yarn build # build package
+```
