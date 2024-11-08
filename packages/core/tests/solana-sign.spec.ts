@@ -56,7 +56,7 @@ beforeAll(async () => {
   solanaWallet = Keypair.fromSecretKey(SOLANA_WALLET);
   gasToken = token.gasToken;
   faucet = new FaucetDropper('http://159.69.19.127:3333');
-  neonUser = SolanaNeonAccount.fromKeypair(new Keypair(), neonEvmProgram, chainTokenMint, chainId);
+  neonUser = SolanaNeonAccount.fromKeypair(solanaWallet, neonEvmProgram, chainTokenMint, chainId);
 
   console.log(`Solana wallet: ${neonUser.publicKey.toBase58()}; ${bs58.encode(neonUser.keypair.secretKey)}`);
   console.log(`Neon wallet: ${neonUser.neonWallet}; Balance Account: ${neonUser.balanceAddress.toBase58()}`);
@@ -67,15 +67,18 @@ beforeAll(async () => {
 describe('Check ScheduledTransaction instructions', () => {
   it(`Create ScheduledTransaction and sign with Solana`, async () => {
     const treasuryPool = TreasuryPoolAddress.find(neonEvmProgram, proxyStatus.neonTreasuryPoolCount);
-    await solanaAirdrop(connection, treasuryPool.publicKey, 1e8);
+    await solanaAirdrop(connection, treasuryPool.publicKey, 1e9);
 
-    const nonce = await neonProxyRpcApi.getTransactionCount(neonUser.neonWallet);
-    console.log(nonce);
+    const nonce = Number(await neonProxyRpcApi.getTransactionCount(neonUser.neonWallet)) + Math.floor(Math.random() * 1000);
+    console.log(`Neon wallet ${neonUser.neonWallet} nonce: ${nonce}`);
 
-    const account = await neonProxyRpcApi.getAccount(neonUser.neonWallet, Number(nonce));
+    const account = await neonProxyRpcApi.getAccount(neonUser.neonWallet, nonce);
+    console.log('account', account);
+    const gasPrice = await neonProxyRpcApi.gasPrice();
+    console.log('gasPrice', gasPrice);
 
     const scheduledTransaction = new ScheduledTransaction({
-      nonce: '0x',
+      nonce: toBeHex(nonce),
       payer: neonUser.neonWallet,
       target: NEON_TRANSFER_CONTRACT_DEVNET,
       callData: neonTransactionData(neonUser.publicKey),
@@ -84,21 +87,9 @@ describe('Check ScheduledTransaction instructions', () => {
 
     console.log(scheduledTransaction.encode());
 
-    const gasPrice = await neonProxyRpcApi.gasPrice();
-    console.log('account', account);
-    console.log('gasPrice', gasPrice);
-    console.log('neonTransaction', '');
 
     const neonWalletNonce = await balanceAccountNonce(connection, neonUser.neonWallet, neonEvmProgram, chainId);
     console.log('neonWalletNonce', neonWalletNonce);
-
-    // const balanceAccount = await connection.getAccountInfo(neonUser.balanceAddress);
-    // if (!balanceAccount) {
-    //   const balanceTransaction = await createBalanceAccountTransaction(neonEvmProgram, neonUser.publicKey, neonUser.neonWallet, chainId);
-    //   await sendSolanaTransaction(connection, balanceTransaction, [neonUser.signer], false, { skipPreflight });
-    //   await delay(2e3);
-    //   await solanaAirdrop(connection, neonUser.balanceAddress, 2916240);
-    // }
 
     const createScheduledTransaction = await createScheduledNeonEvmTransaction({
       chainId,
@@ -106,7 +97,7 @@ describe('Check ScheduledTransaction instructions', () => {
       tokenMintAddress: neonUser.tokenMint,
       neonEvmProgram,
       neonWallet: neonUser.neonWallet,
-      neonWalletNonce: Number(neonWalletNonce),
+      neonWalletNonce: nonce,
       neonTransaction: scheduledTransaction.serialize(),
       treasuryPool
     });
