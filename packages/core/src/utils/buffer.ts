@@ -25,7 +25,7 @@ export function stringToBuffer(str: string, encoding = 'utf8'): Buffer {
   return Buffer.from(str, encoding as any);
 }
 
-export function bufferConcat(list: Buffer[], totalLength?: number): Buffer {
+export function bufferConcat(list: Buffer[], totalLength?: number): any {
   return Buffer.concat(list, totalLength);
 }
 

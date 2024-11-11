@@ -1,7 +1,8 @@
-import { decodeRlp, encodeRlp, toBeHex } from 'ethers';
+import { decodeRlp, encodeRlp, keccak256, RlpStructuredData, toBeHex } from 'ethers';
 import { HexString } from '../models';
 import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer } from '../utils';
-import { RlpStructuredData } from 'ethers/src.ts/utils/rlp';
+import { Connection, PublicKey, Transaction, TransactionConfirmationStrategy } from '@solana/web3.js';
+import { createWriteToHolderAccountInstruction, sendSolanaTransaction, SolanaNeonAccount } from '../solana';
 
 export interface ScheduledTransactionData {
   payer: string;
@@ -84,3 +85,29 @@ export class ScheduledTransaction {
     return decodeRlp(data);
   }
 }
+
+export async function asyncWriteTransactionToHoldAccount(connection: Connection, neonEvmProgram: PublicKey, solanaUser: SolanaNeonAccount, holderAddress: PublicKey, scheduledTransaction: ScheduledTransaction): Promise<any> {
+  const receipts: Promise<string>[] = [];
+  const transactionHash = keccak256(scheduledTransaction.serialize());
+  let rest = hexToBuffer(scheduledTransaction.serialize());
+  let offset = 0;
+
+  while (rest.length) {
+    const part = rest.slice(0, 920);
+    rest = rest.slice(920);
+
+    const transaction = new Transaction();
+    transaction.feePayer = solanaUser.publicKey;
+    transaction.add(createWriteToHolderAccountInstruction(neonEvmProgram, solanaUser.publicKey, holderAddress, transactionHash, part, offset));
+    receipts.push(sendSolanaTransaction(connection, transaction, [solanaUser.signer], false, { preflightCommitment: 'confirmed' }));
+
+    offset += part.length;
+  }
+
+  for (const receipt of receipts) {
+    const signature = await receipt;
+    const strategy: TransactionConfirmationStrategy = { signature } as any;
+    await connection.confirmTransaction(strategy, 'confirmed');
+  }
+}
+

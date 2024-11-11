@@ -1,5 +1,5 @@
 {
-  "name": "@neonevm/solana-signer",
+  "name": "@neonevm/solana-sign",
   "description": "Javascript Library for Execute Neon transactions with Solana's signature",
   "version": "0.1.0",
   "private": true,

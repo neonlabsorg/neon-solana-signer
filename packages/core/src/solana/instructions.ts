@@ -1,4 +1,11 @@
-import { AccountMeta, PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
+import {
+  AccountMeta,
+  ComputeBudgetProgram,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction
+} from '@solana/web3.js';
 import { createAccountWithSeedInstruction, createHolderAccountInstruction } from '@neonevm/token-transfer-core';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import {
@@ -7,7 +14,7 @@ import {
   NeonAddress,
   ScheduledInstruction
 } from '../models';
-import { bufferConcat, hexToBuffer, numberToBuffer, toBytesLittleEndian } from '../utils';
+import { bufferConcat, hexToBuffer, numberToBuffer, stringToBuffer, toBytesLittleEndian } from '../utils';
 import {
   neonAuthorityPoolAddressSync,
   neonBalanceProgramAddressSync,
@@ -133,5 +140,41 @@ export function createBalanceAccountInstruction(neonEvmProgram: PublicKey, solan
 export function createBalanceAccountTransaction(neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonAddress: NeonAddress, chainId: number): Transaction {
   const transaction = new Transaction();
   transaction.add(createBalanceAccountInstruction(neonEvmProgram, solanaWallet, neonAddress, chainId));
+  return transaction;
+}
+
+export function createWriteToHolderAccountInstruction(neonEvmProgram: PublicKey, operator: PublicKey, holderAddress: PublicKey, transactionHash: string, transactionPart: Buffer, offset: number): TransactionInstruction {
+  const data = bufferConcat([stringToBuffer(transactionHash), numberToBuffer(offset), transactionPart]);
+  return new TransactionInstruction({
+    keys: [
+      { pubkey: holderAddress, isSigner: false, isWritable: true },
+      { pubkey: operator, isSigner: true, isWritable: false }
+    ],
+    programId: neonEvmProgram,
+    data
+  });
+}
+
+export function createScheduledTransactionStartFromAccountInstruction(neonEvmProgram: PublicKey, operator: PublicKey, balanceAddress: PublicKey, holderAddress: PublicKey, treeAddress: PublicKey, index: number, additionAccounts: PublicKey[] = []): TransactionInstruction {
+  const type = numberToBuffer(ScheduledInstruction.START_FROM_ACCOUNT);
+  const indexBuffer = numberToBuffer(index);
+  const data = bufferConcat([type, indexBuffer]);
+  const keys: AccountMeta[] = [
+    { pubkey: holderAddress, isSigner: false, isWritable: true },
+    { pubkey: treeAddress, isSigner: false, isWritable: true },
+    { pubkey: operator, isSigner: true, isWritable: true },
+    { pubkey: balanceAddress, isSigner: false, isWritable: true }
+  ];
+  for (const account of additionAccounts) {
+    keys.push({ pubkey: account, isSigner: false, isWritable: true });
+  }
+  return new TransactionInstruction({ programId: neonEvmProgram, keys, data } as any);
+}
+
+export function createScheduledTransactionStartFromAccountTransaction(neonEvmProgram: PublicKey, operator: PublicKey, balanceAddress: PublicKey, holderAddress: PublicKey, treeAddress: PublicKey, index: number, additionAccounts: PublicKey[] = []): Transaction {
+  const transaction = new Transaction();
+  transaction.add(ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }));
+  transaction.add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1000000 }));
+  transaction.add(createScheduledTransactionStartFromAccountInstruction(neonEvmProgram, operator, balanceAddress, holderAddress, treeAddress, index, additionAccounts));
   return transaction;
 }

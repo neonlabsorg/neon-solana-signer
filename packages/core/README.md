@@ -1,7 +1,9 @@
-# Neon Solana Transfer Core
+# Library for Scheduled Neon EVM Transaction
+
+This package is under development.
 
 ```shell
-yarn install # install vendors 
-yarn test # run tests
-yarn build # build package
+yarn install
+yarn test
+yarn build
 ```
