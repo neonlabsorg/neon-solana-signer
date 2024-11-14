@@ -6,6 +6,10 @@ export function privateKeyFromWallet(solanaWallet: PublicKey, neonWallet: HexStr
   return keccak256(Buffer.from(`${neonWallet.slice(2)}${solanaWallet.toBase58()}`, 'utf-8'));
 }
 
+export function getTransactionReceipt(provider: JsonRpcProvider, transactionHash: HexString): Promise<any> {
+  return provider.waitForTransaction(transactionHash);
+}
+
 export async function signNeonTransaction(provider: JsonRpcProvider, solanaWallet: Keypair, neonWallet: Wallet, transaction: TransactionRequest): Promise<HexString> {
   try {
     const privateKey = privateKeyFromWallet(solanaWallet.publicKey, neonWallet.address);
