@@ -8,7 +8,7 @@ export function isValidHex(hex: string | number): boolean {
   return isHexStrict;
 }
 
-export function hexToBuffer(hex: HexString): Buffer {
+export function hexToBuffer(hex: HexString) {
   const _hex = isValidHex(hex) ? hex.replace(/^0x/i, '') : hex;
   return Buffer.from(_hex, 'hex');
 }
@@ -17,18 +17,17 @@ export function bufferToHex(data: ArrayBuffer): HexString {
   return Buffer.from(data).toString('hex');
 }
 
-export function numberToBuffer(size: number): Buffer {
+export function numberToBuffer(size: number) {
   return Buffer.from([size]);
 }
 
-export function stringToBuffer(str: string, encoding = 'utf8'): Buffer {
+export function stringToBuffer(str: string, encoding = 'utf8') {
   return Buffer.from(str, encoding as any);
 }
 
-export function bufferConcat(list: Buffer[], totalLength?: number): any {
+export function bufferConcat(list: Buffer[], totalLength?: number) {
   return Buffer.concat(list, totalLength);
 }
-
 
 export function toU256BE(bigIntNumber: bigint): Uint8Array {
   if (bigIntNumber < BigInt(0) || bigIntNumber > BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')) {

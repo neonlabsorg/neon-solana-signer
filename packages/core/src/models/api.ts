@@ -43,3 +43,20 @@ export interface ProxyApiState {
   proxyStatus: NeonProgramStatus;
   tokensList: GasToken[];
 }
+
+export interface NeonGasPrice {
+  tokenName: string;
+  isConstGasPrice: boolean;
+  chainId: HexString;
+  gasPrice: HexString;
+  suggestedGasPrice: HexString;
+  minAcceptableGasPrice: HexString;
+  minExecutableGasPrice: HexString;
+  chainTokenPriceUsd: HexString;
+  tokenPriceUsd: HexString;
+  operatorFee: HexString;
+  priorityFee: HexString;
+  solanaCUPriorityFee: HexString;
+  solanaSimpleCUPriorityFee: HexString;
+  minWoChainIDAcceptableGasPrice: HexString;
+}

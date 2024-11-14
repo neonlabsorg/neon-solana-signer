@@ -1,4 +1,4 @@
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, TransactionSignature } from '@solana/web3.js';
 import { HexString, NeonAddress } from './api';
 import { TreasuryPoolAddress } from '../solana';
 
@@ -35,4 +35,10 @@ export const enum ScheduledInstruction {
   CREATE = 0x4A,
   CREATE_MULTIPLE = 0x4B,
   DESTROY = 0x4C,
+}
+
+export interface SolanaTransactionSignature {
+  signature: TransactionSignature;
+  blockhash?: string;
+  lastValidBlockHeight?: number;
 }

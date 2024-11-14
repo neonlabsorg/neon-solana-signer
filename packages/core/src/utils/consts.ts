@@ -5,3 +5,5 @@ export const enum NeonChainId {
   devnetSol = 245022927,
   mainnet = 245022934
 }
+
+export const EVM_STEPS = 500;

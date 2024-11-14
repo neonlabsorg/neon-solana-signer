@@ -1,7 +1,7 @@
 import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { dataSlice, keccak256 } from 'ethers';
 import { hexToBuffer, numberToBuffer, stringToBuffer, toBytesInt32, toBytesLittleEndian, toU256BE } from '../utils';
-import { AccountAddress, NeonAddress } from '../models';
+import { AccountAddress, HexString, NeonAddress } from '../models';
 import { BalanceAccountLayout } from './layout';
 import { toSigner } from './transaction';
 
@@ -47,7 +47,7 @@ export async function balanceAccountNonce(connection: Connection, neonWallet: Ne
   return 0n;
 }
 
-export async function holderAccountData(neonEvmProgram: PublicKey, solanaWallet: PublicKey): Promise<[PublicKey, string]> {
+export async function holderAddressWithSeed(neonEvmProgram: PublicKey, solanaWallet: PublicKey): Promise<[PublicKey, string]> {
   const seed = Math.floor(Math.random() * 1e12).toString();
   const holder = await PublicKey.createWithSeed(solanaWallet, seed, neonEvmProgram);
   return [holder, seed];
@@ -116,5 +116,24 @@ export class SolanaNeonAccount {
     if (keypair instanceof Keypair) {
       this._keypair = keypair;
     }
+  }
+}
+
+export class BaseContract {
+  ethAddress: HexString;
+  solanaAddress: PublicKey;
+  balancaAccountAddress: PublicKey;
+
+  constructor(ethAddress: HexString, solanaAddress: PublicKey, balanceAccountAddress: PublicKey) {
+    this.ethAddress = ethAddress;
+    this.solanaAddress = solanaAddress;
+    this.balancaAccountAddress = balanceAccountAddress;
+  }
+
+  static get baseContractMock(): BaseContract {
+    return new BaseContract(
+      `0x8df5a637684a23eec12574429747eb7364ec306e`,
+      new PublicKey(`HAeVTrEn2MtBNcNvSvrtWHH7uLUrXkpMnxwLGp8D1yWg`),
+      new PublicKey(`GLQ9ZBYHe9q9vqsbd4fYs3ow4qBzksGEUiJuGKhSkdfk`));
   }
 }

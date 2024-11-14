@@ -2,7 +2,7 @@ import { PublicKey } from '@solana/web3.js';
 import {
   GasToken,
   NeonAddress,
-  NeonAddressResponse,
+  NeonAddressResponse, NeonGasPrice,
   NeonProgramStatus,
   ProxyApiState,
   RPCResponse,
@@ -23,12 +23,12 @@ export class NeonProxyRpcApi {
   }
 
   // neon_getTransactionReceipt
-  getTransactionReceipt(): Promise<RPCResponse<any>> {
-    return this.neonRpc('neon_getTransactionReceipt', []);
+  getTransactionReceipt(transactionHash: string): Promise<RPCResponse<any>> {
+    return this.neonRpc('neon_getTransactionReceipt', [transactionHash]);
   }
 
   // neon_gasPrice
-  gasPrice(): Promise<RPCResponse<any>> {
+  gasPrice(): Promise<RPCResponse<NeonGasPrice>> {
     return this.neonRpc('neon_gasPrice', []);
   }
 
@@ -47,7 +47,7 @@ export class NeonProxyRpcApi {
   static rpc<T>(url: string, method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
     const id = uuid();
     const body = { id, jsonrpc: '2.0', method, params };
-    console.log(`curl -H 'Content-Type: application/json' -d '${JSON.stringify(body)}' -X POST ${url}`);
+    console.log(`curl -H 'Content-Type: application/json' -d '${JSON.stringify(body)}' -X POST ${url} | jq .`);
     return fetch(url, {
       method: 'POST',
       mode: 'cors',
