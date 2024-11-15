@@ -8,7 +8,7 @@ const config: Config.InitialOptions = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   moduleNameMapper: { '@neonevm/solana-sign': '<rootDir>/src' },
   testEnvironmentOptions: { path: '.env' },
-  testTimeout: 12e4,
+  testTimeout: 2e5,
   detectOpenHandles: false,
   forceExit: false
 };

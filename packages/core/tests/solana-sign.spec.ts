@@ -25,7 +25,7 @@ import {
   TreasuryPoolAddress,
   writeTransactionToHoldAccount
 } from '@neonevm/solana-sign';
-import { neonNeonTransactionEthers, neonTransactionData } from '@neonevm/token-transfer-ethers';
+import { neonTransactionData } from '@neonevm/token-transfer-ethers';
 import { NEON_TRANSFER_CONTRACT_DEVNET } from '@neonevm/token-transfer-core';
 import { JsonRpcProvider, toBeHex } from 'ethers';
 import { config } from 'dotenv';
@@ -33,7 +33,7 @@ import bs58 from 'bs58';
 
 config({ path: '.env' });
 
-const NEON_API_RPC_URL = process.env.NEON_CORE_API_RPC_URL!;
+const NEON_API_RPC_URL = `${process.env.NEON_CORE_API_RPC_URL!}/sol`;
 const NEON_CLIENT_API_URL = process.env.NEON_CORE_API_URL!;
 const SOLANA_DEVNET_URL = process.env.SOLANA_URL!;
 const NEON_FAUCET_URL = process.env.NEON_FAUCET_URL!;
@@ -56,7 +56,6 @@ let skipPreflight = false;
 beforeAll(async () => {
   const result = await getProxyState(NEON_API_RPC_URL);
   const token = getGasToken(result.tokensList, NeonChainId.testnetSol);
-  // const keypair = new Keypair();
   const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_WALLET));
   connection = new Connection(SOLANA_DEVNET_URL, 'confirmed');
   provider = new JsonRpcProvider(NEON_API_RPC_URL!);
@@ -78,9 +77,8 @@ beforeAll(async () => {
 });
 
 describe('Check ScheduledTransaction instructions', () => {
-  it(`Create ScheduledTransaction and sign with Solana`, async () => {
+  it(`Create ScheduledTransaction and sign with Solana for exist account`, async () => {
     const treasuryPool = TreasuryPoolAddress.find(neonEvmProgram, proxyStatus.neonTreasuryPoolCount);
-    // const treasuryPool = new TreasuryPoolAddress(new PublicKey('C8SPT4zTVxWdCQTsk8f7RHaNDaPkx766x8icyzSUgzQ3'), 2);
     await solanaAirdrop(connection, treasuryPool.publicKey, 20e9);
 
     await solanaUser.balanceAccountCreate(connection);
@@ -89,10 +87,8 @@ describe('Check ScheduledTransaction instructions', () => {
     const neonBalanceAccountNonce = await balanceAccountNonce(connection, solanaUser.neonWallet, neonEvmProgram, chainId);
     console.log('Balance account nonce', neonBalanceAccountNonce);
 
-    const nonce = Number(neonBalanceAccountNonce);
-
-    const neonWalletNonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
-    console.log(`Neon wallet ${solanaUser.neonWallet} nonce: ${neonWalletNonce}`);
+    const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
+    console.log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
 
     const gasPrice = await neonProxyRpcApi.gasPrice();
     console.log(gasPrice.result.suggestedGasPrice);
@@ -120,18 +116,19 @@ describe('Check ScheduledTransaction instructions', () => {
     await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer], false, { skipPreflight }, 'scheduled');
 
     const treeTransaction = await neonClientApi.transactionTree(solanaUser.neonWallet, nonce);
-    const transaction = treeTransaction.value.transactions[0];
+    expect(treeTransaction.value.transactions.length).toBeGreaterThan(0);
     console.log(treeTransaction);
-    console.log(treeTransaction.value.transactions[0]);
-    console.log(await provider.getTransactionReceipt(`0x${transaction['transaction_hash']}`));
-    console.log(await provider.waitForTransaction(`0x${transaction['transaction_hash']}`, 1, 10e3));
+    for (const transaction of treeTransaction.value.transactions) {
+      console.log(transaction);
+      console.log(await neonProxyRpcApi.getTransactionReceipt(`0x${transaction['transaction_hash']}`));
+      console.log(await provider.waitForTransaction(`0x${transaction['transaction_hash']}`, 1, 2e4));
+    }
   });
 
   it.skip(`Create ScheduledTransaction and sign with Solana`, async () => {
     const treasuryPool = TreasuryPoolAddress.find(neonEvmProgram, proxyStatus.neonTreasuryPoolCount);
     await solanaAirdrop(connection, treasuryPool.publicKey, 1e9);
-
-    const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet)) + Math.floor(Math.random() * 1000);
+    const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
 
     console.log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
 
@@ -175,68 +172,28 @@ describe('Check ScheduledTransaction instructions', () => {
     await executeTransactionStepsFromAccount(connection, neonEvmProgram, solanaUser, holderAddress, treasuryPool, treeAccountAddress, additionalAccounts);
   });
 
-  it.skip(`Create holder account`, async () => {
-    // create holder account
+  it(`Create holder account`, async () => {
+    const solanaUser = SolanaNeonAccount.fromKeypair(Keypair.generate(), neonEvmProgram, chainTokenMint, chainId);
+    await solanaAirdrop(connection, solanaUser.publicKey, 1e10);
     const [holderAccount, holderSeed] = await holderAddressWithSeed(neonEvmProgram, solanaUser.publicKey);
-    if (await connection.getBalance(holderAccount) === 0) {
+    let account = await connection.getAccountInfo(holderAccount);
+    if (!account) {
       const transaction = await createHolderAccountTransaction(neonEvmProgram, solanaUser.publicKey, holderAccount, holderSeed);
-      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-      const solanaSignature = await sendSolanaTransaction(connection, transaction, [solanaUser.signer], false, { skipPreflight });
-      console.log('holderAccount signature', solanaSignature);
+      await sendSolanaTransaction(connection, transaction, [solanaUser.signer], false, { skipPreflight });
+      account = await connection.getAccountInfo(holderAccount);
     }
+    expect(account).not.toBeNull();
   });
 
-  it.skip(`Should encode/decode transaction`, async () => {
-    const amount = 0.1;
-    const transaction = await neonNeonTransactionEthers(provider, solanaUser.neonWallet, NEON_TRANSFER_CONTRACT_DEVNET, solanaUser.publicKey, amount);
-    const nonce = await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet);
-    console.log(nonce);
-
-    console.log(transaction.value);
-
-    const scheduledTransaction = new ScheduledTransaction({
-      payer: <string>transaction.from,
-      nonce: toBeHex(nonce),
-      target: <string>transaction.to,
-      callData: <string>transaction.data,
-      value: toBeHex(transaction.value!),
-      chainId: toBeHex(NeonChainId.testnetSol),
-      gasLimit: toBeHex(transaction.gasLimit!)
-    });
-
-    const encoded = scheduledTransaction.encode();
-    const decoded = ScheduledTransaction.decodeFrom(scheduledTransaction.encode());
-
-    expect(encoded).toBe(decoded.encode());
-  });
-
-  it.skip(`Compare ScheduledTransaction: new and from`, async () => {
-    const trx1 = new ScheduledTransaction({
-      payer: solanaUser.neonWallet,
-      target: `0xc7e376be256bdb6a1fbedaee64ca860b2b6e95ee`,
-      callData: `0x3fb5c1cb0000000000000000000000000000000000000000000000000000000000000012`
-    });
-
-    const trx2 = ScheduledTransaction.from([
-      solanaUser.neonWallet, // payer
-      '0x', // sender
-      '0x', // nonce
-      '0x', // index
-      '0x', // intent -
-      '0x', // intentCallData -
-      '0xc7e376be256bdb6a1fbedaee64ca860b2b6e95ee', // target
-      '0x3fb5c1cb0000000000000000000000000000000000000000000000000000000000000012', // callData
-      '0x', // value
-      toBeHex(NeonChainId.testnetSol), // chainId
-      '0x02540be3ff', // gasLimit
-      '0x64', // maxFeePerGas
-      '0x0a' // maxPriorityFeePerGas
-    ]);
-
+  it(`Compare ScheduledTransaction: new and from`, async () => {
+    const target = `0xc7e376be256bdb6a1fbedaee64ca860b2b6e95ee`;
+    const callData = `0x3fb5c1cb0000000000000000000000000000000000000000000000000000000000000012`;
+    const trx1 = new ScheduledTransaction({ payer: solanaUser.neonWallet, target, callData });
+    const trx2 = ScheduledTransaction.from([solanaUser.neonWallet, '0x', '0x', '0x', '0x', '0x', target, callData, '0x', toBeHex(NeonChainId.testnetSol), '0x02540be3ff', '0x64', '0x0a']);
     expect(trx1.encode()).toBe(trx2.encode());
   });
 
-  it.skip(`Should decode transaction`, async () => {
+  it(`Should decode transaction`, async () => {
     const trx = `0xf85e94b20650b9d28d3a46e3c6d8859a7243d7627db6b0808080808094c7e376be256bdb6a1fbedaee64ca860b2b6e95eea43fb5c1cb000000000000000000000000000000000000000000000000000000000000001280708502540be3ff640a`;
     const decoded = ScheduledTransaction.decodeFrom(trx);
     expect(trx).toBe(decoded.encode());
