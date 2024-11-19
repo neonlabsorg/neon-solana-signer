@@ -1,6 +1,13 @@
 import { JsonRpcProvider, keccak256, TransactionRequest, Wallet } from 'ethers';
 import { Keypair, PublicKey } from '@solana/web3.js';
+import bs58 from 'bs58';
 import { HexString } from '../models';
+
+export function base58ToHex(mint: string): string {
+  const bytes = bs58.decode(mint);
+  const bytes32Value = Buffer.from(bytes);
+  return `0x${bytes32Value.toString('hex')}`;
+}
 
 export function privateKeyFromWallet(solanaWallet: PublicKey, neonWallet: HexString): HexString {
   return keccak256(Buffer.from(`${neonWallet.slice(2)}${solanaWallet.toBase58()}`, 'utf-8'));

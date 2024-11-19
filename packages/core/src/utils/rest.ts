@@ -1,5 +1,5 @@
 export async function post<T = any>(url = '', data = {}): Promise<T> {
-  console.log(`curl -H 'Content-Type: application/json' -d '${JSON.stringify(data)}' -X POST ${url} | jq .`);
+  console.log(`curl ${url} -X POST -H 'Content-Type: application/json' -d '${JSON.stringify(data)}' | jq .`);
   const response = await fetch(url, {
     method: 'POST',
     mode: 'cors',
