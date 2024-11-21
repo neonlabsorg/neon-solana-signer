@@ -30,7 +30,7 @@ const deployer = new ResourceForSpl(solanaWallet, neonWallet, provider, connecti
 
 export async function tokenDeploy(token: SPLToken): Promise<SPLToken> {
   await solanaAirdrop(connection, solanaWallet.publicKey, 1e9);
-  await neonAirdrop(provider, faucet, neonWallet, 300);
+  await neonAirdrop(provider, faucet, neonWallet.address, 500);
 
   const factoryAddress = FACTORY_ADDRESS || await deployFactory(neonWallet);
   console.log(`Factory address: ${factoryAddress}`);
@@ -48,7 +48,7 @@ export async function setup(): Promise<void> {
     await delay(5e3);
   }
 
-  writeToFile('token-list.json', JSON.stringify(tokens));
+  writeToFile('token-list.json', JSON.stringify(tokens, null, '  '));
 }
 
 (async () => {

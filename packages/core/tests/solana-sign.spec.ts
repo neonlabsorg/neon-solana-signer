@@ -113,7 +113,7 @@ describe('Check ScheduledTransaction instructions', () => {
       treasuryPool
     });
 
-    await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer], false, { skipPreflight }, 'scheduled');
+    await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer], true, { skipPreflight }, 'scheduled');
 
     const treeTransaction = await neonClientApi.transactionTree(solanaUser.neonWallet, nonce);
     expect(treeTransaction.value.transactions.length).toBeGreaterThan(0);

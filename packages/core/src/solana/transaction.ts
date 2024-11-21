@@ -1,6 +1,6 @@
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SendOptions, Signer, Transaction } from '@solana/web3.js';
 import { solanaTransactionLog } from '@neonevm/token-transfer-core';
-import { JsonRpcProvider, Wallet } from 'ethers';
+import { JsonRpcProvider } from 'ethers';
 import { delay, FaucetDropper } from '../utils';
 import { SolanaTransactionSignature } from '../models';
 
@@ -34,13 +34,14 @@ export async function solanaAirdrop(connection: Connection, publicKey: PublicKey
   return balance;
 }
 
-export async function neonAirdrop(provider: JsonRpcProvider, faucet: FaucetDropper, wallet: Wallet, amount: number): Promise<bigint> {
-  let balance = await provider.getBalance(wallet.address);
+export async function neonAirdrop(provider: JsonRpcProvider, faucet: FaucetDropper, wallet: string, amount: number): Promise<bigint> {
+  let balance = await provider.getBalance(wallet);
   if (balance < BigInt(amount * (10 ** 18))) {
-    await faucet.requestNeon(wallet.address, 100);
+    const requestAmount = amount > 100 ? 100 : amount;
+    await faucet.requestNeon(wallet, requestAmount);
     await delay(4e3);
     return neonAirdrop(provider, faucet, wallet, amount);
   }
-  console.log(`${wallet.address} balance: ${balance} NEON`);
+  console.log(`${wallet} balance: ${balance} NEON`);
   return balance;
 }

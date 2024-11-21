@@ -26,10 +26,11 @@ export async function mintSplToken(wallet: Keypair, umi: Umi, token: SPLToken, a
       amount: amount * (10 ** token.decimals),
       tokenOwner: wallet.publicKey,
       tokenStandard: TokenStandard.Fungible
-    }).send(umi));
+    }).sendAndConfirm(umi));
     // todo: refactoring to send and confirm method when will working solana websockets
     await delay(3e3);
-    const signature = bs58.encode(response);
+    const { signature: signatureBytes } = response;
+    const signature = bs58.encode(signatureBytes);
     console.log(`Mint signature: ${signature}`)
     console.log(`Successfully minted ${amount}.${(10 ** token.decimals).toString().slice(1)} tokens: (${mint.publicKey})`);
     return { mint, signature };
