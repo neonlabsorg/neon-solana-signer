@@ -1,11 +1,6 @@
-import { readFileSync } from 'fs';
-import { basename, join } from 'path';
 const solc = require('solc');
 
-export async function contractCompile(contractName: string, contractPath: string = 'src'): Promise<any> {
-  const root = process.cwd();
-  const content = readFileSync(join(root, contractPath, contractName), { encoding: 'utf-8' });
-  const name = basename(contractName);
+export function compileSolidityContract(name: string, content: string): any {
   const input = {
     language: 'Solidity',
     sources: { [name]: { content } },

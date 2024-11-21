@@ -11,7 +11,7 @@ import { SPLToken } from '@neonevm/token-transfer-core';
 import { JsonRpcProvider, Wallet } from 'ethers';
 import { deployErc20ForSplWrapper, mintSplToken } from '../contracts';
 
-export class ResourceForSpl {
+export class SplTokenDeployer {
   solanaWallet: Keypair;
   neonWallet: Wallet;
   provider: JsonRpcProvider;
@@ -25,7 +25,7 @@ export class ResourceForSpl {
     return { umi, wallet, signer };
   }
 
-  async deployToken(factoryAddress: string, token: SPLToken, amount = 1e6): Promise<SPLToken> {
+  async deploy(factoryAddress: string, token: SPLToken, amount = 1e6): Promise<SPLToken> {
     const { wallet, umi } = this.getUmiClient();
     const { mint } = await mintSplToken(wallet, umi, token, amount);
     if (mint) {
@@ -36,7 +36,7 @@ export class ResourceForSpl {
     return token;
   }
 
-  constructor(solanaWallet: Keypair, neonWallet: Wallet, provider: JsonRpcProvider, connection: Connection) {
+  constructor(provider: JsonRpcProvider, connection: Connection, neonWallet: Wallet, solanaWallet: Keypair) {
     this.solanaWallet = solanaWallet;
     this.neonWallet = neonWallet;
     this.provider = provider;

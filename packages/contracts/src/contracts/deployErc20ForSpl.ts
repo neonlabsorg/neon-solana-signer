@@ -8,12 +8,8 @@ function nonZeroAddress(address: string): boolean {
   return address !== zeroAddress;
 }
 
-export function erc20ForSPLFactoryContract(contractAddress: string, provider: JsonRpcProvider): Contract {
-  return new Contract(contractAddress, erc20ForSplAbi, provider);
-}
-
 export async function deployErc20ForSplWrapper(provider: JsonRpcProvider, wallet: Wallet, contractAddress: string, tokenMint: string): Promise<string | null> {
-  const contract = erc20ForSPLFactoryContract(contractAddress, provider);
+  const contract = new Contract(contractAddress, erc20ForSplAbi, provider);
   const hexAddr = base58ToHex(tokenMint);
 
   const contractWithSigner = contract.connect(wallet);

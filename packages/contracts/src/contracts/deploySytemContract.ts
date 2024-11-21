@@ -11,6 +11,8 @@ import {
   Wallet
 } from 'ethers';
 import { readFileSync } from 'fs';
+import { basename } from 'path';
+import { compileSolidityContract } from '../utils';
 
 const CHAIN_ID_OFFSET = 35;
 const V_OFFSET = 27;
@@ -23,9 +25,8 @@ export function getContractDeployerAddress(sender: string, nonce: number): NeonA
   return dataSlice(hash, 12, 32);
 }
 
-export function getContractAddressByCode(deployer: NeonAddress, contractCode: HexString): NeonAddress {
-  const codeHash = keccak256(Buffer.from(contractCode, 'hex'));
-  console.log(codeHash);
+export function getContractAddressByContractData(deployer: NeonAddress, contractData: HexString): NeonAddress {
+  const codeHash = keccak256(Buffer.from(contractData, 'hex'));
   return getContractAddressByHash(deployer, codeHash);
 }
 
@@ -43,7 +44,7 @@ export function getContractAddress(chainId: number, contractCode: string): NeonA
   const deployerTrx = buildDeployerTransaction(chainId, false);
   const sender = recoverTransaction(deployerTrx);
   const deployer = getContractDeployerAddress(sender, 0);
-  return getContractAddressByCode(deployer, contractCode);
+  return getContractAddressByContractData(deployer, contractCode);
 }
 
 export function recoverTransaction(trxBytes: HexString): HexString {
@@ -53,9 +54,9 @@ export function recoverTransaction(trxBytes: HexString): HexString {
   return recoverAddress(digest, signature);
 }
 
-export function buildDeployerTransaction(chainId: number, verbose: boolean = false): string {
-  const trxBytes = `0x${TRANSACTION_HASH}`;
-  const [nonce, , , to, value, data, v, r, s] = decodeRlp(trxBytes);
+export function buildDeployerTransaction(chainId: number, verbose: boolean = false): HexString {
+  const transaction = `0x${TRANSACTION_HASH}`;
+  const [nonce, , , to, value, data, v, r, s] = decodeRlp(transaction);
   const trx = { nonce, gasPrice: '0x', gasLimit: toBeHex(1_000_000_000), to, value, data, v, r, s };
 
   trx.v = toBeHex(Number(trx.v) - V_OFFSET + CHAIN_ID_OFFSET + 2 * chainId);
@@ -73,7 +74,7 @@ export function buildDeployerTransaction(chainId: number, verbose: boolean = fal
   ]);
 
   if (verbose) {
-    console.log(`Original trx: ${trxBytes}`);
+    console.log(`Original trx: ${transaction}`);
     console.log(`Deployer trx: ${deployerTrx}`);
     console.log('Deployer trx fields:', trx);
   }
@@ -81,81 +82,107 @@ export function buildDeployerTransaction(chainId: number, verbose: boolean = fal
   return deployerTrx;
 }
 
-export async function initDeployer(provider: JsonRpcProvider, sendTrx = false): Promise<void> {
-  const { chainId } = await provider.getNetwork();
-  const deployerTrx = buildDeployerTransaction(Number(chainId), true);
-  const sender = recoverTransaction(deployerTrx);
-  const deployer = getContractDeployerAddress(sender, 0);
+export class DeploySystemContract {
+  provider: JsonRpcProvider;
+  chainId: number;
 
-  console.log(`Sender: ${sender}`);
-  console.log(`Deployer: ${deployer}`);
-
-  const deployerCode = await provider.getCode(deployer);
-  console.log(`Deployer code: ${deployerCode}`);
-
-  if (sendTrx) {
-    const txHash = await provider.send('eth_sendRawTransaction', [deployerTrx]);
-    console.log(`Deploy proxy transaction: ${txHash}`);
-    const txReceipt = await provider.getTransactionReceipt(txHash.hash);
-    console.log(txReceipt);
-  }
-}
-
-export async function deploySystemContract(provider: JsonRpcProvider, senderWallet: Wallet, contractPath: string, sendTrx: boolean = false): Promise<void> {
-  const { chainId } = await provider.getNetwork();
-  const deployerTrx = buildDeployerTransaction(Number(chainId), false);
-  const sender = recoverTransaction(deployerTrx);
-  const deployer = getContractDeployerAddress(sender, 0);
-
-  console.log(`ChainID: ${chainId}`);
-  console.log(`Sender: ${sender}`);
-  console.log(`Deployer: ${deployer}`);
-
-  const deployerCode = await provider.getCode(deployer);
-  if (deployerCode === '0x') {
-    console.error(`Deployer isn't initialized`);
-    return;
+  get deployerTransaction(): HexString {
+    return buildDeployerTransaction(this.chainId, false);
   }
 
-  const contractCode = readFileSync(contractPath, 'utf8');
-  const contractAddress = getContractAddressByCode(deployer, contractCode);
-  console.log(`Contract: ${contractAddress}`);
-
-  const contractCodeDeployed = await provider.getCode(contractAddress);
-  if (contractCodeDeployed !== '0x') {
-    console.log('Contract already deployed');
-    return;
-  }
-  const accountBalance = await provider.getBalance(senderWallet.address);
-  const accountNonce = await provider.getTransactionCount(senderWallet.address);
-
-  console.log(`Account wallet: ${senderWallet.address}, Balance: ${Number(accountBalance) / 10 ** 18} NEON, Nonce: ${accountNonce}`);
-  const { gasPrice } = await provider.getFeeData();
-  const trx = {
-    chainId,
-    nonce: accountNonce,
-    from: senderWallet.address,
-    to: deployer,
-    data: `0x${contractCode}`,
-    value: 0,
-    gas: 0,
-    gasPrice
-  };
-
-  trx.gas = Number(await provider.estimateGas(trx));
-
-  const requiredFunds = trx.gas * Number(trx.gasPrice!);
-  console.log(`Transaction requires ${Number(requiredFunds) / 10 ** 18} NEON`);
-
-  if (BigInt(accountBalance) < requiredFunds) {
-    console.error('Sender has insufficient funds');
-    return;
+  get sender(): NeonAddress {
+    return recoverTransaction(this.deployerTransaction);
   }
 
-  if (sendTrx) {
-    const txHash = await senderWallet.sendTransaction(trx);
-    console.log(`Deploy contract transaction: ${txHash}`);
-    const receipt = await provider.getTransactionReceipt(txHash.hash);
+  get deployer(): NeonAddress {
+    return getContractDeployerAddress(this.sender, 0);
+  }
+
+  async initDeployer(): Promise<void> {
+    console.log(`Start init deployer`);
+    const sender = this.sender;
+    const deployer = this.deployer;
+    const deployerCode = await this.provider.getCode(deployer);
+    console.log(`Sender address: ${sender}`);
+    console.log(`Deployer address: ${deployer}`);
+    if (deployerCode) {
+      console.log(`Deployer already initialised. Code: ${deployerCode}`);
+    } else {
+      const transaction = await this.provider.send('eth_sendRawTransaction', [this.deployerTransaction]);
+      console.log(`Deploy proxy transaction: `, transaction);
+      const receipt = await this.provider.getTransactionReceipt(transaction.hash);
+      console.log(`Deploy proxy transaction receipt: `, receipt);
+    }
+  }
+
+  compileContract(filePath: string): { abi: string, bytecode: HexString } {
+    const name = basename(filePath);
+    const content = readFileSync(filePath, { encoding: 'utf-8' });
+    const contract = compileSolidityContract(name, content);
+    const bytecode = contract.evm.bytecode.object;
+    const abi = contract.abi;
+    return { abi, bytecode };
+  }
+
+  readContract(filePath: string): HexString {
+    return readFileSync(filePath, 'utf8');
+  }
+
+  async deployContract(contractData: HexString, wallet: Wallet): Promise<NeonAddress> {
+    const sender = this.sender;
+    const deployer = this.deployer;
+    const deployerCode = await this.provider.getCode(deployer);
+    if (deployerCode === '0x') {
+      console.error(`Deployer isn't initialized`);
+      await this.initDeployer();
+    } else {
+      console.log(`Sender address: ${sender}`);
+      console.log(`Deployer address: ${deployer}`);
+    }
+
+    const contractAddress = getContractAddressByContractData(deployer, contractData);
+    console.log(`Contract: ${contractAddress}`);
+
+    const contractCode = await this.provider.getCode(contractAddress);
+    if (contractCode !== '0x') {
+      console.log('Contract already deployed');
+      return contractAddress;
+    }
+    const accountBalance = await this.provider.getBalance(wallet.address);
+    const accountNonce = await this.provider.getTransactionCount(wallet.address);
+
+    console.log(`Account wallet: ${wallet.address}, Balance: ${Number(accountBalance) / 10 ** 18} NEON, Nonce: ${accountNonce}`);
+    const { gasPrice } = await this.provider.getFeeData();
+    const trx = {
+      chainId: this.chainId,
+      nonce: accountNonce,
+      from: wallet.address,
+      to: deployer,
+      data: `0x${contractData}`,
+      value: 0,
+      gas: 0,
+      gasPrice
+    };
+
+    trx.gas = Number(await this.provider.estimateGas(trx));
+
+    const requiredFunds = trx.gas * Number(trx.gasPrice!);
+    console.log(`Transaction requires ${Number(requiredFunds) / 10 ** 18} NEON`);
+
+    if (BigInt(accountBalance) < requiredFunds) {
+      throw new Error('Sender wallet has insufficient funds');
+    }
+
+    const transaction = await wallet.sendTransaction(trx);
+    console.log(`Deploy contract transaction:`, transaction);
+    const receipt = await this.provider.getTransactionReceipt(transaction.hash);
     console.log(`Transaction receipt`, receipt);
+
+    return contractAddress;
+  }
+
+  constructor(provider: JsonRpcProvider, chainId: number) {
+    this.provider = provider;
+    this.chainId = chainId;
   }
 }

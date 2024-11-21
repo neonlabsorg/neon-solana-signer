@@ -12,7 +12,6 @@
     "node": ">=20"
   },
   "scripts": {
-    "setup": "yarn ts-node src/scripts/setup.ts",
     "deploy": "yarn ts-node src/scripts/deployer.ts",
     "test": "jest"
   },
