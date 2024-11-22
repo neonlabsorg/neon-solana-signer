@@ -11,6 +11,7 @@ function nonZeroAddress(address: string): boolean {
 export async function deployErc20ForSplWrapper(provider: JsonRpcProvider, wallet: Wallet, contractAddress: string, tokenMint: string): Promise<string | null> {
   const contract = new Contract(contractAddress, erc20ForSplAbi, provider);
   const hexAddr = base58ToHex(tokenMint);
+  console.log(tokenMint, hexAddr);
 
   const contractWithSigner = contract.connect(wallet);
 

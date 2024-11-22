@@ -105,12 +105,12 @@ export class DeploySystemContract {
     const deployerCode = await this.provider.getCode(deployer);
     console.log(`Sender address: ${sender}`);
     console.log(`Deployer address: ${deployer}`);
-    if (deployerCode) {
+    if (deployerCode !== '0x') {
       console.log(`Deployer already initialised. Code: ${deployerCode}`);
     } else {
       const transaction = await this.provider.send('eth_sendRawTransaction', [this.deployerTransaction]);
       console.log(`Deploy proxy transaction: `, transaction);
-      const receipt = await this.provider.getTransactionReceipt(transaction.hash);
+      const receipt = await this.provider.waitForTransaction(transaction, 1, 3e4);
       console.log(`Deploy proxy transaction receipt: `, receipt);
     }
   }
@@ -132,6 +132,7 @@ export class DeploySystemContract {
     const sender = this.sender;
     const deployer = this.deployer;
     const deployerCode = await this.provider.getCode(deployer);
+    console.log(`Deployer code: ${deployerCode}`);
     if (deployerCode === '0x') {
       console.error(`Deployer isn't initialized`);
       await this.initDeployer();
@@ -175,7 +176,7 @@ export class DeploySystemContract {
 
     const transaction = await wallet.sendTransaction(trx);
     console.log(`Deploy contract transaction:`, transaction);
-    const receipt = await this.provider.getTransactionReceipt(transaction.hash);
+    const receipt = await this.provider.waitForTransaction(transaction.hash, 1, 3e4);
     console.log(`Transaction receipt`, receipt);
 
     return contractAddress;

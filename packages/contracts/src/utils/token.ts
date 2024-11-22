@@ -31,8 +31,15 @@ export class SplTokenDeployer {
     if (mint) {
       token.address_spl = mint.publicKey;
       const ecr20Address = await deployErc20ForSplWrapper(this.provider, this.neonWallet, factoryAddress, mint.publicKey);
-      token.address = ecr20Address ?? '0x';
+      token.address = ecr20Address ?? '';
     }
+    return token;
+  }
+
+  async deployMintedToken(factoryAddress: string, token: SPLToken): Promise<SPLToken> {
+    const tokenMint = token.address_spl;
+    const ecr20Address = await deployErc20ForSplWrapper(this.provider, this.neonWallet, factoryAddress, tokenMint);
+    token.address = ecr20Address ?? '';
     return token;
   }
 

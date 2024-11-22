@@ -35,13 +35,14 @@ export async function deploySplToken(token: SPLToken, factoryAddress: NeonAddres
   return customToken;
 }
 
-export async function deploySplTokens(factoryAddress: NeonAddress, tokens: SPLToken[] = []): Promise<SPLToken[]> {
+export async function deploySplTokens(factoryAddress: NeonAddress, chainId: number, tokens: SPLToken[] = []): Promise<SPLToken[]> {
   for (const token of splTokensMock) {
+    token.chainId = chainId;
     const result = await deploySplToken(token, factoryAddress);
     if (result) {
       tokens.push(result);
     }
-    await delay(3e3);
+    await delay(1e3);
   }
   return tokens;
 }
@@ -53,15 +54,6 @@ export async function deploySplTokens(factoryAddress: NeonAddress, tokens: SPLTo
   let tokens: SPLToken[] = [];
   let SPL_TOKEN_FACTORY: NeonAddress;
 
-  const wNEON: Partial<SPLToken> = {
-    chainId: Number(chainId),
-    address: '',
-    decimals: 18,
-    name: 'Wrapped Neon',
-    symbol: 'wNEON',
-    logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/wrapped-neon-logo.svg'
-  };
-
   {
     console.log(`Deploy NeonToken.bin contract`);
     const contractPath = join(process.cwd(), 'src/data/contracts', 'NeonToken.bin');
@@ -71,7 +63,22 @@ export async function deploySplTokens(factoryAddress: NeonAddress, tokens: SPLTo
   }
 
   {
+    console.log(`Compile and deploy ERC20ForSplFactory contract`);
+    const contractPath = join(process.cwd(), 'src/data/contracts', 'ERC20ForSplFactory.sol');
+    const { bytecode } = deploySystemContract.compileContract(contractPath);
+    SPL_TOKEN_FACTORY = await deploySystemContract.deployContract(bytecode, neonWallet);
+    result.push(`SPL_TOKEN_FACTORY=${SPL_TOKEN_FACTORY}`);
+  }
+  {
     console.log(`Deploy WNEON.bin contract`);
+    const wNEON: Partial<SPLToken> = {
+      chainId: Number(chainId),
+      address: '',
+      decimals: 18,
+      name: 'Wrapped Neon',
+      symbol: 'wNEON',
+      logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/wrapped-neon-logo.svg'
+    };
     const contractPath = join(process.cwd(), 'src/data/contracts', 'WNEON.bin');
     const contractData = deploySystemContract.readContract(contractPath);
     const address = await deploySystemContract.deployContract(contractData, neonWallet);
@@ -80,14 +87,21 @@ export async function deploySplTokens(factoryAddress: NeonAddress, tokens: SPLTo
   }
 
   {
-    console.log(`Compile and deploy ERC20ForSplFactory contract`);
-    const contractPath = join(process.cwd(), 'src/data/contracts', 'ERC20ForSplFactory.sol');
-    const { bytecode } = deploySystemContract.compileContract(contractPath);
-    SPL_TOKEN_FACTORY = await deploySystemContract.deployContract(bytecode, neonWallet);
-    result.push(`SPL_TOKEN_FACTORY=${SPL_TOKEN_FACTORY}`);
+    console.log(`Deploy wSOL token`);
+    const wSOL: SPLToken = {
+      chainId: Number(chainId),
+      address_spl: 'So11111111111111111111111111111111111111112',
+      address: '',
+      decimals: 9,
+      name: 'Wrapped SOL',
+      symbol: 'wSOL',
+      logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-wsol-logo.svg'
+    };
+    const token = await deployer.deployMintedToken(SPL_TOKEN_FACTORY, wSOL);
+    tokens.push(token);
   }
 
-  tokens = await deploySplTokens(SPL_TOKEN_FACTORY, tokens);
+  tokens = await deploySplTokens(SPL_TOKEN_FACTORY, Number(chainId), tokens);
 
   writeToFile('environments.txt', result.join('\n'));
   writeToFile('token-list.json', JSON.stringify(tokens, null, '  '));
