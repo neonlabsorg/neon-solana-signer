@@ -20,7 +20,7 @@
     "allowJs": true,
     "paths": {
       "@neonevm/solana-sign": [
-        "./src"
+        "src"
       ],
       "@neonevm/solana-contracts": [
         "../contracts/src"

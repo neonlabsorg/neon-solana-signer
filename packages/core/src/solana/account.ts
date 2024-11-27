@@ -1,7 +1,7 @@
 import { AccountInfo, Connection, Keypair, PublicKey, Signer, Transaction } from '@solana/web3.js';
 import { dataSlice, keccak256 } from 'ethers';
 import { hexToBuffer, numberToBuffer, stringToBuffer, toBytesInt32, toBytesLittleEndian, toU256BE } from '../utils';
-import { AccountAddress, HexString, NeonAddress } from '../models';
+import { AccountAddress, NeonAddress } from '../models';
 import { BalanceAccountLayout } from './layout';
 import { toSigner } from './transaction';
 import { createBalanceAccountInstruction } from './instructions';
@@ -97,20 +97,29 @@ export class SolanaNeonAccount {
     return this._keypair;
   }
 
-  get signer(): Signer {
+  get signer(): Signer | null {
     if (this._keypair) {
       return toSigner(this._keypair);
     }
-    return { publicKey: this.publicKey, secretKey: new Uint8Array() };
+    return null;
+  }
+
+  nonce(account: AccountInfo<Buffer>): number {
+    if (account) {
+      // @ts-ignore
+      const layout = BalanceAccountLayout.decode(account.data);
+      return Number(layout.trx_count);
+    }
+    return 0;
   }
 
   async balanceAccountNonce(connection: Connection): Promise<bigint> {
     return balanceAccountNonce(connection, this.neonWallet, this.neonEvmProgram, this.chainId);
   }
 
-  async balanceAccountCreate(connection: Connection): Promise<AccountInfo<Buffer>> {
+  async balanceAccountCreate(connection: Connection): Promise<AccountInfo<Buffer> | null> {
     let account = await connection.getAccountInfo(this.balanceAddress);
-    if (account === null) {
+    if (account === null && this.signer) {
       const instruction = createBalanceAccountInstruction(this.neonEvmProgram, this.publicKey, this.neonWallet, this.chainId);
       const transaction = new Transaction({ feePayer: this.publicKey }).add(instruction);
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
@@ -119,11 +128,11 @@ export class SolanaNeonAccount {
       const signature = await connection.sendRawTransaction(transaction.serialize());
       await connection.confirmTransaction({ signature, lastValidBlockHeight, blockhash }, 'finalized');
       account = await connection.getAccountInfo(this.balanceAddress);
+      if (account) {
+        console.log(BalanceAccountLayout.decode(account.data as any));
+      }
     }
-    if (account) {
-      console.log(BalanceAccountLayout.decode(account.data as Uint8Array));
-    }
-    return account!;
+    return account;
   }
 
   static fromKeypair(keypair: Keypair, neonEvmProgram: PublicKey, mint: PublicKey, chainId: number): SolanaNeonAccount {

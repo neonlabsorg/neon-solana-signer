@@ -920,7 +920,7 @@
     "@emnapi/runtime" "^1.1.0"
     "@tybys/wasm-util" "^0.9.0"
 
-"@neonevm/token-transfer-core@^4.3.3-devnet":
+"@neonevm/token-transfer-core@^4.4.1":
   version "4.4.1"
   resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-core/-/token-transfer-core-4.4.1.tgz#2404f762f56a736f46abbd6e9669adff9a5eca95"
   integrity sha512-a88V8nTz3S7oD2L9vdZc7r4gz2/mTuWy4wTW6g7KnNlQ7aFCTOw5KwtQKs6MTbDaEiYoHxiOghTeRkpZXE2YFw==
@@ -930,7 +930,7 @@
     big.js "^6.2.1"
     ethers "^6.13.3"
 
-"@neonevm/token-transfer-ethers@^4.3.3-devnet":
+"@neonevm/token-transfer-ethers@^4.4.1":
   version "4.4.1"
   resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-ethers/-/token-transfer-ethers-4.4.1.tgz#4635fbdf503b9ebf85f934865822f17dd5d539dc"
   integrity sha512-5eErq8RPsOAY/ZwtYTYdJQ2kcv3N7fK95KF2nAM73cHPhJH/pYxD+eZUnLMyMc5OUj2Q8knqPH/56fBD9NfmdA==

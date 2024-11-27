@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-export function writeToFile(fileName: string, data: string, distPath = 'dist'): void {
+export function writeToFile(fileName: string, data: string, distPath = 'build'): void {
   try {
     const root = process.cwd();
     if (!existsSync(join(root, distPath))) {

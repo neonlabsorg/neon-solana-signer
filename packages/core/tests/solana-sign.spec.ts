@@ -105,7 +105,7 @@ describe('Check ScheduledTransaction instructions', () => {
     const treasuryPool = createScheduledTransaction.instructions[0].keys[2].pubkey;
     await solanaAirdrop(connection, treasuryPool, 20e9);
 
-    await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer], true, { skipPreflight }, 'scheduled');
+    await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
 
     const [transaction] = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 2e3);
     const { status, transaction_hash, result_hash } = transaction;
@@ -122,7 +122,7 @@ describe('Check ScheduledTransaction instructions', () => {
     let account = await connection.getAccountInfo(holderAccount);
     if (!account) {
       const transaction = await createHolderAccountTransaction(neonEvmProgram, solanaUser.publicKey, holderAccount, holderSeed);
-      await sendSolanaTransaction(connection, transaction, [solanaUser.signer], false, { skipPreflight });
+      await sendSolanaTransaction(connection, transaction, [solanaUser.signer!], false, { skipPreflight });
       account = await connection.getAccountInfo(holderAccount);
     }
     expect(account).not.toBeNull();

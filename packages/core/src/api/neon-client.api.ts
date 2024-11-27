@@ -61,7 +61,7 @@ export class NeonClientApi {
       } else {
         return result;
       }
-      await delay(150);
+      await delay(100);
     }
     return result;
   }

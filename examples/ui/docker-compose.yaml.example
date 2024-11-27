@@ -1,0 +1,15 @@
+version: "3"
+
+# This Docker compose forwards ports to localhost for interaction between Phantom Wallet and Solana localnet.
+
+services:
+  port_forwarder:
+    container_name: port_forwarder
+    image: neonlabsorg/port_forwarder:v0.2.1
+    environment:
+      SOLANA_ADDR: <solana_rpc_url>:8899
+      SOLANA_ADDR_WEBSOCKET: <solana_rpc_url>:8900
+    ports:
+      - 127.0.0.1:8899:8899
+      - 127.0.0.1:8900:8900
+    hostname: port_forwarder

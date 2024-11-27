@@ -3,6 +3,10 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./",
+    "lib": [
+      "es2020",
+      "dom"
+    ],
     "target": "ESNext",
     "module": "commonjs",
     "moduleResolution": "node",

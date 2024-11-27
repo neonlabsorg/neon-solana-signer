@@ -1,13 +1,11 @@
 import { delay, FaucetDropper, NeonAddress, neonAirdrop, solanaAirdrop } from '@neonevm/solana-sign';
+import { DeploySystemContract, SplTokenDeployer, splTokensMock, writeToFile } from '@neonevm/solana-contracts';
 import { SPLToken } from '@neonevm/token-transfer-core';
 import { Connection, Keypair } from '@solana/web3.js';
 import { JsonRpcProvider, Wallet } from 'ethers';
 import { join } from 'path';
 import { config } from 'dotenv';
 import bs58 from 'bs58';
-import { DeploySystemContract } from '../contracts';
-import { SplTokenDeployer, writeToFile } from '../utils';
-import { splTokensMock } from '../data';
 
 config({ path: '.env' });
 

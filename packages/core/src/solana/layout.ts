@@ -1,6 +1,6 @@
 import { blob, Layout, ns64, struct, u32, u8 } from '@solana/buffer-layout';
 import { encodeDecode } from '@solana/buffer-layout-utils';
-import { bufferToHex, hexToBuffer } from '../utils';
+import { hexToBuffer } from '../utils';
 import { HexString } from '../models';
 
 export const hexStringLayout = (length: number, property?: string): Layout<HexString> => {
@@ -11,7 +11,7 @@ export const hexStringLayout = (length: number, property?: string): Layout<HexSt
 
   publicKeyLayout.decode = (buffer: Buffer, offset: number) => {
     const src = decode(buffer as any, offset);
-    return `0x${bufferToHex(src)}`;
+    return `0x${Buffer.from(src).toString('hex')}`;
   };
 
   publicKeyLayout.encode = (hex: HexString, buffer: Buffer, offset: number) => {

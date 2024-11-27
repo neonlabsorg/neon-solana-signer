@@ -107,7 +107,7 @@ export async function writeTransactionToHoldAccount(connection: Connection, neon
     const transaction = new Transaction();
     transaction.feePayer = solanaUser.publicKey;
     transaction.add(createWriteToHolderAccountInstruction(neonEvmProgram, solanaUser.publicKey, holderAddress, transactionHash, part, offset));
-    receipts.push(sendSolanaTransaction(connection, transaction, [solanaUser.signer], false, { preflightCommitment: 'confirmed' }, `rest`));
+    receipts.push(sendSolanaTransaction(connection, transaction, [solanaUser.signer!], false, { preflightCommitment: 'confirmed' }, `rest`));
 
     offset += part.length;
   }
@@ -121,7 +121,7 @@ export async function writeTransactionToHoldAccount(connection: Connection, neon
 export async function executeScheduledTransactionFromAccount(connection: Connection, neonEvmProgram: PublicKey, solanaUser: SolanaNeonAccount, holderAddress: PublicKey, treeAddress: PublicKey, nonce: number) {
   const transaction = createScheduledTransactionStartFromAccountTransaction(neonEvmProgram, solanaUser.publicKey, solanaUser.balanceAddress, holderAddress, treeAddress, nonce);
   transaction.feePayer = solanaUser.publicKey;
-  await sendSolanaTransaction(connection, transaction, [solanaUser.signer], false, { preflightCommitment: 'confirmed' }, `rest`);
+  await sendSolanaTransaction(connection, transaction, [solanaUser.signer!], false, { preflightCommitment: 'confirmed' }, `rest`);
 }
 
 export async function executeTransactionStepsFromAccount(
@@ -148,7 +148,7 @@ export async function executeTransactionStepsFromAccount(
       ``,
       additionalAccounts
     );
-    const { signature } = await sendSolanaTransaction(connection, transaction, [solanaUser.signer], false, { preflightCommitment: 'confirmed' }, `execute ${index}`);
+    const { signature } = await sendSolanaTransaction(connection, transaction, [solanaUser.signer!], false, { preflightCommitment: 'confirmed' }, `execute ${index}`);
     await delay(2e3);
     receipt = await connection.getParsedTransaction(signature, { commitment: 'confirmed' });
     console.log(receipt);

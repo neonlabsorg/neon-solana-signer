@@ -1,5 +1,5 @@
-import { Contract, JsonRpcProvider, Wallet } from 'ethers';
 import { base58ToHex } from '@neonevm/solana-sign';
+import { Contract, JsonRpcProvider, Wallet } from 'ethers';
 import { erc20ForSplAbi } from '../data';
 
 export const zeroAddress = '0x0000000000000000000000000000000000000000';
