@@ -26,7 +26,7 @@
   "license": "ISC",
   "dependencies": {
     "@solana/spl-token": "^0.4.9",
-    "@solana/web3.js": "^1.95.4",
+    "@solana/web3.js": "^1.95.5",
     "big.js": "^6.2.2",
     "ethers": "^6.13.4"
   },

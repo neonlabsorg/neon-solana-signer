@@ -1,7 +1,7 @@
 import { decodeRlp, encodeRlp, keccak256, RlpStructuredData, toBeHex } from 'ethers';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { HexString, SolanaTransactionSignature } from '../models';
 import { bufferConcat, delay, EVM_STEPS, hexToBuffer, NeonChainId, numberToBuffer } from '../utils';
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import {
   createPartialCallOrContinueFromRawEthereumTransaction,
   createScheduledTransactionStartFromAccountTransaction,
@@ -158,5 +158,5 @@ export async function executeTransactionStepsFromAccount(
     index += 1;
   }
 
-return receipt;
+  return receipt;
 }

@@ -25,26 +25,29 @@ export function getContractDeployerAddress(sender: string, nonce: number): NeonA
   return dataSlice(hash, 12, 32);
 }
 
-export function getContractAddressByContractData(deployer: NeonAddress, contractData: HexString): NeonAddress {
-  const codeHash = keccak256(Buffer.from(contractData, 'hex'));
+export function getContractAddressByData(deployer: NeonAddress, contractData: HexString): NeonAddress {
+  const codeHash = keccak256(`0x${contractData}`);
   return getContractAddressByHash(deployer, codeHash);
 }
 
 export function getContractAddressByHash(deployer: NeonAddress, codeHash: HexString): NeonAddress {
-  const hash = keccak256(Buffer.concat([
-    Buffer.from('ff', 'hex'),
-    Buffer.from(deployer.slice(2), 'hex'),
-    Buffer.alloc(32),
-    Buffer.from(codeHash.slice(2), 'hex')
-  ]));
+  // @ts-ignore
+  const hash = keccak256(Buffer.concat([Buffer.from('ff', 'hex'), Buffer.from(deployer.slice(2), 'hex'), Buffer.alloc(32), Buffer.from(codeHash.slice(2), 'hex')]));
   return dataSlice(hash, 12, 32);
 }
 
-export function getContractAddress(chainId: number, contractCode: string): NeonAddress {
+export function contractAddressByData(chainId: number, contractCode: HexString): NeonAddress {
   const deployerTrx = buildDeployerTransaction(chainId, false);
   const sender = recoverTransaction(deployerTrx);
   const deployer = getContractDeployerAddress(sender, 0);
-  return getContractAddressByContractData(deployer, contractCode);
+  return getContractAddressByData(deployer, contractCode);
+}
+
+export function contractAddressByHash(chainId: number, codeHash: HexString): NeonAddress {
+  const deployerTrx = buildDeployerTransaction(chainId, false);
+  const sender = recoverTransaction(deployerTrx);
+  const deployer = getContractDeployerAddress(sender, 0);
+  return getContractAddressByHash(deployer, codeHash);
 }
 
 export function recoverTransaction(trxBytes: HexString): HexString {
@@ -134,14 +137,13 @@ export class DeploySystemContract {
     const deployerCode = await this.provider.getCode(deployer);
     console.log(`Deployer code: ${deployerCode}`);
     if (deployerCode === '0x') {
-      console.error(`Deployer isn't initialized`);
-      await this.initDeployer();
+      throw new Error(`Deployer isn't initialized`);
     } else {
       console.log(`Sender address: ${sender}`);
       console.log(`Deployer address: ${deployer}`);
     }
 
-    const contractAddress = getContractAddressByContractData(deployer, contractData);
+    const contractAddress = getContractAddressByData(deployer, contractData);
     console.log(`Contract: ${contractAddress}`);
 
     const contractCode = await this.provider.getCode(contractAddress);
@@ -176,7 +178,7 @@ export class DeploySystemContract {
 
     const transaction = await wallet.sendTransaction(trx);
     console.log(`Deploy contract transaction:`, transaction);
-    const receipt = await this.provider.waitForTransaction(transaction.hash, 1, 3e4);
+    const receipt = await this.provider.waitForTransaction(transaction.hash, 1, 6e4);
     console.log(`Transaction receipt`, receipt);
 
     return contractAddress;

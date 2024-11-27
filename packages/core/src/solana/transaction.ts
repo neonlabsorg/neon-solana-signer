@@ -1,4 +1,13 @@
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SendOptions, Signer, Transaction } from '@solana/web3.js';
+import {
+  Commitment,
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SendOptions,
+  Signer,
+  Transaction
+} from '@solana/web3.js';
 import { solanaTransactionLog } from '@neonevm/token-transfer-core';
 import { JsonRpcProvider } from 'ethers';
 import { delay, FaucetDropper } from '../utils';
@@ -23,11 +32,11 @@ export async function sendSolanaTransaction(connection: Connection, transaction:
   return { signature, blockhash, lastValidBlockHeight };
 }
 
-export async function solanaAirdrop(connection: Connection, publicKey: PublicKey, lamports: number): Promise<number> {
+export async function solanaAirdrop(connection: Connection, publicKey: PublicKey, lamports: number, commitment: Commitment = 'finalized'): Promise<number> {
   let balance = await connection.getBalance(publicKey);
   if (balance < lamports) {
-    await connection.requestAirdrop(publicKey, lamports);
-    await delay(3e3);
+    const signature = await connection.requestAirdrop(publicKey, lamports);
+    await connection.confirmTransaction(signature, commitment);
     balance = await connection.getBalance(publicKey);
   }
   console.log(`${publicKey.toBase58()} balance: ${balance / LAMPORTS_PER_SOL} SOL`);

@@ -16,26 +16,25 @@ yarn test
 
 ```typescript
 // init connection for solana and neon evm rpc
+const solanaPrivateKey = bs58.decode(`<you_private_key_base58>`);
 const result = await getProxyState(`<neon_proxy_rpc_url>`);
 const token = getGasToken(result.tokensList, NeonChainId.testnetSol);
 const connection = new Connection(`<solana_rpc_url>`, 'confirmed');
 const provider = new JsonRpcProvider(`<neon_proxy_rpc_url>`);
+const neonClientApi = new NeonClientApi(`<neon_client_api_url>`);
 const neonProxyRpcApi = result.proxyApi;
 const neonEvmProgram = result.evmProgramAddress;
-const proxyStatus = result.proxyStatus;
 
 const chainId = Number(token.gasToken.tokenChainId);
 const chainTokenMint = new PublicKey(token.gasToken.tokenMint);
 
+// init contract for scheduled transaction
+const baseContract = new BaseContract(chainId);
+
 // init solana user account
-const solanaUser = SolanaNeonAccount.fromKeypair(new Keypair(), neonEvmProgram, chainTokenMint, chainId);
+const keypair = Keypair.fromSecretKey(solanaPrivateKey);
+const solanaUser = SolanaNeonAccount.fromKeypair(keypair, neonEvmProgram, chainTokenMint, chainId);
 await solanaAirdrop(connection, solanaUser.publicKey, 1e9);
-
-// find treasury pool account
-const treasuryPool = TreasuryPoolAddress.find(neonEvmProgram, proxyStatus.neonTreasuryPoolCount);
-
-// check that treasury pool account exists ans has enough balance
-await solanaAirdrop(connection, treasuryPool.publicKey, 1e9);
 
 // get nonce for native neon wallet
 const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
@@ -45,14 +44,10 @@ console.log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
 const scheduledTransaction = new ScheduledTransaction({
   nonce: toBeHex(nonce),
   payer: solanaUser.neonWallet,
-  target: `<target_contract_hex>`,
-  callData: `<run_abi_method_contract_data>`,
+  target: baseContract.address,
+  callData: baseContract.transactionData(solanaUser.publicKey),
   chainId: toBeHex(NeonChainId.testnetSol)
 });
-
-// get balance account nonce
-const neonBalanceAccountNonce = await balanceAccountNonce(connection, solanaUser.neonWallet, neonEvmProgram, chainId);
-console.log('neon nonce', neonBalanceAccountNonce);
 
 // create tree account transaction for solana network
 const createScheduledTransaction = await createScheduledNeonEvmTransaction({
@@ -62,11 +57,17 @@ const createScheduledTransaction = await createScheduledNeonEvmTransaction({
   neonEvmProgram,
   neonWallet: solanaUser.neonWallet,
   neonWalletNonce: nonce,
-  neonTransaction: scheduledTransaction.serialize(),
-  treasuryPool
+  neonTransaction: scheduledTransaction.serialize()
 });
 
-// send transaction 
+// sign and send solana transaction 
 const signature = await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer], false, { skipPreflight });
 console.log('Transaction signature', signature);
+
+// whaint while transaction will executed by NeonEvm
+const [transaction] = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 2e3);
+const { status, transaction_hash, result_hash } = transaction;
+console.log(`Scheduled transaction result`, transaction);
+console.log(await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`));
+console.log(await neonProxyRpcApi.getTransactionReceipt(`0x${result_hash}`));
 ```

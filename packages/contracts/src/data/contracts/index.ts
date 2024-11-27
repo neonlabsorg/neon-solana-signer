@@ -1,0 +1,3 @@
+export const erc20ForSplFactoryContractHash = `0x0ca5dd6c7e1618068410602d6bd415acfb796282a652c5489b5958ee2d947893`;
+export const neonTokenContractHash = `0xe544bb250f1526a76a6ad8967eecf640056e0ecce317e1bb27ade1f8a5e65752`;
+export const wNeonTokenContractHash = `0x022a1f87399f7808973ecf02856f7f3932c729f18335cbb02a83083de3161016`;

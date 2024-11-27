@@ -1,2 +1,3 @@
-export * from './abi/erc20ForSplFactory';
-export * from './tokens/tokens.mock';
+export * from './contracts';
+export * from './abi';
+export * from './tokens';

@@ -21,6 +21,9 @@
     "paths": {
       "@neonevm/solana-sign": [
         "./src"
+      ],
+      "@neonevm/solana-contracts": [
+        "../contracts/src"
       ]
     }
   }

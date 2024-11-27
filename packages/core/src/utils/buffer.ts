@@ -8,6 +8,10 @@ export function isValidHex(hex: string | number): boolean {
   return isHexStrict;
 }
 
+export function bufferAlloc(size: number) {
+  return Buffer.alloc(size);
+}
+
 export function hexToBuffer(hex: HexString) {
   const _hex = isValidHex(hex) ? hex.replace(/^0x/i, '') : hex;
   return Buffer.from(_hex, 'hex');
@@ -25,7 +29,7 @@ export function stringToBuffer(str: string, encoding = 'utf8') {
   return Buffer.from(str, encoding as any);
 }
 
-export function bufferConcat(list: Buffer[], totalLength?: number) {
+export function bufferConcat(list: Uint8Array[], totalLength?: number) {
   return Buffer.concat(list, totalLength);
 }
 

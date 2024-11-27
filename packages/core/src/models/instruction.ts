@@ -1,6 +1,5 @@
 import { PublicKey, TransactionSignature } from '@solana/web3.js';
 import { HexString, NeonAddress } from './api';
-import { TreasuryPoolAddress } from '../solana';
 
 export interface CreateScheduledTransactionInstructionData {
   neonEvmProgram: PublicKey;
@@ -9,7 +8,6 @@ export interface CreateScheduledTransactionInstructionData {
   treeAccountAddress: PublicKey;
   associatedTokenAddress: PublicKey;
   neonTransaction: HexString;
-  treasuryPool: TreasuryPoolAddress;
 }
 
 export interface CreateScheduledTransactionData {
@@ -19,7 +17,6 @@ export interface CreateScheduledTransactionData {
   neonWallet: NeonAddress;
   neonWalletNonce: number;
   neonEvmProgram: PublicKey;
-  treasuryPool: TreasuryPoolAddress;
   neonTransaction: HexString;
 }
 

@@ -14,7 +14,14 @@ import {
   NeonAddress,
   ScheduledInstruction
 } from '../models';
-import { bufferConcat, hexToBuffer, numberToBuffer, stringToBuffer, toBytesLittleEndian } from '../utils';
+import {
+  bufferConcat,
+  hexToBuffer,
+  NEON_TREASURY_POOL_COUNT,
+  numberToBuffer,
+  stringToBuffer,
+  toBytesLittleEndian
+} from '../utils';
 import {
   neonAuthorityPoolAddressSync,
   neonBalanceProgramAddressSync,
@@ -50,9 +57,9 @@ export function createScheduledTransactionInstruction(instructionData: CreateSch
     balanceAddress,
     treeAccountAddress,
     associatedTokenAddress,
-    treasuryPool,
     neonTransaction
   } = instructionData;
+  const treasuryPool = TreasuryPoolAddress.find(programId, NEON_TREASURY_POOL_COUNT);
 
   const keys: Array<AccountMeta> = [
     { pubkey: signerAddress, isSigner: true, isWritable: true },
@@ -75,9 +82,10 @@ export function createScheduledTransactionMultipleInstruction(instructionData: C
     balanceAddress,
     treeAccountAddress,
     associatedTokenAddress,
-    treasuryPool,
     neonTransaction
   } = instructionData;
+  const treasuryPool = TreasuryPoolAddress.find(programId, NEON_TREASURY_POOL_COUNT);
+
   const keys: Array<AccountMeta> = [
     { pubkey: signerAddress, isSigner: true, isWritable: true },
     { pubkey: balanceAddress, isSigner: false, isWritable: true },
@@ -100,8 +108,7 @@ export async function createScheduledNeonEvmTransaction(transactionData: CreateS
     neonEvmProgram,
     neonWallet,
     neonWalletNonce,
-    neonTransaction,
-    treasuryPool
+    neonTransaction
   } = transactionData;
   const transaction = new Transaction();
   const [balanceAddress] = neonBalanceProgramAddressSync(neonWallet, neonEvmProgram, chainId);
@@ -115,7 +122,6 @@ export async function createScheduledNeonEvmTransaction(transactionData: CreateS
     balanceAddress,
     treeAccountAddress,
     associatedTokenAddress,
-    treasuryPool,
     neonTransaction
   }));
 
