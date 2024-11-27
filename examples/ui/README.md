@@ -12,9 +12,9 @@ REACT_APP_NEON_CORE_API_URL: <neon_core_api_url>
 
 ### Solana localnet configuration
 
-To enable Phantom Wallet to work with Solana localnet, it is necessary to forward ports to localhost. We have created a `docker-compose` configuration, an example of which can be found in the `docker-compose.conf.example` file.
+To enable Phantom Wallet to work with Solana localnet, it is necessary to forward ports to localhost. We have created a `docker-compose` configuration, an example of which can be found in the `docker-compose.yaml.example` file.
 
-You need to rename this configuration file to `docker-compose.conf` and specify `<solana_rpc_url>`. After that, you can start it using the command: `docker compose up`.
+You need to rename this configuration file to `docker-compose.yaml` and specify `<solana_rpc_url>`. After that, you can start it using the command: `docker compose up`.
 
 ### Running the project
 
