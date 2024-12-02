@@ -113,10 +113,6 @@ export class SolanaNeonAccount {
     return 0;
   }
 
-  async balanceAccountNonce(connection: Connection): Promise<bigint> {
-    return balanceAccountNonce(connection, this.neonWallet, this.neonEvmProgram, this.chainId);
-  }
-
   async balanceAccountCreate(connection: Connection): Promise<AccountInfo<Buffer> | null> {
     let account = await connection.getAccountInfo(this.balanceAddress);
     if (account === null && this.signer) {

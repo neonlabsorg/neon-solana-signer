@@ -1,15 +1,6 @@
 import { decodeRlp, encodeRlp, keccak256, RlpStructuredData, toBeHex } from 'ethers';
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { HexString, SolanaTransactionSignature } from '../models';
-import { bufferConcat, delay, EVM_STEPS, hexToBuffer, NeonChainId, numberToBuffer } from '../utils';
-import {
-  createPartialCallOrContinueFromRawEthereumTransaction,
-  createScheduledTransactionStartFromAccountTransaction,
-  createWriteToHolderAccountInstruction,
-  sendSolanaTransaction,
-  SolanaNeonAccount,
-  TreasuryPoolAddress
-} from '../solana';
+import { HexString } from '../models';
+import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer } from '../utils';
 
 export interface ScheduledTransactionData {
   payer: string;
@@ -25,6 +16,7 @@ export interface ScheduledTransactionData {
   gasLimit: string; // = 9999999999;
   maxFeePerGas: string; // = 100;
   maxPriorityFeePerGas: string; // = 10;
+  hash?: string;
 }
 
 export class ScheduledTransaction {
@@ -39,7 +31,7 @@ export class ScheduledTransaction {
     maxPriorityFeePerGas: toBeHex(10) // = 10;
   };
 
-  encode(): string {
+  encode(): HexString {
     const result: string[] = [];
     for (const key of ScheduledTransaction.keys) {
       // @ts-ignore
@@ -49,11 +41,23 @@ export class ScheduledTransaction {
     return encodeRlp(result);
   }
 
+  hash(): HexString {
+    return keccak256(this.encode());
+  }
+
   serialize(): HexString {
     const type = numberToBuffer(this.type);
     const subType = numberToBuffer(this.neonSubType);
     const encode = hexToBuffer(this.encode());
     return bufferConcat([type, subType, encode]).toString('hex');
+  }
+
+  serializeWithHash(): HexString {
+    const data = this.data;
+    data.hash = this.hash();
+    data.callData = '0x';
+    const transaction = new ScheduledTransaction(data);
+    return transaction.serialize();
   }
 
   constructor(data: Partial<ScheduledTransactionData>) {
@@ -91,72 +95,4 @@ export class ScheduledTransaction {
   static decodeRpl(data: string): RlpStructuredData {
     return decodeRlp(data);
   }
-}
-
-export async function writeTransactionToHoldAccount(connection: Connection, neonEvmProgram: PublicKey, solanaUser: SolanaNeonAccount, holderAddress: PublicKey, scheduledTransaction: ScheduledTransaction): Promise<any> {
-  const receipts: Promise<SolanaTransactionSignature>[] = [];
-  const scheduledTransactionHash = `0x${scheduledTransaction.serialize()}`;
-  const transactionHash = keccak256(scheduledTransactionHash);
-  let rest = hexToBuffer(scheduledTransactionHash);
-  let offset = 0;
-
-  while (rest.length) {
-    const part = rest.slice(0, 920);
-    rest = rest.slice(920);
-
-    const transaction = new Transaction();
-    transaction.feePayer = solanaUser.publicKey;
-    transaction.add(createWriteToHolderAccountInstruction(neonEvmProgram, solanaUser.publicKey, holderAddress, transactionHash, part, offset));
-    receipts.push(sendSolanaTransaction(connection, transaction, [solanaUser.signer!], false, { preflightCommitment: 'confirmed' }, `rest`));
-
-    offset += part.length;
-  }
-
-  for (const receipt of receipts) {
-    const { signature, blockhash, lastValidBlockHeight } = await receipt;
-    console.log(signature, blockhash, lastValidBlockHeight);
-  }
-}
-
-export async function executeScheduledTransactionFromAccount(connection: Connection, neonEvmProgram: PublicKey, solanaUser: SolanaNeonAccount, holderAddress: PublicKey, treeAddress: PublicKey, nonce: number) {
-  const transaction = createScheduledTransactionStartFromAccountTransaction(neonEvmProgram, solanaUser.publicKey, solanaUser.balanceAddress, holderAddress, treeAddress, nonce);
-  transaction.feePayer = solanaUser.publicKey;
-  await sendSolanaTransaction(connection, transaction, [solanaUser.signer!], false, { preflightCommitment: 'confirmed' }, `rest`);
-}
-
-export async function executeTransactionStepsFromAccount(
-  connection: Connection,
-  neonEvmProgram: PublicKey,
-  solanaUser: SolanaNeonAccount,
-  holderAddress: PublicKey,
-  treasuryPoolAddress: TreasuryPoolAddress,
-  storageAccount: PublicKey,
-  additionalAccounts: PublicKey[] = []
-): Promise<any> {
-  let index = 0;
-  let receipt = null;
-  let done = false;
-
-  while (!done) {
-    const transaction = createPartialCallOrContinueFromRawEthereumTransaction(
-      index,
-      EVM_STEPS,
-      neonEvmProgram,
-      solanaUser,
-      holderAddress,
-      treasuryPoolAddress,
-      ``,
-      additionalAccounts
-    );
-    const { signature } = await sendSolanaTransaction(connection, transaction, [solanaUser.signer!], false, { preflightCommitment: 'confirmed' }, `execute ${index}`);
-    await delay(2e3);
-    receipt = await connection.getParsedTransaction(signature, { commitment: 'confirmed' });
-    console.log(receipt);
-    if (receipt) {
-      done = true;
-    }
-    index += 1;
-  }
-
-  return receipt;
 }

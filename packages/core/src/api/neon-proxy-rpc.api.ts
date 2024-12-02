@@ -1,8 +1,10 @@
 import { PublicKey } from '@solana/web3.js';
 import {
   GasToken,
+  HexString,
   NeonAddress,
-  NeonAddressResponse, NeonGasPrice,
+  NeonAddressResponse,
+  NeonGasPrice,
   NeonProgramStatus,
   ProxyApiState,
   RPCResponse,
@@ -36,8 +38,24 @@ export class NeonProxyRpcApi {
     return this.neonRpc<GasToken[]>('neon_getNativeTokenList', []).then(({ result }) => result);
   }
 
+  sendRawScheduledTransaction(transaction: HexString): Promise<any> {
+    return this.neonRpc<string>('neon_sendRawScheduledTransaction', [transaction]);
+  }
+
+  getPendingTransactions(): Promise<any> {
+    return this.neonRpc<string>('neon_getPendingTransactions', []);
+  }
+
   getTransactionCount(neonWallet: NeonAddress): Promise<string> {
     return this.neonRpc<string>('eth_getTransactionCount', [neonWallet, 'latest']).then(({ result }) => result);
+  }
+
+  getTransactionByHash(transaction: HexString): Promise<any> {
+    return this.neonRpc<string>('eth_getTransactionByHash', [transaction]);
+  }
+
+  ethGetTransactionReceipt(transaction: HexString): Promise<any> {
+    return this.neonRpc<string>('eth_getTransactionReceipt', [transaction]);
   }
 
   async neonRpc<T>(method: string, params: unknown[] = []): Promise<RPCResponse<T>> {

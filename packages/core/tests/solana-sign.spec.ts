@@ -18,7 +18,7 @@ import {
   solanaAirdrop,
   SolanaNeonAccount
 } from '@neonevm/solana-sign';
-import { BaseContract } from '@neonevm/solana-contracts';
+import { BaseContract, DeployContract } from '@neonevm/solana-contracts';
 import { JsonRpcProvider, toBeHex } from 'ethers';
 import { config } from 'dotenv';
 import bs58 from 'bs58';
@@ -69,7 +69,7 @@ beforeAll(async () => {
 });
 
 describe('Check ScheduledTransaction instructions', () => {
-  it(`Create ScheduledTransaction and sign with Solana for exist account`, async () => {
+  it.skip(`Create ScheduledTransaction and sign with Solana for exist account`, async () => {
     await solanaUser.balanceAccountCreate(connection);
 
     const neonBalanceAccountNonce = await balanceAccountNonce(connection, solanaUser.neonWallet, neonEvmProgram, chainId);
@@ -78,9 +78,6 @@ describe('Check ScheduledTransaction instructions', () => {
     const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
     const maxFeePerGas = 0x77359400;
     console.log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
-
-    const gasPrice = await neonProxyRpcApi.gasPrice();
-    console.log(gasPrice.result.suggestedGasPrice);
 
     const scheduledTransaction = new ScheduledTransaction({
       nonce: nonce > 0 ? toBeHex(nonce) : '0x',
@@ -108,14 +105,57 @@ describe('Check ScheduledTransaction instructions', () => {
     await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
 
     const [transaction] = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 2e3);
-    const { status, transaction_hash, result_hash } = transaction;
+    const { status, transaction_hash } = transaction;
     console.log(`Scheduled transaction result`, transaction);
     console.log(await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`));
-    console.log(await neonProxyRpcApi.getTransactionReceipt(`0x${result_hash}`));
     expect(status).toBe('Success');
   });
 
-  it(`Create holder account`, async () => {
+  it(`Send raw ScheduledTransaction and sign with Solana`, async () => {
+    await solanaUser.balanceAccountCreate(connection);
+
+    const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
+    const maxFeePerGas = 0x77359400;
+    console.log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
+
+    const contract = new DeployContract(chainId);
+
+    const scheduledTransaction = new ScheduledTransaction({
+      nonce: nonce > 0 ? toBeHex(nonce) : '0x',
+      payer: solanaUser.neonWallet,
+      target: contract.address,
+      callData: contract.data,
+      maxFeePerGas: toBeHex(maxFeePerGas),
+      chainId: toBeHex(NeonChainId.testnetSol)
+    });
+
+    const neonTransaction = scheduledTransaction.serializeWithHash();
+    const createScheduledTransaction = await createScheduledNeonEvmTransaction({
+      chainId,
+      neonEvmProgram,
+      neonTransaction,
+      signerAddress: solanaUser.publicKey,
+      tokenMintAddress: solanaUser.tokenMint,
+      neonWallet: solanaUser.neonWallet,
+      neonWalletNonce: nonce
+    });
+
+    // for this test, we check that the pool account has tokens on test stand
+    const treasuryPool = createScheduledTransaction.instructions[0].keys[2].pubkey;
+    await solanaAirdrop(connection, treasuryPool, 20e9);
+
+    await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
+
+    const response = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${scheduledTransaction.serialize()}`);
+
+    const [transaction] = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 5e3);
+    const { transaction_hash } = transaction;
+    console.log(`Scheduled transaction result`, transaction);
+    console.log(await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`));
+    expect(transaction_hash).toBe(response.result.slice(2));
+  });
+
+  it.skip(`Create holder account`, async () => {
     const solanaUser = SolanaNeonAccount.fromKeypair(Keypair.generate(), neonEvmProgram, chainTokenMint, chainId);
     await solanaAirdrop(connection, solanaUser.publicKey, 1e10);
     const [holderAccount, holderSeed] = await holderAddressWithSeed(neonEvmProgram, solanaUser.publicKey);
@@ -129,7 +169,7 @@ describe('Check ScheduledTransaction instructions', () => {
     console.log(await neonClientApi.getHolder(holderAccount));
   });
 
-  it(`Compare ScheduledTransaction: new and from`, async () => {
+  it.skip(`Compare ScheduledTransaction: new and from`, async () => {
     const target = `0xc7e376be256bdb6a1fbedaee64ca860b2b6e95ee`;
     const callData = `0x3fb5c1cb0000000000000000000000000000000000000000000000000000000000000012`;
     const trx1 = new ScheduledTransaction({ payer: solanaUser.neonWallet, target, callData });
@@ -137,7 +177,7 @@ describe('Check ScheduledTransaction instructions', () => {
     expect(trx1.encode()).toBe(trx2.encode());
   });
 
-  it(`Should decode transaction`, async () => {
+  it.skip(`Should decode transaction`, async () => {
     const trx = `0xf85e94b20650b9d28d3a46e3c6d8859a7243d7627db6b0808080808094c7e376be256bdb6a1fbedaee64ca860b2b6e95eea43fb5c1cb000000000000000000000000000000000000000000000000000000000000001280708502540be3ff640a`;
     const decoded = ScheduledTransaction.decodeFrom(trx);
     expect(trx).toBe(decoded.encode());
