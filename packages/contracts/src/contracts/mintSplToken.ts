@@ -3,6 +3,7 @@ import { createAndMint, TokenStandard } from '@metaplex-foundation/mpl-token-met
 import { mplCandyMachine } from '@metaplex-foundation/mpl-candy-machine';
 import { SPLToken } from '@neonevm/token-transfer-core';
 import bs58 from 'bs58';
+import { log } from '@neonevm/solana-sign';
 
 export async function mintSplToken(wallet: Keypair, umi: Umi, token: SPLToken, amount = 1e6): Promise<{
   mint: KeypairSigner,
@@ -26,8 +27,8 @@ export async function mintSplToken(wallet: Keypair, umi: Umi, token: SPLToken, a
     }).sendAndConfirm(umi));
     const { signature: signatureBytes } = response;
     const signature = bs58.encode(signatureBytes);
-    console.log(`Mint signature: ${signature}`);
-    console.log(`Successfully minted ${amount}.${(10 ** token.decimals).toString().slice(1)} tokens: (${mint.publicKey})`);
+    log(`Mint signature: ${signature}`);
+    log(`Successfully minted ${amount}.${(10 ** token.decimals).toString().slice(1)} tokens: (${mint.publicKey})`);
     return { mint, signature };
   } catch (err) {
     console.error(err);

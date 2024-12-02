@@ -1,4 +1,4 @@
-import { base58ToHex } from '@neonevm/solana-sign';
+import { base58ToHex, log } from '@neonevm/solana-sign';
 import { Contract, JsonRpcProvider, Wallet } from 'ethers';
 import { erc20ForSplAbi } from '../data';
 
@@ -11,7 +11,7 @@ function nonZeroAddress(address: string): boolean {
 export async function deployErc20ForSplWrapper(provider: JsonRpcProvider, wallet: Wallet, contractAddress: string, tokenMint: string): Promise<string | null> {
   const contract = new Contract(contractAddress, erc20ForSplAbi, provider);
   const hexAddr = base58ToHex(tokenMint);
-  console.log(tokenMint, hexAddr);
+  log(tokenMint, hexAddr);
 
   const contractWithSigner = contract.connect(wallet);
 
@@ -24,10 +24,10 @@ export async function deployErc20ForSplWrapper(provider: JsonRpcProvider, wallet
 
   // @ts-ignore
   const tx = await contractWithSigner.createErc20ForSpl(hexAddr);
-  console.log(`Transaction hash: ${tx.hash}`);
+  log(`Transaction hash: ${tx.hash}`);
 
   const receipt = await tx.wait();
-  console.log(`Transaction confirmed in block: ${receipt.blockNumber}`);
+  log(`Transaction confirmed in block: ${receipt.blockNumber}`);
 
   // Get erc20 wrapper Address
   ecr20Address = await contract.getErc20ForSpl(hexAddr);

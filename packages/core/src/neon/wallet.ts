@@ -2,6 +2,7 @@ import { JsonRpcProvider, keccak256, TransactionRequest, Wallet } from 'ethers';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { HexString } from '../models';
+import { log } from '../utils';
 
 export function base58ToHex(mint: string): string {
   const bytes = bs58.decode(mint);
@@ -21,12 +22,12 @@ export async function signNeonTransaction(provider: JsonRpcProvider, solanaWalle
   try {
     const privateKey = privateKeyFromWallet(solanaWallet.publicKey, neonWallet.address);
     const walletSigner = new Wallet(privateKey, provider);
-    console.log(privateKey, walletSigner);
+    log(privateKey, walletSigner);
     const result = await walletSigner.signTransaction(transaction);
-    console.log(result);
+    log(result);
     return result;
   } catch (e) {
-    console.log(e);
+    log(e);
   }
   return ``;
 }

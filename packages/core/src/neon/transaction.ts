@@ -53,9 +53,8 @@ export class ScheduledTransaction {
   }
 
   serializeWithHash(): HexString {
-    const data = this.data;
+    const data: ScheduledTransactionData = { ...this.data };
     data.hash = this.hash();
-    data.callData = '0x';
     const transaction = new ScheduledTransaction(data);
     return transaction.serialize();
   }

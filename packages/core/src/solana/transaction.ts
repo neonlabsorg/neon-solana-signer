@@ -10,7 +10,7 @@ import {
 } from '@solana/web3.js';
 import { solanaTransactionLog } from '@neonevm/token-transfer-core';
 import { JsonRpcProvider, keccak256 } from 'ethers';
-import { delay, EVM_STEPS, FaucetDropper, hexToBuffer } from '../utils';
+import { delay, EVM_STEPS, FaucetDropper, hexToBuffer, log } from '../utils';
 import { SolanaTransactionSignature } from '../models';
 import { SolanaNeonAccount, TreasuryPoolAddress } from './account';
 import {
@@ -34,8 +34,8 @@ export async function sendSolanaTransaction(connection: Connection, transaction:
   if (confirm) {
     await connection.confirmTransaction({ blockhash, lastValidBlockHeight, signature });
   }
-  console.log(`Transaction${name ? ` ${name}` : ''} signature: ${signature}`);
-  console.log(`https://explorer.solana.com/tx/${signature}?cluster=custom&customUrl=http://localhost:8899`);
+  log(`Transaction${name ? ` ${name}` : ''} signature: ${signature}`);
+  log(`https://explorer.solana.com/tx/${signature}?cluster=custom&customUrl=http://localhost:8899`);
   return { signature, blockhash, lastValidBlockHeight };
 }
 
@@ -46,7 +46,7 @@ export async function solanaAirdrop(connection: Connection, publicKey: PublicKey
     await connection.confirmTransaction(signature, commitment);
     balance = await connection.getBalance(publicKey);
   }
-  console.log(`${publicKey.toBase58()} balance: ${balance / LAMPORTS_PER_SOL} SOL`);
+  log(`${publicKey.toBase58()} balance: ${balance / LAMPORTS_PER_SOL} SOL`);
   return balance;
 }
 
@@ -58,7 +58,7 @@ export async function neonAirdrop(provider: JsonRpcProvider, faucet: FaucetDropp
     await delay(4e3);
     return neonAirdrop(provider, faucet, wallet, amount);
   }
-  console.log(`${wallet} balance: ${balance} NEON`);
+  log(`${wallet} balance: ${balance} NEON`);
   return balance;
 }
 
@@ -83,7 +83,7 @@ export async function writeTransactionToHoldAccount(connection: Connection, neon
 
   for (const receipt of receipts) {
     const { signature, blockhash, lastValidBlockHeight } = await receipt;
-    console.log(signature, blockhash, lastValidBlockHeight);
+    log(signature, blockhash, lastValidBlockHeight);
   }
 }
 
@@ -104,9 +104,8 @@ export async function executeTransactionStepsFromAccount(
 ): Promise<any> {
   let index = 0;
   let receipt = null;
-  let done = false;
 
-  while (!done) {
+  while (!receipt) {
     const transaction = createPartialCallOrContinueFromRawEthereumTransaction(
       index,
       EVM_STEPS,
@@ -120,12 +119,8 @@ export async function executeTransactionStepsFromAccount(
     const { signature } = await sendSolanaTransaction(connection, transaction, [solanaUser.signer!], false, { preflightCommitment: 'confirmed' }, `execute ${index}`);
     await delay(2e3);
     receipt = await connection.getParsedTransaction(signature, { commitment: 'confirmed' });
-    console.log(receipt);
-    if (receipt) {
-      done = true;
-    }
     index += 1;
   }
-
+  log(receipt);
   return receipt;
 }

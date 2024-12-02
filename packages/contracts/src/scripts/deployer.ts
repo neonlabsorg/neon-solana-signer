@@ -1,4 +1,4 @@
-import { delay, FaucetDropper, NeonAddress, neonAirdrop, solanaAirdrop } from '@neonevm/solana-sign';
+import { delay, FaucetDropper, log, NeonAddress, neonAirdrop, solanaAirdrop } from '@neonevm/solana-sign';
 import { DeploySystemContract, SplTokenDeployer, splTokensMock, writeToFile } from '@neonevm/solana-contracts';
 import { SPLToken } from '@neonevm/token-transfer-core';
 import { Connection, Keypair } from '@solana/web3.js';
@@ -29,7 +29,7 @@ const deployer = new SplTokenDeployer(gasLessProvider, connection, neonWallet, s
 
 export async function deploySplToken(token: SPLToken, factoryAddress: NeonAddress): Promise<SPLToken | null> {
   const customToken = await deployer.deploy(factoryAddress, token, 1e9);
-  console.log(`Resource setup complete. SPLToken: `, customToken);
+  log(`Resource setup complete. SPLToken: `, customToken);
   return customToken;
 }
 
@@ -53,7 +53,7 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
   let SPL_TOKEN_FACTORY: NeonAddress;
 
   {
-    console.log(`Init deployer`);
+    log(`Init deployer`);
     const { chainId } = await provider.getNetwork();
     const deploy = new DeploySystemContract(provider, Number(chainId));
     await neonAirdrop(provider, faucet, deploy.sender, 100);
@@ -65,7 +65,7 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
   }
 
   {
-    console.log(`Deploy NeonToken.bin contract`);
+    log(`Deploy NeonToken.bin contract`);
     const contractPath = join(process.cwd(), 'src/data/contracts', 'NeonToken.bin');
     const contractData = deploySystemContract.readContract(contractPath);
     const address = await deploySystemContract.deployContract(contractData, neonWallet);
@@ -73,14 +73,15 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
   }
 
   {
-    console.log(`Compile and deploy ERC20ForSplFactory contract`);
+    log(`Compile and deploy ERC20ForSplFactory contract`);
     const contractPath = join(process.cwd(), 'src/data/contracts', 'ERC20ForSplFactory.sol');
     const { bytecode } = deploySystemContract.compileContract(contractPath);
     SPL_TOKEN_FACTORY = await deploySystemContract.deployContract(bytecode, neonWallet);
     result.push(`SPL_TOKEN_FACTORY=${SPL_TOKEN_FACTORY}`);
   }
+
   {
-    console.log(`Deploy WNEON.bin contract`);
+    log(`Deploy WNEON.bin contract`);
     const wNEON: Partial<SPLToken> = {
       chainId: Number(chainId),
       address: '',
@@ -97,7 +98,7 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
   }
 
   /*  {
-      console.log(`Deploy wSOL token`);
+      log(`Deploy wSOL token`);
       const wSOL: SPLToken = {
         chainId: Number(chainId),
         address_spl: 'So11111111111111111111111111111111111111112',

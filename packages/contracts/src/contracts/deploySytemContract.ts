@@ -1,4 +1,4 @@
-import { HexString, NeonAddress } from '@neonevm/solana-sign';
+import { HexString, log, NeonAddress } from '@neonevm/solana-sign';
 import {
   dataSlice,
   decodeRlp,
@@ -77,9 +77,9 @@ export function buildDeployerTransaction(chainId: number, verbose: boolean = fal
   ]);
 
   if (verbose) {
-    console.log(`Original trx: ${transaction}`);
-    console.log(`Deployer trx: ${deployerTrx}`);
-    console.log('Deployer trx fields:', trx);
+    log(`Original trx: ${transaction}`);
+    log(`Deployer trx: ${deployerTrx}`);
+    log('Deployer trx fields:', trx);
   }
 
   return deployerTrx;
@@ -102,19 +102,19 @@ export class DeploySystemContract {
   }
 
   async initDeployer(): Promise<void> {
-    console.log(`Start init deployer`);
+    log(`Start init deployer`);
     const sender = this.sender;
     const deployer = this.deployer;
     const deployerCode = await this.provider.getCode(deployer);
-    console.log(`Sender address: ${sender}`);
-    console.log(`Deployer address: ${deployer}`);
+    log(`Sender address: ${sender}`);
+    log(`Deployer address: ${deployer}`);
     if (deployerCode !== '0x') {
-      console.log(`Deployer already initialised. Code: ${deployerCode}`);
+      log(`Deployer already initialised. Code: ${deployerCode}`);
     } else {
       const transaction = await this.provider.send('eth_sendRawTransaction', [this.deployerTransaction]);
-      console.log(`Deploy proxy transaction: `, transaction);
+      log(`Deploy proxy transaction: `, transaction);
       const receipt = await this.provider.waitForTransaction(transaction, 1, 3e4);
-      console.log(`Deploy proxy transaction receipt: `, receipt);
+      log(`Deploy proxy transaction receipt: `, receipt);
     }
   }
 
@@ -135,26 +135,26 @@ export class DeploySystemContract {
     const sender = this.sender;
     const deployer = this.deployer;
     const deployerCode = await this.provider.getCode(deployer);
-    console.log(`Deployer code: ${deployerCode}`);
+    log(`Deployer code: ${deployerCode}`);
     if (deployerCode === '0x') {
       throw new Error(`Deployer isn't initialized`);
     } else {
-      console.log(`Sender address: ${sender}`);
-      console.log(`Deployer address: ${deployer}`);
+      log(`Sender address: ${sender}`);
+      log(`Deployer address: ${deployer}`);
     }
 
     const contractAddress = getContractAddressByData(deployer, contractData);
-    console.log(`Contract: ${contractAddress}`);
+    log(`Contract: ${contractAddress}`);
 
     const contractCode = await this.provider.getCode(contractAddress);
     if (contractCode !== '0x') {
-      console.log('Contract already deployed');
+      log('Contract already deployed');
       return contractAddress;
     }
     const accountBalance = await this.provider.getBalance(wallet.address);
     const accountNonce = await this.provider.getTransactionCount(wallet.address);
 
-    console.log(`Account wallet: ${wallet.address}, Balance: ${Number(accountBalance) / 10 ** 18} NEON, Nonce: ${accountNonce}`);
+    log(`Account wallet: ${wallet.address}, Balance: ${Number(accountBalance) / 10 ** 18} NEON, Nonce: ${accountNonce}`);
     const { gasPrice } = await this.provider.getFeeData();
     const trx = {
       chainId: this.chainId,
@@ -170,16 +170,16 @@ export class DeploySystemContract {
     trx.gas = Number(await this.provider.estimateGas(trx));
 
     const requiredFunds = trx.gas * Number(trx.gasPrice!);
-    console.log(`Transaction requires ${Number(requiredFunds) / 10 ** 18} NEON`);
+    log(`Transaction requires ${Number(requiredFunds) / 10 ** 18} NEON`);
 
     if (BigInt(accountBalance) < requiredFunds) {
       throw new Error('Sender wallet has insufficient funds');
     }
 
     const transaction = await wallet.sendTransaction(trx);
-    console.log(`Deploy contract transaction:`, transaction);
+    log(`Deploy contract transaction:`, transaction);
     const receipt = await this.provider.waitForTransaction(transaction.hash, 1, 6e4);
-    console.log(`Transaction receipt`, receipt);
+    log(`Transaction receipt`, receipt);
 
     return contractAddress;
   }

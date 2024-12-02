@@ -10,7 +10,7 @@ import {
   RPCResponse,
   RPCUrl
 } from '../models';
-import { uuid } from '../utils';
+import { log, uuid } from '../utils';
 
 export class NeonProxyRpcApi {
   readonly rpcUrl: RPCUrl;
@@ -65,7 +65,7 @@ export class NeonProxyRpcApi {
   static rpc<T>(url: string, method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
     const id = uuid();
     const body = { id, jsonrpc: '2.0', method, params };
-    console.log(`curl ${url} -X POST -H 'Content-Type: application/json' -d '${JSON.stringify(body)}' | jq .`);
+    log(`curl ${url} -X POST -H 'Content-Type: application/json' -d '${JSON.stringify(body)}' | jq .`);
     return fetch(url, {
       method: 'POST',
       mode: 'cors',
