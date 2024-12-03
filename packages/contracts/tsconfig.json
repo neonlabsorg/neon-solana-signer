@@ -17,6 +17,7 @@
     "allowSyntheticDefaultImports": true,
     "strictPropertyInitialization": false,
     "declaration": true,
+    "declarationMap": true,
     "allowJs": true,
     "paths": {
       "@neonevm/solana-sign": [
@@ -26,5 +27,6 @@
         "src"
       ]
     }
-  }
+  },
+  "include": ["src"]
 }

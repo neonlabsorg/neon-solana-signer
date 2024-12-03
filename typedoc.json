@@ -1,0 +1,7 @@
+{
+  "name": "Solana Signer SDK Documentation",
+  "entryPoints": ["packages/*"],
+  "entryPointStrategy": "packages",
+  "out": "docs",
+  "includeVersion": false
+}

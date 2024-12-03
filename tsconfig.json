@@ -6,6 +6,7 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "declaration": true,
+    "declarationMap": true,
     "allowJs": true,
     "sourceMap": true,
     "target": "es2020",
@@ -25,5 +26,13 @@
     "@neonevm/solana-sign": [
       "./src"
     ]
-  }
+  },
+  "references": [
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/contracts"
+    }
+  ]
 }

@@ -72,5 +72,8 @@
   },
   "nx": {
     "includedScripts": []
+  },
+  "volta": {
+    "node": "20.18.1"
   }
 }
