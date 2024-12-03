@@ -1,10 +1,9 @@
-import { AccountInfo, Connection, Keypair, PublicKey, Signer, Transaction } from '@solana/web3.js';
+import { AccountInfo, Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { dataSlice, keccak256 } from 'ethers';
-import { hexToBuffer, numberToBuffer, stringToBuffer, toBytesInt32, toBytesLittleEndian, toU256BE } from '../utils';
-import { AccountAddress, NeonAddress } from '../models';
+import { hexToBuffer, numberToBuffer, stringToBuffer, toBytes64LE, toBytesInt32, toSigner, toU256BE } from '../utils';
+import { AccountSeedTag, NeonAddress } from '../models';
 import { BalanceAccountLayout } from './layout';
-import { toSigner } from './transaction';
-import { createBalanceAccountInstruction } from './instructions';
+import { createBalanceAccountTransaction } from './transactions';
 
 export function treasuryPoolAddressSync(neonEvmProgram: PublicKey, treasuryPoolIndex: number): [PublicKey, number] {
   const a = stringToBuffer('treasury_pool');
@@ -15,7 +14,7 @@ export function treasuryPoolAddressSync(neonEvmProgram: PublicKey, treasuryPoolI
 export function neonBalanceProgramAddressSync(neonWallet: NeonAddress, neonEvmProgram: PublicKey, chainId: number): [PublicKey, number] {
   const neonWalletBuffer = hexToBuffer(neonWallet);
   const chainIdBytes = toU256BE(BigInt(chainId)); //chain_id as u256be
-  const seed: any[] = [numberToBuffer(AccountAddress.SeedVersion), neonWalletBuffer, chainIdBytes];
+  const seed: any[] = [numberToBuffer(AccountSeedTag.SeedVersion), neonWalletBuffer, chainIdBytes];
   return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 
@@ -25,16 +24,16 @@ export function neonAuthorityPoolAddressSync(neonEvmProgram: PublicKey): [Public
 }
 
 export function neonTreeAccountAddressSync(neonWallet: NeonAddress, neonEvmProgram: PublicKey, nonce: number): [PublicKey, number] {
-  const version = numberToBuffer(AccountAddress.SeedVersion);
+  const version = numberToBuffer(AccountSeedTag.SeedVersion);
   const tag = stringToBuffer('TREE');
   const address = hexToBuffer(neonWallet);
-  const _nonce = toBytesLittleEndian(nonce, 8);
+  const _nonce = toBytes64LE(nonce, 8);
   const seed: any[] = [version, tag, address, _nonce];
   return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 
 export function neonWalletProgramAddress(neonWallet: NeonAddress, neonEvmProgram: PublicKey): [PublicKey, number] {
-  const seeds: any[] = [numberToBuffer(AccountAddress.SeedVersion), hexToBuffer(neonWallet)];
+  const seeds: any[] = [numberToBuffer(AccountSeedTag.SeedVersion), hexToBuffer(neonWallet)];
   return PublicKey.findProgramAddressSync(seeds, neonEvmProgram);
 }
 
@@ -43,7 +42,7 @@ export async function balanceAccountNonce(connection: Connection, neonWallet: Ne
   const neonWalletBalanceAccount = await connection.getAccountInfo(neonWalletBalanceAddress);
   if (neonWalletBalanceAccount) {
     const balanceAccountLayout = BalanceAccountLayout.decode(neonWalletBalanceAccount.data as Uint8Array);
-    return balanceAccountLayout.trx_count;
+    return balanceAccountLayout.nonce;
   }
   return 0n;
 }
@@ -108,7 +107,7 @@ export class SolanaNeonAccount {
     if (account) {
       // @ts-ignore
       const layout = BalanceAccountLayout.decode(account.data);
-      return Number(layout.trx_count);
+      return Number(layout.nonce);
     }
     return 0;
   }
@@ -116,9 +115,9 @@ export class SolanaNeonAccount {
   async balanceAccountCreate(connection: Connection): Promise<AccountInfo<Buffer> | null> {
     let account = await connection.getAccountInfo(this.balanceAddress);
     if (account === null && this.signer) {
-      const instruction = createBalanceAccountInstruction(this.neonEvmProgram, this.publicKey, this.neonWallet, this.chainId);
-      const transaction = new Transaction({ feePayer: this.publicKey }).add(instruction);
+      const transaction = createBalanceAccountTransaction(this.neonEvmProgram, this.publicKey, this.neonWallet, this.chainId);
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+      transaction.feePayer = this.publicKey;
       transaction.recentBlockhash = blockhash;
       transaction.sign(this.signer);
       const signature = await connection.sendRawTransaction(transaction.serialize());

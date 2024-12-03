@@ -25,18 +25,18 @@ export const hexStringLayout = (length: number, property?: string): Layout<HexSt
 
 export interface BalanceAccountRaw {
   type: number;
-  header_version: number;
+  headerVersion: number;
   address: HexString;
-  chain_id: bigint;
-  trx_count: bigint;
+  chainId: bigint;
+  nonce: bigint;
   balance: number;
 }
 
 export const BalanceAccountLayout = struct<BalanceAccountRaw>([
   u8('type'),
-  u8('header_version'),
+  u8('headerVersion'),
   hexStringLayout(20, 'address'),
-  ns64('chain_id'),
-  ns64('trx_count'),
+  ns64('chainId'),
+  ns64('nonce'),
   u32('balance')
 ]);

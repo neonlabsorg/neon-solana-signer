@@ -6,3 +6,4 @@ export * from './log';
 export * from './proxy';
 export * from './rest';
 export * from './uuid';
+export * from './wallet';

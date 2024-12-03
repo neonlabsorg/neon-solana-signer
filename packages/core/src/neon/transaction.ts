@@ -1,6 +1,6 @@
 import { decodeRlp, encodeRlp, keccak256, RlpStructuredData, toBeHex } from 'ethers';
 import { HexString } from '../models';
-import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer } from '../utils';
+import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer, toBytes16LE, toBytes64BE } from '../utils';
 
 export interface ScheduledTransactionData {
   payer: string;
@@ -42,7 +42,7 @@ export class ScheduledTransaction {
   }
 
   hash(): HexString {
-    return keccak256(this.encode());
+    return keccak256(`0x${this.serialize()}`);
   }
 
   serialize(): HexString {
@@ -57,6 +57,23 @@ export class ScheduledTransaction {
     data.hash = this.hash();
     const transaction = new ScheduledTransaction(data);
     return transaction.serialize();
+  }
+
+  /**
+   * Serialize and return the node as bytes with the following layout:
+   * - gas_limit: 32 bytes
+   * - value: 32 bytes
+   * - childIndex: 2 bytes
+   * - successLimit: 2 bytes
+   * - trxHash: 32 bytes
+   */
+  serializedNode(childIndex: number, successLimit: number): Buffer {
+    const gasLimit = toBytes64BE(BigInt(this.data.gasLimit), 32, 24);
+    const value = toBytes64BE(BigInt(this.data.value == '0x' ? 0 : this.data.value), 32, 24);
+    const index = toBytes16LE(childIndex, 2);
+    const success = toBytes16LE(successLimit, 2);
+    const hash = hexToBuffer(this.hash());
+    return bufferConcat([gasLimit, value, index, success, hash]);
   }
 
   constructor(data: Partial<ScheduledTransactionData>) {
@@ -93,5 +110,27 @@ export class ScheduledTransaction {
 
   static decodeRpl(data: string): RlpStructuredData {
     return decodeRlp(data);
+  }
+}
+
+export class MultipleTreeAccount {
+  nonce: Buffer;
+  maxFeePerGar: Buffer;
+  maxPriorityFeePerGas: Buffer;
+  private _data: Buffer;
+
+  get data(): HexString {
+    return `0x${this._data.toString('hex')}`;
+  }
+
+  addTransaction(transaction: ScheduledTransaction, childIndex: number, successLimit: number): void {
+    this._data = Buffer.concat([this._data, transaction.serializedNode(childIndex, successLimit)]);
+  }
+
+  constructor(nonce: number, maxFeePerGar: number = 100, maxPriorityFeePerGas: number = 10) {
+    this.nonce = toBytes64BE(nonce, 8);
+    this.maxFeePerGar = toBytes64BE(maxFeePerGar, 32, 24);
+    this.maxPriorityFeePerGas = toBytes64BE(maxPriorityFeePerGas, 32, 24);
+    this._data = Buffer.concat([this.nonce, this.maxFeePerGar, this.maxPriorityFeePerGas]);
   }
 }

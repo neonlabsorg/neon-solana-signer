@@ -20,18 +20,56 @@ export interface CreateScheduledTransactionData {
   neonTransaction: HexString;
 }
 
-export const enum AccountAddress {
+export interface DestroyScheduledTransactionData {
+  neonEvmProgram: PublicKey,
+  signerAddress: PublicKey,
+  balanceAddress: PublicKey,
+  treeAccountAddress: PublicKey
+}
+
+export interface FinishScheduledTransactionData {
+  neonEvmProgram: PublicKey,
+  signerAddress: PublicKey,
+  balanceAddress: PublicKey,
+  holderAddress: PublicKey
+  treeAccountAddress: PublicKey
+}
+
+export const enum AccountSeedTag {
   SeedVersion = 0x03
 }
 
-export const enum ScheduledInstruction {
-  START_FROM_ACCOUNT = 0x46,
-  START_FROM_INSTRUCTION = 0x47,
-  SKIP = 0x48,
-  FINISH = 0x49,
-  CREATE = 0x4A,
-  CREATE_MULTIPLE = 0x4B,
-  DESTROY = 0x4C,
+export const enum InstructionTag {
+  HolderCreate = 0x24,
+  HolderDelete = 0x25,
+  HolderWrite = 0x26,
+  CreateMainTreasury = 0x29,
+  AccountBalanceCreate = 0x30,
+  Deposit = 0x31,
+  TransactionExecuteFromInstruction = 0x3D,
+  TransactionExecuteFromAccount = 0x33,
+  TransactionStepFromInstruction = 0x34,
+  TransactionStepFromAccount = 0x35,
+  TransactionStepFromAccountNoChainid = 0x36,
+  Cancel = 0x37,
+  TransactionExecuteFromInstructionWithSolanaCall = 0x3E,
+  TransactionExecuteFromAccountWithSolanaCall = 0x39,
+}
+
+export const enum OperatorBalanceTag {
+  Create = 0x3A,
+  Delete = 0x3B,
+  Withdraw = 0x3C,
+}
+
+export const enum ScheduledTransactionTag {
+  StartFromAccount = 0x46,
+  StartFromInstruction = 0x47,
+  Skip = 0x48,
+  Finish = 0x49,
+  Create = 0x4A,
+  CreateMultiple = 0x4B,
+  Destroy = 0x4C,
 }
 
 export interface SolanaTransactionSignature {

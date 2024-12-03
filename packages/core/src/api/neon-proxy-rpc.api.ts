@@ -20,7 +20,7 @@ export class NeonProxyRpcApi {
   }
 
   // neon_getAccount
-  getAccount(account: string, nonce: number): Promise<RPCResponse<NeonAddressResponse>> {
+  getAccount(account: NeonAddress, nonce: number): Promise<RPCResponse<NeonAddressResponse>> {
     return this.neonRpc('neon_getAccount', [account, nonce]);
   }
 
@@ -42,8 +42,8 @@ export class NeonProxyRpcApi {
     return this.neonRpc<string>('neon_sendRawScheduledTransaction', [transaction]);
   }
 
-  getPendingTransactions(): Promise<any> {
-    return this.neonRpc<string>('neon_getPendingTransactions', []);
+  getPendingTransactions(solanaWallet: PublicKey): Promise<any> {
+    return this.neonRpc<string>('neon_getPendingTransactions', [solanaWallet.toBase58()]);
   }
 
   getTransactionCount(neonWallet: NeonAddress): Promise<string> {

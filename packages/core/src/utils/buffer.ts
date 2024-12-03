@@ -58,8 +58,20 @@ export function toBytesInt32(number: number, littleEndian = true): ArrayBuffer {
   return arrayBuffer;
 }
 
-export function toBytesLittleEndian(num: number | bigint, byteLength: number): Buffer {
-  const buffer = Buffer.alloc(byteLength);
+export function toBytes64LE(num: number | bigint, size: number): Buffer {
+  const buffer = Buffer.alloc(size);
   buffer.writeBigUInt64LE(BigInt(num), 0);
+  return buffer;
+}
+
+export function toBytes64BE(num: number | bigint, size: number, offset = 0): Buffer {
+  const buffer = Buffer.alloc(size);
+  buffer.writeBigUInt64BE(BigInt(num), offset);
+  return buffer;
+}
+
+export function toBytes16LE(num: number, size: number, offset = 0): Buffer {
+  const buffer = Buffer.alloc(size);
+  buffer.writeUInt16LE(num, offset);
   return buffer;
 }
