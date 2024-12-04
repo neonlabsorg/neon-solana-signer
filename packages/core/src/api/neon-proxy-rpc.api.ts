@@ -38,11 +38,19 @@ export class NeonProxyRpcApi {
     return this.neonRpc<GasToken[]>('neon_getNativeTokenList', []).then(({ result }) => result);
   }
 
-  sendRawScheduledTransaction(transaction: HexString): Promise<any> {
+  sendRawScheduledTransaction(transaction: HexString): Promise<RPCResponse<HexString>> {
     return this.neonRpc<string>('neon_sendRawScheduledTransaction', [transaction]);
   }
 
-  getPendingTransactions(solanaWallet: PublicKey): Promise<any> {
+  async sendRawScheduledTransactions(transactions: HexString[]): Promise<RPCResponse<HexString>[]> {
+    const result: RPCResponse<HexString>[] = [];
+    for (const transaction of transactions) {
+      result.push(await this.sendRawScheduledTransaction(transaction));
+    }
+    return result;
+  }
+
+  getPendingTransactions(solanaWallet: PublicKey): Promise<RPCResponse<any>> {
     return this.neonRpc<string>('neon_getPendingTransactions', [solanaWallet.toBase58()]);
   }
 
@@ -50,7 +58,7 @@ export class NeonProxyRpcApi {
     return this.neonRpc<string>('eth_getTransactionCount', [neonWallet, 'latest']).then(({ result }) => result);
   }
 
-  getTransactionByHash(transaction: HexString): Promise<any> {
+  getTransactionByHash(transaction: HexString): Promise<RPCResponse<any>> {
     return this.neonRpc<string>('eth_getTransactionByHash', [transaction]);
   }
 

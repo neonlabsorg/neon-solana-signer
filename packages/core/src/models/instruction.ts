@@ -20,19 +20,27 @@ export interface CreateScheduledTransactionData {
   neonTransaction: HexString;
 }
 
+export interface SkipScheduledTransactionData {
+  neonEvmProgram: PublicKey;
+  signerAddress: PublicKey;
+  holderAccount: PublicKey;
+  treeAccountAddress: PublicKey;
+  transactionIndex: number;
+}
+
 export interface DestroyScheduledTransactionData {
-  neonEvmProgram: PublicKey,
-  signerAddress: PublicKey,
-  balanceAddress: PublicKey,
-  treeAccountAddress: PublicKey
+  neonEvmProgram: PublicKey;
+  signerAddress: PublicKey;
+  balanceAddress: PublicKey;
+  treeAccountAddress: PublicKey;
 }
 
 export interface FinishScheduledTransactionData {
-  neonEvmProgram: PublicKey,
-  signerAddress: PublicKey,
-  balanceAddress: PublicKey,
-  holderAddress: PublicKey
-  treeAccountAddress: PublicKey
+  neonEvmProgram: PublicKey;
+  signerAddress: PublicKey;
+  balanceAddress: PublicKey;
+  holderAddress: PublicKey;
+  treeAccountAddress: PublicKey;
 }
 
 export const enum AccountSeedTag {

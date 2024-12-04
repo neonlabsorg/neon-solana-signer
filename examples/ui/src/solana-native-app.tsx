@@ -16,7 +16,7 @@ import {
   NEON_TOKEN_MINT_DEVNET,
   NeonProgramStatus
 } from '@neonevm/token-transfer-core';
-import { JsonRpcProvider, toBeHex } from 'ethers';
+import { JsonRpcProvider } from 'ethers';
 
 import { BaseContract, CHAIN_ID, NEON_CORE_API_RPC_URL, NEON_CORE_API_URL, SOLANA_URL } from './utils';
 
@@ -132,12 +132,12 @@ function SolanaNativeApp() {
       console.log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
 
       const scheduledTransaction = new ScheduledTransaction({
-        nonce: nonce > 0 ? toBeHex(nonce) : '0x',
+        nonce: nonce,
         payer: solanaUser.neonWallet,
         target: baseContract.address,
         callData: baseContract.transactionData(solanaUser.publicKey),
-        maxFeePerGas: toBeHex(maxFeePerGas),
-        chainId: toBeHex(112)
+        maxFeePerGas: maxFeePerGas,
+        chainId: 112
       });
 
       const createScheduledTransaction = await createScheduledNeonEvmTransaction({

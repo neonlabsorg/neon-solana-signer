@@ -3,3 +3,7 @@ export function log(...args: any[]) {
     console.log(...args);
   }
 }
+
+export function logJson(obj: any) {
+  log(JSON.stringify(obj, null, 2));
+}

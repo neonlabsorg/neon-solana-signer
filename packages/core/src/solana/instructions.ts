@@ -5,7 +5,8 @@ import {
   FinishScheduledTransactionData,
   InstructionTag,
   NeonAddress,
-  ScheduledTransactionTag
+  ScheduledTransactionTag,
+  SkipScheduledTransactionData
 } from '../models';
 import {
   bufferConcat,
@@ -77,6 +78,18 @@ export function finishScheduledTransactionInstruction(data: FinishScheduledTrans
     { pubkey: balanceAddress, isSigner: false, isWritable: true }
   ];
   return new TransactionInstruction({ keys, programId, data: type });
+}
+
+export function skipScheduledTransactionInstruction(data: SkipScheduledTransactionData): TransactionInstruction {
+  const { neonEvmProgram: programId, signerAddress, holderAccount, treeAccountAddress, transactionIndex } = data;
+  const type = numberToBuffer(ScheduledTransactionTag.Skip);
+  const index = numberToBuffer(transactionIndex);
+  const keys: Array<AccountMeta> = [
+    { pubkey: holderAccount, isSigner: false, isWritable: true },
+    { pubkey: treeAccountAddress, isSigner: false, isWritable: true },
+    { pubkey: signerAddress, isSigner: true, isWritable: true }
+  ];
+  return new TransactionInstruction({ keys, programId, data: bufferConcat([type, index]) });
 }
 
 export function destroyScheduledTransactionInstruction(data: DestroyScheduledTransactionData): TransactionInstruction {

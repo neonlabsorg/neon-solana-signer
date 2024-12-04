@@ -5,17 +5,17 @@ import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer, toBytes16LE, to
 export interface ScheduledTransactionData {
   payer: string;
   sender: string;
-  nonce: string;
-  index: string;
+  nonce: number | string;
+  index: number | string;
   intent: string; // = Buffer.from('');
   intentCallData: string; // = Buffer.from('');
   target: string; // = Buffer.from('');
   callData: string; // = Buffer.from('');
-  value: string; // = 0;
-  chainId: string;
-  gasLimit: string; // = 9999999999;
-  maxFeePerGas: string; // = 100;
-  maxPriorityFeePerGas: string; // = 10;
+  value: number | string; // = 0;
+  chainId: number | string;
+  gasLimit: number | string; // = 9999999999;
+  maxFeePerGas: number | string; // = 100;
+  maxPriorityFeePerGas: number | string; // = 10;
   hash?: string;
 }
 
@@ -52,13 +52,6 @@ export class ScheduledTransaction {
     return bufferConcat([type, subType, encode]).toString('hex');
   }
 
-  serializeWithHash(): HexString {
-    const data: ScheduledTransactionData = { ...this.data };
-    data.hash = this.hash();
-    const transaction = new ScheduledTransaction(data);
-    return transaction.serialize();
-  }
-
   /**
    * Serialize and return the node as bytes with the following layout:
    * - gas_limit: 32 bytes
@@ -80,7 +73,9 @@ export class ScheduledTransaction {
     this.data = {} as ScheduledTransactionData;
     for (const key of ScheduledTransaction.keys) {
       // @ts-ignore
-      this.data[key] = data.hasOwnProperty(key) ? data[key] : this.defaultData.hasOwnProperty(key) ? this.defaultData[key] : '0x';
+      this.data[key] = data.hasOwnProperty(key) ? this.convertData(data[key]) :
+        // @ts-ignore
+        this.defaultData.hasOwnProperty(key) ? this.defaultData[key] : '0x';
     }
   }
 
@@ -88,6 +83,18 @@ export class ScheduledTransaction {
     'payer', 'sender', 'nonce', 'index', 'intent', 'intentCallData', 'target',
     'callData', 'value', 'chainId', 'gasLimit', 'maxFeePerGas', 'maxPriorityFeePerGas'
   ];
+
+  private convertData(data: number | string | bigint | Buffer): string {
+    const result = '0x';
+    if (typeof data === 'string' && data.length > 0 && data.startsWith('0x')) {
+      return data;
+    } else if (typeof data === 'number' && data > 0) {
+      return toBeHex(data);
+    } else if (Buffer.isBuffer(data)) {
+      return `0x${data.toString('hex')}`;
+    }
+    return result;
+  }
 
   static from(items: string[]): ScheduledTransaction {
     const model: Partial<ScheduledTransactionData> = {};
@@ -115,7 +122,7 @@ export class ScheduledTransaction {
 
 export class MultipleTreeAccount {
   nonce: Buffer;
-  maxFeePerGar: Buffer;
+  maxFeePerGas: Buffer;
   maxPriorityFeePerGas: Buffer;
   private _data: Buffer;
 
@@ -127,10 +134,10 @@ export class MultipleTreeAccount {
     this._data = Buffer.concat([this._data, transaction.serializedNode(childIndex, successLimit)]);
   }
 
-  constructor(nonce: number, maxFeePerGar: number = 100, maxPriorityFeePerGas: number = 10) {
+  constructor(nonce: number, maxFeePerGas: number = 100, maxPriorityFeePerGas: number = 10) {
     this.nonce = toBytes64BE(nonce, 8);
-    this.maxFeePerGar = toBytes64BE(maxFeePerGar, 32, 24);
+    this.maxFeePerGas = toBytes64BE(maxFeePerGas, 32, 24);
     this.maxPriorityFeePerGas = toBytes64BE(maxPriorityFeePerGas, 32, 24);
-    this._data = Buffer.concat([this.nonce, this.maxFeePerGar, this.maxPriorityFeePerGas]);
+    this._data = Buffer.concat([this.nonce, this.maxFeePerGas, this.maxPriorityFeePerGas]);
   }
 }
