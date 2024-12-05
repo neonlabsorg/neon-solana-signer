@@ -4,6 +4,7 @@
 /.idea
 /node_modules
 /dist
+/docs
 
 # misc
 .DS_Store

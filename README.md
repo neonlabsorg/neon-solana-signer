@@ -97,3 +97,23 @@ const { status, transaction_hash, result_hash } = transaction;
 console.log(`Scheduled transaction result`, transaction);
 console.log(await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`));
 ```
+
+### Building Docs
+
+We can run TypeDoc with packages mode to generate a single docs folder in the root of the project.
+
+```sh
+# We need to build before building the docs so that `foo` can reference types from `bar`
+# TypeDoc can't use TypeScript's build mode to do this for us because build mode may skip
+# a project that needs documenting, or include packages that shouldn't be included in the docs
+yarn build:all
+# or
+npm run build:all
+```
+Now, we can run TypeDoc with packages mode to generate a single docs folder
+
+```sh
+yarn build:docs
+# or
+npm run build:docs
+```
