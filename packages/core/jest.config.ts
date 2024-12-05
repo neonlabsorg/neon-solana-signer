@@ -9,6 +9,7 @@ const config: Config.InitialOptions = {
   moduleNameMapper: {
     '@neonevm/solana-sign': '<rootDir>/src',
     '@neonevm/solana-contracts': '<rootDir>/../contracts/src',
+    '@neonevm/solana-contracts/build': '<rootDir>/../contracts/build',
   },
   testEnvironmentOptions: { path: '.env' },
   testTimeout: 2e5,

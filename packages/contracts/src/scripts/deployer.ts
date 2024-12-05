@@ -115,5 +115,6 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
   tokens = await deploySplTokens(SPL_TOKEN_FACTORY, Number(chainId), tokens);
 
   writeToFile('environments.txt', result.join('\n'));
-  writeToFile('token-list.json', JSON.stringify(tokens, null, '  '));
+  writeToFile('token-list.json', JSON.stringify(tokens, null, 2));
+  writeToFile('token-list.ts', `export const tokenList = ${JSON.stringify(tokens, null, 2)}`);
 })();
