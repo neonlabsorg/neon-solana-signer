@@ -179,7 +179,7 @@ describe('Check ScheduledTransaction instructions', () => {
     }
   });
 
-  it(`Send send two depended ScheduledTransactions and sign with Solana`, async () => {
+  it(`Send two depended ScheduledTransactions and sign with Solana`, async () => {
     const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
     const maxFeePerGas = 0x77359400;
     log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
@@ -240,7 +240,7 @@ describe('Check ScheduledTransaction instructions', () => {
     }
   });
 
-  it(`Send send tree parallel ScheduledTransactions and sign with Solana`, async () => {
+  it(`Send tree parallel ScheduledTransactions and sign with Solana`, async () => {
     const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
     const maxFeePerGas = 0x77359400;
     log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
