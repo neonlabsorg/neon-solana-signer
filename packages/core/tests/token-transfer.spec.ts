@@ -138,7 +138,7 @@ beforeAll(async () => {
 });
 
 describe('Token transfer', () => {
-  it.skip(`Should transfer spl tokens from Solana to Neon EVM`, async () => {
+  it(`Should transfer spl tokens from Solana to Neon EVM`, async () => {
     for (const token of erc20Tokens) {
       const amount = 1;
       log(`Transfer ${amount} ${token.symbol} from Solana to Neon EVM`);
@@ -167,7 +167,7 @@ describe('Token transfer', () => {
     }
   });
 
-  it.skip(`Should transfer 10 NEON from Neon to Solana`, async () => {
+  it(`Should transfer 10 NEON from Neon to Solana`, async () => {
     const amount = 10;
     try {
       const balanceBefore = await neonBalance(provider, neonWallet);
@@ -192,7 +192,7 @@ describe('Token transfer', () => {
     }
   });
 
-  it.skip(`Should transfer 1 NEON from Solana to Neon`, async () => {
+  it(`Should transfer 1 NEON from Solana to Neon`, async () => {
     const amount = 1;
     await createAssociatedTokenAccount(connection, signer, NEON);
     const balanceBefore = await splTokenBalance(connection, solanaUser.publicKey, NEON);
