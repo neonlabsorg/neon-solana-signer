@@ -24,15 +24,15 @@ export class FaucetDropper {
   }
 }
 
-export async function neonAirdrop(provider: JsonRpcProvider, faucet: FaucetDropper, wallet: string, amount: number): Promise<bigint> {
+export async function neonAirdrop(provider: JsonRpcProvider, faucet: FaucetDropper, wallet: string, amount: number, decimals = 18): Promise<bigint> {
   let balance = await provider.getBalance(wallet);
-  if (balance < BigInt(amount * (10 ** 18))) {
+  if (balance < BigInt(amount) * BigInt(10 ** decimals)) {
     const requestAmount = amount > 100 ? 100 : amount;
     await faucet.requestNeon(wallet, requestAmount);
     await delay(4e3);
     return neonAirdrop(provider, faucet, wallet, amount);
   }
-  log(`${wallet} balance: ${balance} NEON`);
+  log(`${wallet} balance: ${balance / BigInt(10 ** decimals)} NEON`);
   return balance;
 }
 
