@@ -7,7 +7,8 @@ import {
   NeonApiResponse,
   NeonBalance,
   ScheduledTransactionStatus,
-  TransactionTreeResponse
+  TransactionTreeResponse,
+  TransferTreeData
 } from '../models';
 
 export class NeonClientApi {
@@ -38,15 +39,12 @@ export class NeonClientApi {
     return post(`${this.url}/balance`, body);
   }
 
-  async transactionTree(origin: NeonAddress, nonce: number): Promise<NeonApiResponse<TransactionTreeResponse>> {
+  async transactionTree(origin: TransferTreeData, nonce: number): Promise<NeonApiResponse<TransactionTreeResponse>> {
     const body = { origin, nonce };
-    return post(`${this.url}/transaction_tree`, body).then(r => {
-      console.log(r);
-      return r;
-    });
+    return post(`${this.url}/transaction_tree`, body);
   }
 
-  async waitTransactionTreeExecution(origin: NeonAddress, nonce: number, timeout: number): Promise<ScheduledTransactionStatus[]> {
+  async waitTransactionTreeExecution(origin: TransferTreeData, nonce: number, timeout: number): Promise<ScheduledTransactionStatus[]> {
     const start = Date.now();
     const result: ScheduledTransactionStatus[] = [];
     while (timeout > Date.now() - start) {

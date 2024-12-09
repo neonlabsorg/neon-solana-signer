@@ -130,3 +130,8 @@ export interface NeonBalance {
   balance: HexString;
   user_pubkey?: PublicKeyString;
 }
+
+export interface TransferTreeData {
+  address: NeonAddress;
+  chain_id: number;
+}

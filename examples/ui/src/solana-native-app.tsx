@@ -163,7 +163,10 @@ function SolanaNativeApp() {
         const signedTransaction = await solanaProvider.signTransaction(createScheduledTransaction);
         const signature = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false });
         console.log(`Solana signature: ${signature}`);
-        const [transaction] = await proxyClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 5e3);
+        const [transaction] = await proxyClientApi.waitTransactionTreeExecution({
+          address: solanaUser.neonWallet,
+          chain_id: chainId
+        }, nonce, 5e3);
         const { transaction_hash, result_hash } = transaction;
         console.log(`Scheduled transaction result`, transaction);
         console.log(await proxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`));

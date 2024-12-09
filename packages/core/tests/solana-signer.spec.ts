@@ -123,7 +123,10 @@ describe('Check Solana signer instructions', () => {
       preflightCommitment: 'confirmed'
     }, 'scheduled');
 
-    const transactions = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 2e3);
+    const transactions = await neonClientApi.waitTransactionTreeExecution({
+      address: solanaUser.neonWallet,
+      chain_id: chainId
+    }, nonce, 2e3);
     log(`Scheduled transactions result`, transactions);
     for (const { transaction_hash, status } of transactions) {
       const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
@@ -168,10 +171,13 @@ describe('Check Solana signer instructions', () => {
     await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
     await delay(2e3);
 
-    const {result} = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${transaction.serialize()}`);
+    const { result } = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${transaction.serialize()}`);
     log(result);
 
-    const transactions = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 5e3);
+    const transactions = await neonClientApi.waitTransactionTreeExecution({
+      address: solanaUser.neonWallet,
+      chain_id: chainId
+    }, nonce, 5e3);
     log(`Scheduled transactions result`, transactions);
     for (const { transaction_hash, status } of transactions) {
       const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
@@ -232,7 +238,10 @@ describe('Check Solana signer instructions', () => {
     const transaction2 = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${trx1.serialize()}`);
     log(transaction1.result, transaction2.result);
 
-    const transactions = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 5e3);
+    const transactions = await neonClientApi.waitTransactionTreeExecution({
+      address: solanaUser.neonWallet,
+      chain_id: chainId
+    }, nonce, 5e3);
     log(`Scheduled transactions result`, transactions);
     for (const { transaction_hash, status } of transactions) {
       const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
@@ -286,7 +295,10 @@ describe('Check Solana signer instructions', () => {
 
     const result = await neonProxyRpcApi.sendRawScheduledTransactions(trxs.map(t => t.serialize()));
     logJson(result);
-    const transactions = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 9e3);
+    const transactions = await neonClientApi.waitTransactionTreeExecution({
+      address: solanaUser.neonWallet,
+      chain_id: chainId
+    }, nonce, 9e3);
     log(`Scheduled transactions result`, transactions);
     for (const { transaction_hash, status } of transactions) {
       const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
