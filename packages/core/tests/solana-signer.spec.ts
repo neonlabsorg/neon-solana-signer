@@ -307,6 +307,11 @@ describe('Check Solana signer instructions', () => {
     }
   });
 
+  it(`Check if we have pending transactions`, async () => {
+    const response = await neonProxyRpcApi.getPendingTransactions(solanaUser.publicKey);
+    console.log(response);
+  });
+
   it.skip(`Create holder account`, async () => {
     const solanaUser = SolanaNeonAccount.fromKeypair(Keypair.generate(), neonEvmProgram, chainTokenMint, chainId);
     await solanaAirdrop(connection, solanaUser.publicKey, 1e10);

@@ -49,7 +49,6 @@ export class NeonClientApi {
     const result: ScheduledTransactionStatus[] = [];
     while (timeout > Date.now() - start) {
       const { value, status } = await this.transactionTree(origin, nonce);
-      console.log(value, status);
       const { transactions } = value;
       if (transactions.length > 0) {
         for (const tx of transactions) {
