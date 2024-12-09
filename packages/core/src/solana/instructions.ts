@@ -18,7 +18,18 @@ import {
 } from '../utils';
 import { neonBalanceProgramAddressSync, neonWalletProgramAddress, TreasuryPoolAddress } from './account';
 
-export function createScheduledTransactionInstruction(instructionData: CreateScheduledTransactionInstructionData): TransactionInstruction {
+/**
+ * Create a new scheduled transaction instruction
+ * @param data {CreateScheduledTransactionInstructionData} The data for the instruction
+ * @param data.neonEvmProgram {PublicKey} The program ID of the Neon EVM program
+ * @param data.signerAddress {PublicKey} The signer address solana wallet public key
+ * @param data.balanceAddress {PublicKey} The balance address public key - contain information about neon wallet
+ * @param data.treeAccountAddress {PublicKey} The tree account address public key - contain information about scheduled transactions
+ * @param data.associatedTokenAddress {PublicKey} The associated token address public key - token address that will used for fee payment
+ * @param data.neonTransaction {HexString} The scheduled transaction hex string
+ * @returns {TransactionInstruction}
+ */
+export function createScheduledTransactionInstruction(data: CreateScheduledTransactionInstructionData): TransactionInstruction {
   const {
     neonEvmProgram: programId,
     signerAddress,
@@ -26,7 +37,7 @@ export function createScheduledTransactionInstruction(instructionData: CreateSch
     treeAccountAddress,
     associatedTokenAddress,
     neonTransaction
-  } = instructionData;
+  } = data;
   const treasuryPool = TreasuryPoolAddress.find(programId, NEON_TREASURY_POOL_COUNT);
 
   const keys: Array<AccountMeta> = [
@@ -43,7 +54,18 @@ export function createScheduledTransactionInstruction(instructionData: CreateSch
   return new TransactionInstruction({ keys, programId, data: bufferConcat([type, count, transaction]) } as any);
 }
 
-export function createScheduledTransactionMultipleInstruction(instructionData: CreateScheduledTransactionInstructionData): TransactionInstruction {
+/**
+ * Create a solana transaction instruction for multiple transactions
+ * @param data {CreateScheduledTransactionInstructionData} The data for the instruction
+ * @param data.neonEvmProgram {PublicKey} The program ID of the Neon EVM program
+ * @param data.signerAddress {PublicKey} The signer address solana wallet public key
+ * @param data.balanceAddress {PublicKey} The balance address public key - contain information about neon wallet
+ * @param data.treeAccountAddress {PublicKey} The tree account address public key - contain information about scheduled transactions
+ * @param data.associatedTokenAddress {PublicKey} The associated token address public key - token address that will used for fee payment
+ * @param data.neonTransaction {HexString} The multiple format scheduled transactions hex string
+ * @returns {TransactionInstruction}
+ */
+export function createScheduledTransactionMultipleInstruction(data: CreateScheduledTransactionInstructionData): TransactionInstruction {
   const {
     neonEvmProgram: programId,
     signerAddress,
@@ -51,7 +73,7 @@ export function createScheduledTransactionMultipleInstruction(instructionData: C
     treeAccountAddress,
     associatedTokenAddress,
     neonTransaction
-  } = instructionData;
+  } = data;
   const treasuryPool = TreasuryPoolAddress.find(programId, NEON_TREASURY_POOL_COUNT);
 
   const keys: Array<AccountMeta> = [
@@ -106,6 +128,13 @@ export function destroyScheduledTransactionInstruction(data: DestroyScheduledTra
   return new TransactionInstruction({ keys, programId, data: bufferConcat([type, count]) });
 }
 
+/**
+ * Create balance account instruction
+ * @param neonEvmProgram {PublicKey} The program ID of the Neon EVM program
+ * @param solanaWallet {PublicKey} The solana wallet public key
+ * @param neonAddress {NeonAddress} The neon wallet address
+ * @param chainId {number} The chain ID
+ */
 export function createBalanceAccountInstruction(neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonAddress: NeonAddress, chainId: number): TransactionInstruction {
   const [balanceAddress] = neonBalanceProgramAddressSync(neonAddress, neonEvmProgram, chainId);
   const [neonWalletAddress] = neonWalletProgramAddress(neonAddress, neonEvmProgram);
@@ -122,6 +151,9 @@ export function createBalanceAccountInstruction(neonEvmProgram: PublicKey, solan
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Generate a transaction instruction that creates a new account at an address generated with from, a seed, and programId
+ */
 export function createAccountWithSeedInstruction(neonEvmProgram: PublicKey, operator: PublicKey, holderAccount: PublicKey, seed: string, space: number, lamports = 0): TransactionInstruction {
   return SystemProgram.createAccountWithSeed({
     fromPubkey: operator,

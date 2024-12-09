@@ -1,3 +1,4 @@
 export * from './api';
-export * from './token';
 export * from './instruction';
+export * from './token';
+export * from './transaction';

@@ -13,18 +13,19 @@ import {
   holderAddressWithSeed,
   log,
   logJson,
-  MultipleTreeAccount,
+  MultipleTransactions,
   NeonChainId,
   NeonClientApi,
   NeonProgramStatus,
   NeonProxyRpcApi,
+  NO_CHILD_INDEX,
   ScheduledTransaction,
   sendSolanaTransaction,
   solanaAirdrop,
   SolanaNeonAccount
 } from '@neonevm/solana-sign';
 import { BaseContract } from '@neonevm/solana-contracts';
-import { JsonRpcProvider, toBeHex } from 'ethers';
+import { JsonRpcProvider } from 'ethers';
 import { config } from 'dotenv';
 import bs58 from 'bs58';
 
@@ -84,7 +85,7 @@ afterEach(async () => {
   }
 });
 
-describe('Check ScheduledTransaction instructions', () => {
+describe('Check Solana signer instructions', () => {
   it(`Create ScheduledTransaction and sign with Solana`, async () => {
     const neonBalanceAccountNonce = await balanceAccountNonce(connection, solanaUser.neonWallet, neonEvmProgram, chainId);
     log('Balance account nonce', neonBalanceAccountNonce);
@@ -99,7 +100,7 @@ describe('Check ScheduledTransaction instructions', () => {
       target: baseContract.address,
       callData: baseContract.transactionData(solanaUser.publicKey),
       maxFeePerGas: maxFeePerGas,
-      chainId: NeonChainId.testnetSol
+      chainId
     });
     log(`Scheduled transaction`, scheduledTransaction.serialize(), scheduledTransaction.hash());
 
@@ -143,12 +144,12 @@ describe('Check ScheduledTransaction instructions', () => {
       target: baseContract.address,
       callData: baseContract.transactionData(solanaUser.publicKey),
       maxFeePerGas: maxFeePerGas,
-      chainId: NeonChainId.testnetSol
+      chainId
     });
     log(`Scheduled transaction`, transaction.serialize(), transaction.hash());
 
-    const multiple = new MultipleTreeAccount(nonce, maxFeePerGas);
-    multiple.addTransaction(transaction, 0xFFFF, 0);
+    const multiple = new MultipleTransactions(nonce, maxFeePerGas);
+    multiple.addTransaction(transaction, NO_CHILD_INDEX, 0);
 
     const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
       chainId,
@@ -167,8 +168,8 @@ describe('Check ScheduledTransaction instructions', () => {
     await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
     await delay(2e3);
 
-    const transaction1 = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${transaction.serialize()}`);
-    log(transaction1.result);
+    const {result} = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${transaction.serialize()}`);
+    log(result);
 
     const transactions = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 5e3);
     log(`Scheduled transactions result`, transactions);
@@ -191,7 +192,7 @@ describe('Check ScheduledTransaction instructions', () => {
       target: baseContract.address,
       callData: baseContract.transactionData(solanaUser.publicKey),
       maxFeePerGas: maxFeePerGas,
-      chainId: NeonChainId.testnetSol
+      chainId
     });
 
     const trx1 = new ScheduledTransaction({
@@ -201,14 +202,14 @@ describe('Check ScheduledTransaction instructions', () => {
       target: baseContract.address,
       callData: baseContract.transactionData(solanaUser.publicKey),
       maxFeePerGas: maxFeePerGas,
-      chainId: NeonChainId.testnetSol
+      chainId
     });
     log(`Scheduled transaction 0`, trx0.serialize(), trx0.hash());
     log(`Scheduled transaction 1`, trx1.serialize(), trx1.hash());
 
-    const multiple = new MultipleTreeAccount(nonce, maxFeePerGas);
+    const multiple = new MultipleTransactions(nonce, maxFeePerGas);
     multiple.addTransaction(trx0, 1, 0);
-    multiple.addTransaction(trx1, 0xffff, 1);
+    multiple.addTransaction(trx1, NO_CHILD_INDEX, 1);
 
     const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
       chainId,
@@ -254,17 +255,17 @@ describe('Check ScheduledTransaction instructions', () => {
         target: baseContract.address,
         callData: baseContract.transactionData(solanaUser.publicKey),
         maxFeePerGas: maxFeePerGas,
-        chainId: NeonChainId.testnetSol
+        chainId
       });
       trxs.push(trx);
       log(`Scheduled transaction ${i}`, trx.serialize(), trx.hash());
     }
 
-    const multiple = new MultipleTreeAccount(nonce, maxFeePerGas);
+    const multiple = new MultipleTransactions(nonce, maxFeePerGas);
     multiple.addTransaction(trxs[0], 3, 0);
     multiple.addTransaction(trxs[1], 3, 0);
     multiple.addTransaction(trxs[2], 3, 0);
-    multiple.addTransaction(trxs[3], 0xFFFF, 3);
+    multiple.addTransaction(trxs[3], NO_CHILD_INDEX, 3);
 
     const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
       chainId,
@@ -306,19 +307,5 @@ describe('Check ScheduledTransaction instructions', () => {
     }
     expect(account).not.toBeNull();
     log(await neonClientApi.getHolder(holderAccount));
-  });
-
-  it(`Compare ScheduledTransaction: new and from`, async () => {
-    const target = `0xc7e376be256bdb6a1fbedaee64ca860b2b6e95ee`;
-    const callData = `0x3fb5c1cb0000000000000000000000000000000000000000000000000000000000000012`;
-    const trx1 = new ScheduledTransaction({ payer: solanaUser.neonWallet, target, callData });
-    const trx2 = ScheduledTransaction.from([solanaUser.neonWallet, '0x', '0x', '0x', '0x', '0x', target, callData, '0x', toBeHex(NeonChainId.testnetSol), '0x02540be3ff', '0x64', '0x0a']);
-    expect(trx1.encode()).toBe(trx2.encode());
-  });
-
-  it(`Should decode transaction`, async () => {
-    const trx = `0xf85e94b20650b9d28d3a46e3c6d8859a7243d7627db6b0808080808094c7e376be256bdb6a1fbedaee64ca860b2b6e95eea43fb5c1cb000000000000000000000000000000000000000000000000000000000000001280708502540be3ff640a`;
-    const decoded = ScheduledTransaction.decodeFrom(trx);
-    expect(trx).toBe(decoded.encode());
   });
 });

@@ -19,17 +19,14 @@ export class NeonProxyRpcApi {
     return this.neonRpc<NeonProgramStatus>('neon_getEvmParams', []).then(({ result }) => result);
   }
 
-  // neon_getAccount
   getAccount(account: NeonAddress, nonce: number): Promise<RPCResponse<NeonAddressResponse>> {
     return this.neonRpc('neon_getAccount', [account, nonce]);
   }
 
-  // neon_getTransactionReceipt
   getTransactionReceipt(transactionHash: string): Promise<RPCResponse<any>> {
     return this.neonRpc('neon_getTransactionReceipt', [transactionHash]);
   }
 
-  // neon_gasPrice
   gasPrice(): Promise<RPCResponse<NeonGasPrice>> {
     return this.neonRpc('neon_gasPrice', []);
   }

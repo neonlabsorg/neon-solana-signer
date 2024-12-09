@@ -13,8 +13,6 @@ yarn build
 
 ### Run tests
 
-
-
 ```shell
 yarn test
 ```
@@ -104,3 +102,65 @@ const { status, transaction_hash, result_hash } = transaction;
 console.log(`Scheduled transaction result`, transaction);
 console.log(await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`));
 ```
+
+### Creating Multiple Scheduled Transactions
+
+**Multiple Scheduled Transactions** is an advanced use case for creating a **ScheduledTransaction**.
+
+For example, you may need to execute three transactions that call contract methods with different parameters and are executed sequentially, or where one depends on the completion of the other two. Alternatively, a transaction may involve a large volume of data that exceeds the limits of a single transaction permissible within the Solana network.
+
+To create a `MultipleTransactions`, you need to instantiate the `MultipleTransactions` class with a common `nonce`, `maxFeePerGas`, and `maxPriorityFeePerGas`. At the same time, `maxFeePerGas` must match the value that will be passed to each **ScheduledTransaction**. After that, you can add individual transactions to the `MultipleTransactions` instance.
+
+```typescript
+const multiple = new MultipleTransactions(nonce, maxFeePerGas);
+const transaction = new ScheduledTransaction({
+  nonce: nonce,
+  payer: solanaUser.neonWallet,
+  index: 0,
+  target: baseContract.address,
+  callData: baseContract.transactionData(solanaUser.publicKey),
+  maxFeePerGas: maxFeePerGas,
+  chainId: NeonChainId.testnetSol
+});
+multiple.addTransaction(transaction, NO_CHILD_INDEX, 0);
+```
+
+The `addTransaction` method accepts three parameters:
+
+- `transaction`: The Scheduled transaction to be added.
+- `childIndex`: The index of child transactions that must be executed before this transaction starts. If the transaction has no dependent child transactions, the constant `NO_CHILD_INDEX` is passed.
+- `successLimit`: The number of successful transactions that must be completed before this transaction starts execution.
+
+After adding all necessary transactions, you need to create a multiple transaction for Solana and send it for execution.
+
+```typescript
+const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
+  chainId,
+  neonEvmProgram,
+  neonTransaction: multiple.data,
+  signerAddress: solanaUser.publicKey,
+  tokenMintAddress: solanaUser.tokenMint,
+  neonWallet: solanaUser.neonWallet,
+  neonWalletNonce: nonce
+});
+await sendSolanaTransaction(connection, createScheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
+```
+
+At this stage, you need to pass the Scheduled transaction to a specific method in the Neon Proxy RPC. If everything is done correctly, the Neon Proxy RPC will return the hash of the transaction.
+```typescript
+const {result} = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${transaction.serialize()}`);
+console.log(result === transaction.hash());
+```
+
+Next, you need to wait for the transaction to be executed.
+
+```typescript
+const transactions = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 5e3);
+console.log(`Scheduled transactions result`, transactions);
+for (const { transaction_hash, status } of transactions) {
+  const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
+  console.log(result);
+}
+```
+
+By following these steps, you can create and execute a batch of Multiple Scheduled Transactions on Solana using Neon Proxy RPC.

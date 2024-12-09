@@ -1,4 +1,14 @@
-import { delay, FaucetDropper, log, NeonAddress, neonAirdrop, solanaAirdrop } from '@neonevm/solana-sign';
+import {
+  delay,
+  FaucetDropper,
+  getGasToken,
+  getProxyState,
+  log,
+  NeonAddress,
+  neonAirdrop,
+  NeonChainId,
+  solanaAirdrop
+} from '@neonevm/solana-sign';
 import { DeploySystemContract, SplTokenDeployer, splTokensMock, writeToFile } from '@neonevm/solana-contracts';
 import { SPLToken } from '@neonevm/token-transfer-core';
 import { Connection, Keypair } from '@solana/web3.js';
@@ -11,8 +21,10 @@ config({ path: '.env' });
 
 // @ts-ignore
 const env: { [key: string]: any } = process.env;
-const NEON_API_RPC_URL = `${env.NEON_GASLES_API_RPC_URL!}`;
+const NEON_API_RPC_URL = `${env.NEON_CORE_API_RPC_URL!}/neon`;
 const NEON_GASLES_API_RPC_URL = `${env.NEON_GASLES_API_RPC_URL!}/neon`;
+// const NEON_API_RPC_URL = `${env.NEON_CORE_API_RPC_URL!}/sol`;
+// const NEON_GASLES_API_RPC_URL = `${env.NEON_GASLES_API_RPC_URL!}/sol`;
 const SOLANA_URL = env.SOLANA_URL!;
 const NEON_FAUCET_URL = env.NEON_FAUCET_URL!;
 const NEON_WALLET = env.NEON_WALLET!;
@@ -47,6 +59,8 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
 
 (async () => {
   const { chainId } = await gasLessProvider.getNetwork();
+  const proxyState = await getProxyState(NEON_API_RPC_URL);
+  const token = getGasToken(proxyState.tokensList, NeonChainId.testnetSol);
   const deploySystemContract = new DeploySystemContract(gasLessProvider, Number(chainId));
   const result: string[] = [];
   let tokens: SPLToken[] = [];
@@ -56,11 +70,11 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
     log(`Init deployer`);
     const { chainId } = await provider.getNetwork();
     const deploy = new DeploySystemContract(provider, Number(chainId));
-    await neonAirdrop(provider, faucet, deploy.sender, 100);
+    await neonAirdrop(provider, faucet, deploy.sender, 100, token.gasToken.tokenName);
     await delay(3e3);
     await deploy.initDeployer();
     await solanaAirdrop(connection, solanaWallet.publicKey, 1e9);
-    await neonAirdrop(provider, faucet, neonWallet.address, 100);
+    await neonAirdrop(provider, faucet, neonWallet.address, 100, token.gasToken.tokenName);
     await delay(3e3);
   }
 

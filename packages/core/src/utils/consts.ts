@@ -9,3 +9,4 @@ export const enum NeonChainId {
 
 export const EVM_STEPS = 500;
 export const NEON_TREASURY_POOL_COUNT = 128;
+export const NO_CHILD_INDEX = 0xffff;

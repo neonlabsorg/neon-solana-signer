@@ -3,6 +3,7 @@ import { JsonRpcProvider } from 'ethers';
 import { log } from './log';
 import { delay } from './delay';
 import { post } from './rest';
+import { GasToken, GasTokenData } from '../models';
 
 export class FaucetDropper {
   private url: string;
@@ -24,15 +25,15 @@ export class FaucetDropper {
   }
 }
 
-export async function neonAirdrop(provider: JsonRpcProvider, faucet: FaucetDropper, wallet: string, amount: number, decimals = 18): Promise<bigint> {
+export async function neonAirdrop(provider: JsonRpcProvider, faucet: FaucetDropper, wallet: string, amount: number, tokenName: string = 'NEON', decimals = 18): Promise<bigint> {
   let balance = await provider.getBalance(wallet);
   if (balance < BigInt(amount) * BigInt(10 ** decimals)) {
     const requestAmount = amount > 100 ? 100 : amount;
     await faucet.requestNeon(wallet, requestAmount);
     await delay(4e3);
-    return neonAirdrop(provider, faucet, wallet, amount);
+    return neonAirdrop(provider, faucet, wallet, amount, tokenName, decimals);
   }
-  log(`${wallet} balance: ${balance / BigInt(10 ** decimals)} NEON`);
+  log(`${wallet} balance: ${balance / BigInt(10 ** decimals)} ${tokenName}`);
   return balance;
 }
 

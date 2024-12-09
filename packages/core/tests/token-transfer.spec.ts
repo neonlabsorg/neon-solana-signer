@@ -133,7 +133,7 @@ beforeAll(async () => {
   log(`Neon wallet: ${solanaUser.neonWallet}; Balance Account: ${solanaUser.balanceAddress.toBase58()}`);
 
   await solanaAirdrop(connection, solanaUser.publicKey, 100e9);
-  await neonAirdrop(provider, faucet, neonWallet.address, 100);
+  await neonAirdrop(provider, faucet, neonWallet.address, 100, gasToken.tokenName);
   await solanaUser.balanceAccountCreate(connection);
 });
 

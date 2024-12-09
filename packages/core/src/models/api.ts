@@ -15,6 +15,20 @@ export interface RPCResponse<T> {
   result: T;
 }
 
+
+/**
+ * Represents the status and configuration of the Neon EVM Program.
+ * @property {number} neonAccountSeedVersion - The version of the Neon account seed. Used to track different versions of the account format.
+ * @property {number} neonMaxEvmStepsInLastIteration - The maximum number of EVM steps allowed in the last iteration of a transaction.
+ * @property {number} neonMinEvmStepsInIteration - The minimum number of EVM steps allowed in each iteration of a transaction.
+ * @property {number} neonGasLimitMultiplierWithoutChainId - The gas limit multiplier applied when the chain ID is not specified.
+ * @property {number} neonHolderMessageSize - The size of the holder message, used to store temporary data during a transaction.
+ * @property {number} neonPaymentToTreasury - The amount of payment made to the treasury for a transaction.
+ * @property {number} neonStorageEntriesInContractAccount - The number of storage entries allowed in a contract account.
+ * @property {number} neonTreasuryPoolCount - The count of treasury pools used in the Neon program.
+ * @property {string} neonTreasuryPoolSeed - The seed used for generating treasury pool addresses.
+ * @property {string} neonEvmProgramId - The program ID of the Neon EVM program deployed on the blockchain.
+ */
 export interface NeonProgramStatus {
   neonAccountSeedVersion: number;
   neonMaxEvmStepsInLastIteration: number;
@@ -111,7 +125,7 @@ export interface HolderAccount {
 export interface NeonBalance {
   status: 'Empty' | string;
   solana_address: PublicKeyString;
-  contract_solana_address: PublicKeyString; // 'AFswRbPEaaeqPKehEVMajoJqfaJLxj8U5WJQEnscB3Bp',
+  contract_solana_address: PublicKeyString;
   trx_count: number;
   balance: HexString;
   user_pubkey?: PublicKeyString;
