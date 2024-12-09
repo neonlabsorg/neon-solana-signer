@@ -1,7 +1,7 @@
 import { AccountInfo, Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { dataSlice, keccak256 } from 'ethers';
 import { hexToBuffer, numberToBuffer, stringToBuffer, toBytes64LE, toBytesInt32, toSigner, toU256BE } from '../utils';
-import { AccountSeedTag, NeonAddress } from '../models';
+import { AccountSeedTag, NeonAddress, TreeAccountData, TreeAccountTransactionData } from '../models';
 import { BalanceAccountLayout } from './layout';
 import { createBalanceAccountTransaction } from './transactions';
 
@@ -23,12 +23,13 @@ export function neonAuthorityPoolAddressSync(neonEvmProgram: PublicKey): [Public
   return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 
-export function neonTreeAccountAddressSync(neonWallet: NeonAddress, neonEvmProgram: PublicKey, nonce: number): [PublicKey, number] {
+export function neonTreeAccountAddressSync(neonWallet: NeonAddress, neonEvmProgram: PublicKey, chainId: number, nonce: number): [PublicKey, number] {
   const version = numberToBuffer(AccountSeedTag.SeedVersion);
   const tag = stringToBuffer('TREE');
   const address = hexToBuffer(neonWallet);
+  const _chainId = toBytes64LE(chainId, 8);
   const _nonce = toBytes64LE(nonce, 8);
-  const seed: any[] = [version, tag, address, _nonce];
+  const seed: any[] = [version, tag, address, _chainId, _nonce];
   return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 
@@ -143,5 +144,84 @@ export class SolanaNeonAccount {
     if (keypair instanceof Keypair) {
       this._keypair = keypair;
     }
+  }
+}
+
+class TreeAccountTransaction {
+  status: string;
+  resultHash: string;
+  transactionHash: string;
+  gasLimit: string;
+  value: string;
+  childTransaction: number;
+  successExecuteLimit: number;
+  parentCount: number;
+
+  get isSuccessful(): boolean {
+    return this.status === 'Success';
+  }
+
+  get isFailed(): boolean {
+    return this.status === 'Failed';
+  }
+
+  constructor(data: TreeAccountTransactionData) {
+    this.status = data.status;
+    this.resultHash = data.result_hash;
+    this.transactionHash = data.transaction_hash;
+    this.gasLimit = data.gas_limit;
+    this.value = data.value;
+    this.childTransaction = data.child_transaction;
+    this.successExecuteLimit = data.success_execute_limit;
+    this.parentCount = data.parent_count;
+  }
+
+  static fromObject(data: TreeAccountTransactionData): TreeAccountTransaction {
+    return new TreeAccountTransaction(data);
+  }
+}
+
+class TreeAccount {
+  result: string;
+  status: string;
+  pubkey: string;
+  payer: string;
+  lastSlot: number;
+  chainId: number;
+  maxFeePerGas: string;
+  maxPriorityFeePerGas: string;
+  balance: number;
+  lastIndex: number;
+  transactions: TreeAccountTransaction[];
+
+  get count(): number {
+    return this.transactions.length;
+  }
+
+  get statuses(): Record<string, string> {
+    return Object.fromEntries(this.transactions.map(tx => [tx.transactionHash, tx.status]));
+  }
+
+  get isAllSuccessful(): boolean {
+    return this.transactions.every(tx => tx.isSuccessful);
+  }
+
+  constructor(data: TreeAccountData) {
+    const value = data.value;
+    this.result = data.result;
+    this.status = value.status;
+    this.pubkey = value.pubkey;
+    this.payer = value.payer;
+    this.lastSlot = value.last_slot;
+    this.chainId = value.chain_id;
+    this.maxFeePerGas = value.max_fee_per_gas;
+    this.maxPriorityFeePerGas = value.max_priority_fee_per_gas;
+    this.balance = parseInt(value.balance, 16);
+    this.lastIndex = value.last_index;
+    this.transactions = value.transactions.map(TreeAccountTransaction.fromObject);
+  }
+
+  static fromObject(data: TreeAccountData): TreeAccount {
+    return new TreeAccount(data);
   }
 }

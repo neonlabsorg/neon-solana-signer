@@ -73,7 +73,7 @@ export async function createScheduledNeonEvmTransaction(transactionData: CreateS
   } = transactionData;
   const transaction = new Transaction();
   const [balanceAddress] = neonBalanceProgramAddressSync(neonWallet, neonEvmProgram, chainId);
-  const [treeAccountAddress] = neonTreeAccountAddressSync(neonWallet, neonEvmProgram, neonWalletNonce);
+  const [treeAccountAddress] = neonTreeAccountAddressSync(neonWallet, neonEvmProgram, chainId, neonWalletNonce);
   const [authorityPoolAddress] = neonAuthorityPoolAddressSync(neonEvmProgram);
   const associatedTokenAddress = await getAssociatedTokenAddress(tokenMintAddress, authorityPoolAddress, true);
 
@@ -101,7 +101,7 @@ export async function createScheduledNeonEvmMultipleTransaction(transactionData:
   } = transactionData;
   const transaction = new Transaction();
   const [balanceAddress] = neonBalanceProgramAddressSync(neonWallet, neonEvmProgram, chainId);
-  const [treeAccountAddress] = neonTreeAccountAddressSync(neonWallet, neonEvmProgram, neonWalletNonce);
+  const [treeAccountAddress] = neonTreeAccountAddressSync(neonWallet, neonEvmProgram, chainId, neonWalletNonce);
   const [authorityPoolAddress] = neonAuthorityPoolAddressSync(neonEvmProgram);
   const associatedTokenAddress = await getAssociatedTokenAddress(tokenMintAddress, authorityPoolAddress, true);
 

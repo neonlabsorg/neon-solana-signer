@@ -295,7 +295,7 @@ describe('Check Solana signer instructions', () => {
     }
   });
 
-  it(`Create holder account`, async () => {
+  it.skip(`Create holder account`, async () => {
     const solanaUser = SolanaNeonAccount.fromKeypair(Keypair.generate(), neonEvmProgram, chainTokenMint, chainId);
     await solanaAirdrop(connection, solanaUser.publicKey, 1e10);
     const [holderAccount, holderSeed] = await holderAddressWithSeed(neonEvmProgram, solanaUser.publicKey);

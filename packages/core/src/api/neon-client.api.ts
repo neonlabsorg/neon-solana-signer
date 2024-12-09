@@ -40,7 +40,10 @@ export class NeonClientApi {
 
   async transactionTree(origin: NeonAddress, nonce: number): Promise<NeonApiResponse<TransactionTreeResponse>> {
     const body = { origin, nonce };
-    return post(`${this.url}/transaction_tree`, body);
+    return post(`${this.url}/transaction_tree`, body).then(r => {
+      console.log(r);
+      return r;
+    });
   }
 
   async waitTransactionTreeExecution(origin: NeonAddress, nonce: number, timeout: number): Promise<ScheduledTransactionStatus[]> {
@@ -48,6 +51,7 @@ export class NeonClientApi {
     const result: ScheduledTransactionStatus[] = [];
     while (timeout > Date.now() - start) {
       const { value, status } = await this.transactionTree(origin, nonce);
+      console.log(value, status);
       const { transactions } = value;
       if (transactions.length > 0) {
         for (const tx of transactions) {
