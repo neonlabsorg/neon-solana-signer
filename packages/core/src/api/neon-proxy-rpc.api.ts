@@ -5,12 +5,14 @@ import {
   NeonAddress,
   NeonAddressResponse,
   NeonGasPrice,
-  NeonProgramStatus,
+  NeonProgramStatus, PendingTransactions,
   ProxyApiState,
   RPCResponse,
-  RPCUrl
+  RPCUrl,
+  SolanaSignature,
+  TransactionByHash
 } from '../models';
-import { log, uuid } from '../utils';
+import { delay, log, uuid } from '../utils';
 
 export class NeonProxyRpcApi {
   readonly rpcUrl: RPCUrl;
@@ -39,6 +41,14 @@ export class NeonProxyRpcApi {
     return this.neonRpc<string>('neon_sendRawScheduledTransaction', [transaction]);
   }
 
+  getNeonTransactionByAddress(pubkey: PublicKey): Promise<RPCResponse<HexString>> {
+    return this.neonRpc<string>('neon_getTransactionByHash', [pubkey.toBase58()]);
+  }
+
+  estimateScheduledTransaction(transaction: HexString): Promise<RPCResponse<HexString>> {
+    return this.neonRpc<string>('neon_estimateScheduledTransaction', [transaction]);
+  }
+
   async sendRawScheduledTransactions(transactions: HexString[]): Promise<RPCResponse<HexString>[]> {
     const result: RPCResponse<HexString>[] = [];
     for (const transaction of transactions) {
@@ -47,16 +57,28 @@ export class NeonProxyRpcApi {
     return result;
   }
 
-  getPendingTransactions(solanaWallet: PublicKey): Promise<RPCResponse<any>> {
-    return this.neonRpc<string>('neon_getPendingTransactions', [solanaWallet.toBase58()]);
+  getPendingTransactions(solanaWallet: PublicKey): Promise<RPCResponse<PendingTransactions>> {
+    return this.neonRpc<PendingTransactions>('neon_getPendingTransactions', [solanaWallet.toBase58()]);
   }
 
   getTransactionCount(neonWallet: NeonAddress): Promise<string> {
     return this.neonRpc<string>('eth_getTransactionCount', [neonWallet, 'latest']).then(({ result }) => result);
   }
 
-  getTransactionByHash(transaction: HexString): Promise<RPCResponse<any>> {
-    return this.neonRpc<string>('eth_getTransactionByHash', [transaction]);
+  getTransactionByHash(signature: SolanaSignature): Promise<RPCResponse<TransactionByHash>> {
+    return this.neonRpc<TransactionByHash>('eth_getTransactionByHash', [signature]);
+  }
+
+  async waitTransactionByHash(signature: string, timeout: number): Promise<TransactionByHash | null> {
+    const start = Date.now();
+    while (timeout > Date.now() - start) {
+      const { result } = await this.getTransactionByHash(signature);
+      if (result?.hash) {
+        return result;
+      }
+      await delay(100);
+    }
+    return null;
   }
 
   ethGetTransactionReceipt(transaction: HexString): Promise<any> {

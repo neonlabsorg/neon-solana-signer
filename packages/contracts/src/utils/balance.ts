@@ -1,9 +1,17 @@
 import { Contract, JsonRpcProvider, Wallet } from 'ethers';
 import { erc20Abi, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer-core';
 import { Big } from 'big.js';
-import { AccountInfo, Connection, PublicKey, Signer, TokenAmount, Transaction } from '@solana/web3.js';
+import {
+  AccountInfo,
+  Connection,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  Signer,
+  TokenAmount,
+  Transaction
+} from '@solana/web3.js';
 import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { delay, sendSolanaTransaction } from '@neonevm/solana-sign';
+import { delay, NeonAddress, sendSolanaTransaction } from '@neonevm/solana-sign';
 
 export async function mintTokenBalance(wallet: Wallet, token: SPLToken, contractAbi: any = erc20Abi, method = 'balanceOf'): Promise<number> {
   const tokenInstance = new Contract(token.address, contractAbi, wallet);
@@ -14,6 +22,25 @@ export async function mintTokenBalance(wallet: Wallet, token: SPLToken, contract
     return (new Big(balance.toString()).div(Big(10).pow(token.decimals))).toNumber();
   }
   return 0;
+}
+
+export function balanceView(amount: string | bigint | number, decimals: number): number {
+  return (new Big(amount.toString()).div(Big(10).pow(decimals))).toNumber();
+}
+
+export async function tokenBalance(provider: JsonRpcProvider, address: NeonAddress, token: SPLToken, contractAbi: any = erc20Abi, method = 'balanceOf'): Promise<number> {
+  const tokenInstance = new Contract(token.address, contractAbi, provider);
+  if (tokenInstance[method]) {
+    const balanceOf = tokenInstance[method];
+    const balance: bigint = await balanceOf(address);
+    return (new Big(balance.toString()).div(Big(10).pow(token.decimals))).toNumber();
+  }
+  return 0;
+}
+
+export async function solanaBalance(connection: Connection, address: PublicKey): Promise<Big> {
+  const balance = await connection.getBalance(address);
+  return new Big(balance).div(LAMPORTS_PER_SOL);
 }
 
 export async function neonBalance(provider: JsonRpcProvider, address: Wallet): Promise<Big> {

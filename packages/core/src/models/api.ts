@@ -7,6 +7,7 @@ export type HexString = `0x${string}` | string;
 export type PublicKeyString = string;
 export type NeonAddress = HexString;
 export type SolanaAddress = string;
+export type SolanaSignature = string;
 export type RPCUrl = string;
 
 export interface RPCResponse<T> {
@@ -14,7 +15,6 @@ export interface RPCResponse<T> {
   jsonrpc: string;
   result: T;
 }
-
 
 /**
  * Represents the status and configuration of the Neon EVM Program.
@@ -94,8 +94,10 @@ export interface TransactionTreeResponse {
   transactions: ScheduledTransactionStatus[];
 }
 
+export type TransactionStatus = 'NotStarted' | 'InProgress' | 'Success' | 'Empty' | string;
+
 export interface ScheduledTransactionStatus {
-  status: 'NotStarted' | 'InProgress' | 'Success' | string;
+  status: TransactionStatus;
   result_hash: HexString;
   transaction_hash: HexString;
   gas_limit: HexString;

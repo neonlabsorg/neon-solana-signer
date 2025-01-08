@@ -120,10 +120,10 @@ export function destroyScheduledTransactionInstruction(data: DestroyScheduledTra
   const type = numberToBuffer(ScheduledTransactionTag.Destroy);
   const count = treasuryPool.buffer;
   const keys: Array<AccountMeta> = [
+    { pubkey: signerAddress, isSigner: true, isWritable: true },
     { pubkey: balanceAddress, isSigner: false, isWritable: true },
     { pubkey: treasuryPool.publicKey, isSigner: false, isWritable: true },
-    { pubkey: treeAccountAddress, isSigner: false, isWritable: true },
-    { pubkey: signerAddress, isSigner: true, isWritable: true }
+    { pubkey: treeAccountAddress, isSigner: false, isWritable: true }
   ];
   return new TransactionInstruction({ keys, programId, data: bufferConcat([type, count]) });
 }

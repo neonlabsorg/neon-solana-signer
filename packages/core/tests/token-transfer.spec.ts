@@ -24,17 +24,16 @@ import {
   splTokenBalance
 } from '@neonevm/solana-contracts';
 import {
-  NEON_TOKEN_MINT_DECIMALS,
   NeonProxyRpcApi as NeonTokenProxyRpcApi,
   neonWrapper2Abi,
   signerPrivateKey,
-  solanaNEONTransferTransaction,
-  SPLToken
+  solanaNEONTransferTransaction
 } from '@neonevm/token-transfer-core';
 import { neonNeonTransactionEthers, neonTransferMintTransactionEthers } from '@neonevm/token-transfer-ethers';
 import { JsonRpcProvider, Wallet } from 'ethers';
 import { config } from 'dotenv';
 import bs58 from 'bs58';
+import { erc20Tokens, NEON, NEON_TRANSFER_CONTRACT_TESTNET, wNEON } from './tokens';
 
 config({ path: '.env' });
 
@@ -46,50 +45,6 @@ const SOLANA_DEVNET_URL = process.env.SOLANA_URL!;
 const NEON_FAUCET_URL = process.env.NEON_FAUCET_URL!;
 const SOLANA_WALLET = process.env.SOLANA_WALLET!;
 const NEON_WALLET = process.env.NEON_WALLET!;
-
-// todo improve to import from @neonevm/solana-contracts
-// copy from packages/contracts/build/token-list.ts
-// the token-list.ts build when deployed scripts/deployer.ts
-const erc20Tokens = [{
-  chainId: 111,
-  address_spl: 'AaLnf9W8msoZGjqY2WoYPXtAeaEGcVUF3ePjCj3vN4oT',
-  address: '0x604592D5Fd549630F2D069dE1F35A71f57067F2c',
-  decimals: 6,
-  name: 'USDT',
-  symbol: 'USDT',
-  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/tether-usdt-logo.svg'
-}, {
-  chainId: 111,
-  address_spl: '5YHcgnY1SxrrakT4hon1yzYHgWYMDCpLQx6DvTxBBLun',
-  address: '0x96B3Aa551FF17ab97CA49eF1B09FB82318890F31',
-  decimals: 6,
-  name: 'USDC',
-  symbol: 'USDC',
-  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/usd-coin-usdc-logo.svg'
-}];
-
-const wNEON: SPLToken = {
-  chainId: 111,
-  address_spl: '',
-  address: '0x5ddf708fcf2b9d6619c8801d4f7380ff3cee8f40',
-  decimals: 18,
-  name: 'Wrapped Neon',
-  symbol: 'wNEON',
-  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/wrapped-neon-logo.svg'
-};
-
-const NEON: SPLToken = {
-  chainId: 111,
-  address_spl: '',
-  address: '',
-  decimals: NEON_TOKEN_MINT_DECIMALS,
-  name: 'Neon',
-  symbol: 'NEON',
-  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/main/neon_token_md.png'
-};
-
-const NEON_TRANSFER_CONTRACT_TESTNET = `0xb16664cb5f5f5e1380029d6636dc5410ad501cf7`;
-
 
 let connection: Connection;
 let neonProxyRpcApi: NeonProxyRpcApi;
@@ -133,14 +88,14 @@ beforeAll(async () => {
   log(`Neon wallet: ${solanaUser.neonWallet}; Balance Account: ${solanaUser.balanceAddress.toBase58()}`);
 
   await solanaAirdrop(connection, solanaUser.publicKey, 100e9);
-  await neonAirdrop(provider, faucet, neonWallet.address, 100, gasToken.tokenName);
+  await neonAirdrop(provider, faucet, solanaUser.neonWallet, 100, gasToken.tokenName);
   await solanaUser.balanceAccountCreate(connection);
 });
 
 describe('Token transfer', () => {
   it(`Should transfer spl tokens from Solana to Neon EVM`, async () => {
     for (const token of erc20Tokens) {
-      const amount = 1;
+      const amount = 100;
       log(`Transfer ${amount} ${token.symbol} from Solana to Neon EVM`);
       const solanaWalletSigner = new Wallet(signerPrivateKey(solanaUser.publicKey, neonWallet.address), provider);
       try {

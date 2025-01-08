@@ -68,8 +68,8 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
 
   {
     log(`Init deployer`);
-    const { chainId } = await provider.getNetwork();
-    const deploy = new DeploySystemContract(provider, Number(chainId));
+    const { chainId } = await gasLessProvider.getNetwork();
+    const deploy = new DeploySystemContract(gasLessProvider, Number(chainId));
     await neonAirdrop(provider, faucet, deploy.sender, 100, token.gasToken.tokenName);
     await delay(3e3);
     await deploy.initDeployer();
