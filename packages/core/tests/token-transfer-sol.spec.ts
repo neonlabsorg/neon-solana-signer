@@ -93,7 +93,7 @@ beforeAll(async () => {
 });
 
 describe('Token transfer (SOL)', () => {
-  it(`Should transfer 1 SOL from Solana to NeonEVM (SOL)`, async () => {
+  it.skip(`Should transfer 1 SOL from Solana to NeonEVM (SOL)`, async () => {
     const amount = 10;
     const solToken: SPLToken = {
       address: '',

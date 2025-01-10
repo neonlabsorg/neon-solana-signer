@@ -88,7 +88,7 @@ afterEach(async () => {
 });
 
 describe('Check Solana signer instructions', () => {
-  it.skip(`Create ScheduledTransaction and sign with Solana`, async () => {
+  it(`Create ScheduledTransaction and sign with Solana`, async () => {
     const neonBalanceAccountNonce = await balanceAccountNonce(connection, solanaUser.neonWallet, neonEvmProgram, chainId);
     log('Balance account nonce', neonBalanceAccountNonce);
 
@@ -137,7 +137,7 @@ describe('Check Solana signer instructions', () => {
     }
   });
 
-  it.skip(`Send raw ScheduledTransaction and sign with Solana`, async () => {
+  it(`Send raw ScheduledTransaction and sign with Solana`, async () => {
     const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
     const maxFeePerGas = 0x77359400;
     log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
@@ -188,7 +188,7 @@ describe('Check Solana signer instructions', () => {
     }
   });
 
-  it.skip(`Send two depended ScheduledTransactions and sign with Solana`, async () => {
+  it(`Send two depended ScheduledTransactions and sign with Solana`, async () => {
     const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
     const maxFeePerGas = 0x77359400;
     log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
@@ -252,7 +252,7 @@ describe('Check Solana signer instructions', () => {
     }
   });
 
-  it.skip(`Send tree parallel ScheduledTransactions and sign with Solana`, async () => {
+  it(`Send tree parallel ScheduledTransactions and sign with Solana`, async () => {
     const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
     const maxFeePerGas = 0x77359400;
     log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
@@ -321,7 +321,7 @@ describe('Check Solana signer instructions', () => {
             chain_id: chainId
           }, nonce);
           log(value.transactions);
-          if (value.transactions.some(t => t.status === 'NotStarted' && t.transaction_hash === pendingTransaction.hash.slice(2))) {
+          if (value.transactions.some(t => ['NotStarted'].includes(t.status) && t.transaction_hash === pendingTransaction.hash.slice(2))) {
             const [treeAccountAddress] = neonTreeAccountAddressSync(solanaUser.neonWallet, neonEvmProgram, chainId, nonce);
             const destroyScheduledTransaction = await destroyScheduledNeonEvmMultipleTransaction({
               neonEvmProgram: neonEvmProgram,

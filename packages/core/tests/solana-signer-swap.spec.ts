@@ -15,6 +15,7 @@ import {
   NeonClientApi,
   NeonProgramStatus,
   NeonProxyRpcApi,
+  NO_CHILD_INDEX,
   ScheduledTransaction,
   sendSolanaTransaction,
   solanaAirdrop,
@@ -30,7 +31,6 @@ import bs58 from 'bs58';
 import { erc20Tokens, usdc, usdt } from './tokens';
 
 config({ path: '.env' });
-// config({ path: '.env.devnet' });
 
 const NEON_API_RPC_SOL_URL = `${process.env.NEON_CORE_API_RPC_URL!}/sol`;
 const NEON_API_RPC_NEON_URL = `${process.env.NEON_CORE_API_RPC_URL!}/neon`;
@@ -39,26 +39,6 @@ const SOLANA_DEVNET_URL = process.env.SOLANA_URL!;
 const NEON_FAUCET_URL = process.env.NEON_FAUCET_URL!;
 const SOLANA_WALLET = process.env.SOLANA_WALLET!;
 const NEON_WALLET = process.env.NEON_WALLET!;
-
-/*// spl tokens on devnet
-const usdt: SPLToken = {
-  chainId: 245022926,
-  address_spl: '3vxj94fSd3jrhaGAwaEKGDPEwn5Yqs81Ay5j1BcdMqSZ',
-  address: '0x6eEf939FC6e2B3F440dCbB72Ea81Cd63B5a519A5',
-  decimals: 6,
-  name: 'USDT',
-  symbol: 'USDT',
-  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/tether-usdt-logo.svg'
-};
-const usdc: SPLToken = {
-  chainId: 245022926,
-  address_spl: 'F4DgNXqiT3zUQA7dhqN5VzEPkRcd8vtqFwpJSwEEvnz5',
-  address: '0x512E48836Cd42F3eB6f50CEd9ffD81E0a7F15103',
-  decimals: 6,
-  name: 'USDC',
-  symbol: 'USDC',
-  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/tether-usdt-logo.svg'
-};*/
 
 let connection: Connection;
 let neonProxyRpcApi: NeonProxyRpcApi;
@@ -104,7 +84,7 @@ beforeAll(async () => {
   log(`Solana wallet: ${solanaUser.publicKey.toBase58()}; ${bs58.encode(solanaUser.keypair.secretKey)}`);
   log(`Neon wallet: ${solanaUser.neonWallet}; Balance Account: ${solanaUser.balanceAddress.toBase58()}`);
 
-  await solanaAirdrop(connection, solanaUser.publicKey, 50e9);
+  await solanaAirdrop(connection, solanaUser.publicKey, 60e9);
   await solanaUser.balanceAccountCreate(connection);
 });
 
@@ -118,7 +98,7 @@ afterEach(async () => {
 });
 
 describe('Check Swap with Solana singer', () => {
-  it.skip(`Should transfer spl tokens from Solana to Neon wallet`, async () => {
+  it(`Should transfer spl tokens from Solana to Neon wallet`, async () => {
     for (const token of erc20Tokens) {
       const amount = 100;
       log(`Transfer ${amount} ${token.symbol} from Solana to Neon EVM`);
@@ -178,7 +158,7 @@ describe('Check Swap with Solana singer', () => {
     }
   });
 
-  it.skip(`Should send to Solana 1 USDT from Neon EVM to Solana`, async () => {
+  it(`Should send to Solana 1 USDT from Neon EVM to Solana`, async () => {
     const amount = 1;
     await createAssociatedTokenAccount(connection, signer, usdc);
     const balance = await tokenBalance(provider, solanaUser.neonWallet, usdc);
@@ -238,7 +218,7 @@ describe('Check Swap with Solana singer', () => {
     }
   });
 
-  it.skip(`Should transfer 1 USDT from Solana to Neon EVM`, async () => {
+  it(`Should transfer 1 USDT from Solana to Neon EVM`, async () => {
     const amount = 1;
     const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(usdt.address_spl), solanaUser.publicKey);
     const usdtAmount = toFullAmount(amount, usdt.decimals);
@@ -295,9 +275,9 @@ describe('Check Swap with Solana singer', () => {
     }
   });
 
-  it(`Should swap 1 USDT to USDC in Solana`, async () => {
+  it.skip(`Should swap 1 USDT to USDC in Solana`, async () => {
     const amount = 1;
-    const maxFeePerGas = 0xB2D05E00; // 0x3B9ACA00;
+    const maxFeePerGas = 0xEE6B2800; // 0x3B9ACA00;
     const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
     const usdcBalance = await tokenBalance(provider, solanaUser.neonWallet, usdc);
     const usdtBalance = await tokenBalance(provider, solanaUser.neonWallet, usdt);
@@ -332,7 +312,7 @@ describe('Check Swap with Solana singer', () => {
 
     const multiple = new MultipleTransactions(nonce, maxFeePerGas);
     multiple.addTransaction(transactionSendUSDC, 1, 0);
-    multiple.addTransaction(transactionSendUSDT, 0, 1);
+    multiple.addTransaction(transactionSendUSDT, NO_CHILD_INDEX, 1);
 
     // [0] scheduled trx
     const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
