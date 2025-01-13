@@ -275,7 +275,7 @@ describe('Check Swap with Solana singer', () => {
     }
   });
 
-  it.skip(`Should swap 1 USDT to USDC in Solana`, async () => {
+  it.skip(`Should swap 1 USDT to USDC in Solana with multiple transaction`, async () => {
     const amount = 1;
     const maxFeePerGas = 0xEE6B2800; // 0x3B9ACA00;
     const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
