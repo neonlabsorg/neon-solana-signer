@@ -8,6 +8,7 @@ export interface CreateScheduledTransactionInstructionData {
   treeAccountAddress: PublicKey;
   associatedTokenAddress: PublicKey;
   neonTransaction: HexString;
+  isMultiple?: boolean;
 }
 
 export interface CreateScheduledTransactionData {
@@ -18,6 +19,7 @@ export interface CreateScheduledTransactionData {
   neonWalletNonce: number;
   neonEvmProgram: PublicKey;
   neonTransaction: HexString;
+  isMultiple?: boolean;
 }
 
 export interface SkipScheduledTransactionData {

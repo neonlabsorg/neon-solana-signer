@@ -36,7 +36,8 @@ export function createScheduledTransactionInstruction(data: CreateScheduledTrans
     balanceAddress,
     treeAccountAddress,
     associatedTokenAddress,
-    neonTransaction
+    neonTransaction,
+    isMultiple
   } = data;
   const treasuryPool = TreasuryPoolAddress.find(programId, NEON_TREASURY_POOL_COUNT);
 
@@ -48,43 +49,7 @@ export function createScheduledTransactionInstruction(data: CreateScheduledTrans
     { pubkey: associatedTokenAddress, isSigner: false, isWritable: true },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
   ];
-  const type = numberToBuffer(ScheduledTransactionTag.Create);
-  const count = treasuryPool.buffer;
-  const transaction = hexToBuffer(neonTransaction);
-  return new TransactionInstruction({ keys, programId, data: bufferConcat([type, count, transaction]) } as any);
-}
-
-/**
- * Create a solana transaction instruction for multiple transactions
- * @param data {CreateScheduledTransactionInstructionData} The data for the instruction
- * @param data.neonEvmProgram {PublicKey} The program ID of the Neon EVM program
- * @param data.signerAddress {PublicKey} The signer address solana wallet public key
- * @param data.balanceAddress {PublicKey} The balance address public key - contain information about neon wallet
- * @param data.treeAccountAddress {PublicKey} The tree account address public key - contain information about scheduled transactions
- * @param data.associatedTokenAddress {PublicKey} The associated token address public key - token address that will used for fee payment
- * @param data.neonTransaction {HexString} The multiple format scheduled transactions hex string
- * @returns {TransactionInstruction}
- */
-export function createScheduledTransactionMultipleInstruction(data: CreateScheduledTransactionInstructionData): TransactionInstruction {
-  const {
-    neonEvmProgram: programId,
-    signerAddress,
-    balanceAddress,
-    treeAccountAddress,
-    associatedTokenAddress,
-    neonTransaction
-  } = data;
-  const treasuryPool = TreasuryPoolAddress.find(programId, NEON_TREASURY_POOL_COUNT);
-
-  const keys: Array<AccountMeta> = [
-    { pubkey: signerAddress, isSigner: true, isWritable: true },
-    { pubkey: balanceAddress, isSigner: false, isWritable: true },
-    { pubkey: treasuryPool.publicKey, isSigner: false, isWritable: true },
-    { pubkey: treeAccountAddress, isSigner: false, isWritable: true },
-    { pubkey: associatedTokenAddress, isSigner: false, isWritable: true },
-    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
-  ];
-  const type = numberToBuffer(ScheduledTransactionTag.CreateMultiple);
+  const type = numberToBuffer(isMultiple ? ScheduledTransactionTag.CreateMultiple : ScheduledTransactionTag.Create);
   const count = treasuryPool.buffer;
   const transaction = hexToBuffer(neonTransaction);
   return new TransactionInstruction({ keys, programId, data: bufferConcat([type, count, transaction]) } as any);

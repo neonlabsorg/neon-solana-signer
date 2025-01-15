@@ -279,8 +279,8 @@ describe('Check Solana signer instructions', () => {
     multiple.addTransaction(trxs[3], NO_CHILD_INDEX, 3);
 
     const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
-      chainId,
-      neonEvmProgram,
+      chainId: chainId,
+      neonEvmProgram: neonEvmProgram,
       neonTransaction: multiple.data,
       signerAddress: solanaUser.publicKey,
       tokenMintAddress: solanaUser.tokenMint,

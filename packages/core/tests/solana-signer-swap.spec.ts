@@ -356,6 +356,7 @@ describe('Check Swap with Solana singer', () => {
 
     const usdcBalanceAfter = await tokenBalance(provider, solanaUser.neonWallet, usdc);
     const usdtBalanceAfter = await tokenBalance(provider, solanaUser.neonWallet, usdt);
-    log(`Token balance: ${usdcBalanceAfter} ${usdc.symbol}; ${usdtBalanceAfter} ${usdt.symbol}`);
+    log(`Token balance: ${usdcBalance} ${usdc.symbol}; ${usdtBalance} ${usdt.symbol}`);
+    log(`Token balance after: ${usdcBalanceAfter} ${usdc.symbol}; ${usdtBalanceAfter} ${usdt.symbol}`);
   });
 });
