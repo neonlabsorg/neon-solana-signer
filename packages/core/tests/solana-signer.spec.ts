@@ -6,6 +6,7 @@ import {
   createScheduledNeonEvmMultipleTransaction,
   createScheduledNeonEvmTransaction,
   delay,
+  destroyScheduledNeonEvmMultipleTransaction,
   FaucetDropper,
   GasToken,
   getGasToken,
@@ -18,6 +19,7 @@ import {
   NeonClientApi,
   NeonProgramStatus,
   NeonProxyRpcApi,
+  neonTreeAccountAddressSync,
   NO_CHILD_INDEX,
   ScheduledTransaction,
   sendSolanaTransaction,
@@ -277,8 +279,8 @@ describe('Check Solana signer instructions', () => {
     multiple.addTransaction(trxs[3], NO_CHILD_INDEX, 3);
 
     const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
-      chainId,
-      neonEvmProgram,
+      chainId: chainId,
+      neonEvmProgram: neonEvmProgram,
       neonTransaction: multiple.data,
       signerAddress: solanaUser.publicKey,
       tokenMintAddress: solanaUser.tokenMint,
@@ -307,9 +309,32 @@ describe('Check Solana signer instructions', () => {
     }
   });
 
-  it(`Check if we have pending transactions`, async () => {
-    const response = await neonProxyRpcApi.getPendingTransactions(solanaUser.publicKey);
-    console.log(response);
+  it(`Check if we have pending transactions and cancel it`, async () => {
+    const { result } = await neonProxyRpcApi.getPendingTransactions(solanaUser.publicKey);
+    log(result);
+    for (const key in result) {
+      if (result.hasOwnProperty(key)) {
+        const nonce = Number(key);
+        for (const pendingTransaction of result[key]) {
+          const { value } = await neonClientApi.transactionTree({
+            address: solanaUser.neonWallet,
+            chain_id: chainId
+          }, nonce);
+          log(value.transactions);
+          if (value.transactions.some(t => ['NotStarted'].includes(t.status) && t.transaction_hash === pendingTransaction.hash.slice(2))) {
+            const [treeAccountAddress] = neonTreeAccountAddressSync(solanaUser.neonWallet, neonEvmProgram, chainId, nonce);
+            const destroyScheduledTransaction = await destroyScheduledNeonEvmMultipleTransaction({
+              neonEvmProgram: neonEvmProgram,
+              signerAddress: solanaUser.publicKey,
+              balanceAddress: solanaUser.balanceAddress,
+              treeAccountAddress: treeAccountAddress
+            });
+            await sendSolanaTransaction(connection, destroyScheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
+            await delay(2e3);
+          }
+        }
+      }
+    }
   });
 
   it.skip(`Create holder account`, async () => {

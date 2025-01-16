@@ -12,6 +12,7 @@
   "scripts": {
     "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
     "deploy": "yarn ts-node src/scripts/deployer.ts",
+    "drop": "yarn ts-node src/scripts/drop.ts",
     "test": "jest"
   },
   "repository": {

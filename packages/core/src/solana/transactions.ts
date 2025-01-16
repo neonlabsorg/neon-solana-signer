@@ -38,7 +38,6 @@ import {
   createBalanceAccountInstruction,
   createHolderAccountInstruction,
   createScheduledTransactionInstruction,
-  createScheduledTransactionMultipleInstruction,
   createScheduledTransactionStartFromAccountInstruction,
   createWriteToHolderAccountInstruction,
   destroyScheduledTransactionInstruction
@@ -69,7 +68,8 @@ export async function createScheduledNeonEvmTransaction(transactionData: CreateS
     neonEvmProgram,
     neonWallet,
     neonWalletNonce,
-    neonTransaction
+    neonTransaction,
+    isMultiple
   } = transactionData;
   const transaction = new Transaction();
   const [balanceAddress] = neonBalanceProgramAddressSync(neonWallet, neonEvmProgram, chainId);
@@ -83,7 +83,8 @@ export async function createScheduledNeonEvmTransaction(transactionData: CreateS
     balanceAddress,
     treeAccountAddress,
     associatedTokenAddress,
-    neonTransaction
+    neonTransaction,
+    isMultiple
   }));
 
   return transaction;
@@ -99,22 +100,16 @@ export async function createScheduledNeonEvmMultipleTransaction(transactionData:
     neonWalletNonce,
     neonTransaction
   } = transactionData;
-  const transaction = new Transaction();
-  const [balanceAddress] = neonBalanceProgramAddressSync(neonWallet, neonEvmProgram, chainId);
-  const [treeAccountAddress] = neonTreeAccountAddressSync(neonWallet, neonEvmProgram, chainId, neonWalletNonce);
-  const [authorityPoolAddress] = neonAuthorityPoolAddressSync(neonEvmProgram);
-  const associatedTokenAddress = await getAssociatedTokenAddress(tokenMintAddress, authorityPoolAddress, true);
-
-  transaction.add(createScheduledTransactionMultipleInstruction({
-    neonEvmProgram,
+  return createScheduledNeonEvmTransaction({
+    chainId,
     signerAddress,
-    balanceAddress,
-    treeAccountAddress,
-    associatedTokenAddress,
-    neonTransaction
-  }));
-
-  return transaction;
+    tokenMintAddress,
+    neonEvmProgram,
+    neonWallet,
+    neonWalletNonce,
+    neonTransaction,
+    isMultiple: true
+  });
 }
 
 export function destroyScheduledNeonEvmMultipleTransaction(transactionData: DestroyScheduledTransactionData): Transaction {

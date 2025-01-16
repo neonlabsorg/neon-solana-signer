@@ -2309,6 +2309,16 @@
   resolved "https://registry.yarnpkg.com/@mobily/ts-belt/-/ts-belt-3.13.1.tgz#8f8ce2a2eca41d88c2ca70c84d0f47d0f7f5cd5f"
   integrity sha512-K5KqIhPI/EoCTbA6CGbrenM9s41OouyK8A03fGJJcla/zKucsgLbz8HNbeseoLarRPgyWJsUyCYqFhI7t3Ra9Q==
 
+"@neonevm/token-transfer-core@4.4.2":
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-core/-/token-transfer-core-4.4.2.tgz#bb6f2300aa249f001464ad0d30db62f6898cef66"
+  integrity sha512-f+B3BldDMueR/XKw6Bri6uo7uuCW2uJ3Qs2oX/gvTq187IRrcdH7GymGmhXnyQxjX698HokpE/acBaBtG+5F1A==
+  dependencies:
+    "@solana/spl-token" "^0.3.8"
+    "@solana/web3.js" "^1.77.3"
+    big.js "^6.2.1"
+    ethers "^6.13.3"
+
 "@neonevm/token-transfer-core@^4.4.1":
   version "4.4.1"
   resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-core/-/token-transfer-core-4.4.1.tgz#2404f762f56a736f46abbd6e9669adff9a5eca95"
@@ -2317,6 +2327,15 @@
     "@solana/spl-token" "^0.3.8"
     "@solana/web3.js" "^1.77.3"
     big.js "^6.2.1"
+    ethers "^6.13.3"
+
+"@neonevm/token-transfer-ethers@4.4.2":
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-ethers/-/token-transfer-ethers-4.4.2.tgz#1a43b7a8ae4d208de6d0e45abeaadb2f7cc3dd44"
+  integrity sha512-myhCFzznEvUbjqMWcJ033s9noPrlmQZi/koHXmQk0YJY+WY+WWOOYTh1GhmnV+6q9Zb9qVlYMaynvzRRNneAkA==
+  dependencies:
+    "@solana/spl-token" "^0.3.8"
+    "@solana/web3.js" "^1.77.3"
     ethers "^6.13.3"
 
 "@neonevm/token-transfer-ethers@^4.4.1":

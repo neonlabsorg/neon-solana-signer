@@ -6,3 +6,4 @@ tmp.json
 *.tmp
 imp
 .nx/cache
+.env.devnet
