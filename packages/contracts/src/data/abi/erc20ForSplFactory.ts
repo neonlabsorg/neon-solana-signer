@@ -1,4 +1,4 @@
-export const erc20ForSplAbi = [{
+export const erc20ForSplFactoryAbi = [{
   'inputs': [
     {
       'internalType': 'bytes32',

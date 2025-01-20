@@ -88,9 +88,9 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
 
   {
     log(`Compile and deploy ERC20ForSplFactory contract`);
-    const contractPath = join(process.cwd(), 'src/data/contracts', 'ERC20ForSplFactory.sol');
-    const { bytecode } = deploySystemContract.compileContract(contractPath);
-    SPL_TOKEN_FACTORY = await deploySystemContract.deployContract(bytecode, neonWallet);
+    const contractPath = join(process.cwd(), 'src/data/contracts', 'ERC20ForSplFactory.bin');
+    const contractData = deploySystemContract.readContract(contractPath);
+    SPL_TOKEN_FACTORY = await deploySystemContract.deployContract(contractData, neonWallet);
     result.push(`SPL_TOKEN_FACTORY=${SPL_TOKEN_FACTORY}`);
   }
 
@@ -129,6 +129,5 @@ export async function deploySplTokens(factoryAddress: NeonAddress, chainId: numb
   tokens = await deploySplTokens(SPL_TOKEN_FACTORY, Number(chainId), tokens);
 
   writeToFile('environments.txt', result.join('\n'));
-  writeToFile('token-list.json', JSON.stringify(tokens, null, 2));
   writeToFile('token-list.ts', `export const tokenList = ${JSON.stringify(tokens, null, 2)}`);
 })();

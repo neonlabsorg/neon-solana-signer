@@ -9,8 +9,8 @@ export const tokenList = [
   },
   {
     "chainId": 111,
-    "address_spl": "5o3NfhtkEjVoHfgEaDtkpVZQZzZs1dcSxuPeUviExv6C",
-    "address": "0xA96AD44d573370a39f82Ce22D69c3910755523E7",
+    "address_spl": "FF4Lm2VRWDJHBV3dVu2DYPgQQ58kGn4roRDa9vXUhqet",
+    "address": "0x485d01396291FCF0c325392Bbc2c89dc7646e907",
     "decimals": 6,
     "name": "USDT",
     "symbol": "USDT",
@@ -18,8 +18,8 @@ export const tokenList = [
   },
   {
     "chainId": 111,
-    "address_spl": "2xs1thr1owKRN8QpZDA8rRwnq88yDUhukTyEdqZtoJu1",
-    "address": "0x3CFfF2Dfa3330962EF4282621ABFB46Af809531B",
+    "address_spl": "8h5rGkS7Dhv8GkqzG3NDoq6HumKYjSAb2ZjXZjxCbLWY",
+    "address": "0x945E43288fcd1Ae0F0c10C8698Ef72A28e7df40E",
     "decimals": 6,
     "name": "USDC",
     "symbol": "USDC",

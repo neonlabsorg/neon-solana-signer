@@ -15,10 +15,10 @@ export class SplTokenDeployer {
   solanaWallet: Keypair;
   neonWallet: Wallet;
   provider: JsonRpcProvider;
-  connectin: Connection;
+  connection: Connection;
 
   getUmiClient(): { umi: Umi, wallet: UmiKeypair, signer: KeypairSigner } {
-    const umi = createUmi(this.connectin.rpcEndpoint);
+    const umi = createUmi(this.connection.rpcEndpoint);
     const wallet = umi.eddsa.createKeypairFromSecretKey(this.solanaWallet.secretKey);
     const signer = createSignerFromKeypair(umi, wallet);
     umi.use(signerIdentity(signer));
@@ -47,6 +47,6 @@ export class SplTokenDeployer {
     this.solanaWallet = solanaWallet;
     this.neonWallet = neonWallet;
     this.provider = provider;
-    this.connectin = connection;
+    this.connection = connection;
   }
 }

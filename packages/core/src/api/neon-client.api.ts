@@ -10,7 +10,6 @@ import {
   TransactionTreeResponse,
   TransferTreeData
 } from '../models';
-import { NeonProxyRpcApi } from './neon-proxy-rpc.api';
 
 export class NeonClientApi {
   private url: string;

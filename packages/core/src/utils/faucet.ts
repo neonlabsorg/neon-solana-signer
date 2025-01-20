@@ -31,7 +31,6 @@ export class FaucetDropper {
 
 export async function neonAirdrop(provider: JsonRpcProvider, faucet: FaucetDropper, wallet: string, amount: number, tokenName: string = 'NEON', decimals = 18): Promise<bigint> {
   let balance = await provider.getBalance(wallet);
-  console.log(balance, BigInt(amount) * BigInt(10 ** decimals));
   if (balance < BigInt(amount) * BigInt(10 ** decimals)) {
     const requestAmount = amount > 100 ? 100 : amount;
     await faucet.requestNeon(wallet, requestAmount);
