@@ -1,6 +1,10 @@
+scripts
+src
 .gitignore
 .npmignore
 .prettierrc.json
+tsconfig.base.json
+tsconfig.build.json
 tsconfig.cjs.json
 tsconfig.esm.json
-tsconfig.types.json
+typedoc.json

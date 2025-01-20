@@ -45,7 +45,7 @@ export async function balanceAccountNonce(connection: Connection, neonWallet: Ne
     const balanceAccountLayout = BalanceAccountLayout.decode(neonWalletBalanceAccount.data as Uint8Array);
     return balanceAccountLayout.nonce;
   }
-  return 0n;
+  return BigInt(0);
 }
 
 export async function holderAddressWithSeed(neonEvmProgram: PublicKey, solanaWallet: PublicKey): Promise<[PublicKey, string]> {
