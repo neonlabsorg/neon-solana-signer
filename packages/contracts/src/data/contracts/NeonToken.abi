@@ -1,1 +1,0 @@
-[{"inputs":[{"internalType":"bytes32","name":"spender","type":"bytes32"}],"name":"withdraw","outputs":[],"stateMutability":"payable","type":"function"}]
