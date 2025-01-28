@@ -21,7 +21,7 @@ import {
   solanaAirdrop,
   SolanaNeonAccount
 } from '@neonevm/solana-sign';
-import { balanceView, BaseContract, createAssociatedTokenAccount, tokenBalance } from '@neonevm/solana-contracts';
+import { balanceView, BaseContract, createAssociatedTokenAccount, tokenBalance } from '@neonevm/contracts-deployer';
 import { claimTransactionData, mintNeonTransactionData } from '@neonevm/token-transfer-ethers';
 import { authAccountAddress, toFullAmount } from '@neonevm/token-transfer-core';
 import { createApproveInstruction, getAccount, getAssociatedTokenAddressSync } from '@solana/spl-token';

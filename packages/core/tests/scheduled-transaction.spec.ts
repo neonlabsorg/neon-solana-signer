@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import { getGasToken, getProxyState, NeonChainId, ScheduledTransaction, SolanaNeonAccount } from '@neonevm/solana-sign';
-import { BaseContract } from '@neonevm/solana-contracts';
+import { BaseContract } from '@neonevm/contracts-deployer';
 import { toBeHex } from 'ethers';
 import { config } from 'dotenv';
 import bs58 from 'bs58';

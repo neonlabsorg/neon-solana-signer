@@ -26,7 +26,7 @@ import {
   solanaAirdrop,
   SolanaNeonAccount
 } from '@neonevm/solana-sign';
-import { BaseContract } from '@neonevm/solana-contracts';
+import { BaseContract } from '@neonevm/contracts-deployer';
 import { JsonRpcProvider } from 'ethers';
 import { config } from 'dotenv';
 import bs58 from 'bs58';

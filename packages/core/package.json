@@ -41,6 +41,7 @@
     "token-list": "https://github.com/neonlabsorg/token-list.git#v5.0.0"
   },
   "devDependencies": {
+    "@neonevm/contracts-deployer": "^0.1.0-a3",
     "@neonevm/token-transfer-core": "4.4.2",
     "@neonevm/token-transfer-ethers": "4.4.2",
     "@types/big.js": "^6.2.2",

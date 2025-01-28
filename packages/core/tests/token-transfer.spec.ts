@@ -22,7 +22,7 @@ import {
   mintTokenBalance,
   neonBalance,
   splTokenBalance
-} from '@neonevm/solana-contracts';
+} from '@neonevm/contracts-deployer';
 import {
   NeonProxyRpcApi as NeonTokenProxyRpcApi,
   neonWrapper2Abi,

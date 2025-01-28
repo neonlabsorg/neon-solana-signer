@@ -14,7 +14,7 @@ import {
   sendSolanaTransaction,
   SolanaNeonAccount
 } from '@neonevm/solana-sign';
-import { BaseContract, createAssociatedTokenAccount, neonBalance, solanaBalance } from '@neonevm/solana-contracts';
+import { BaseContract, createAssociatedTokenAccount, neonBalance, solanaBalance } from '@neonevm/contracts-deployer';
 import {
   NEON_TOKEN_MINT_DECIMALS,
   NeonProxyRpcApi as NeonTokenProxyRpcApi,
