@@ -21,7 +21,7 @@
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json && npm run rename:esm",
     "build": "npm run build:cjs && npm run build:esm",
-    "rename:esm": "/bin/zsh ./scripts/fix-mjs.sh",
+    "rename:esm": "/bin/bash ./scripts/fix-mjs.sh",
     "prepack": "rm -rf ./dist && npm run build",
     "lint": "eslint ./dist",
     "test": "jest",
