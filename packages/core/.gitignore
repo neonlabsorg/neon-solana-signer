@@ -7,3 +7,4 @@ tmp.json
 imp
 .nx/cache
 .env.devnet
+*.tgz

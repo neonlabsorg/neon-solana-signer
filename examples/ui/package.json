@@ -36,7 +36,7 @@
     "@neonevm/solana-sign": "0.1.0",
     "@neonevm/token-transfer-core": "^4.4.1",
     "@neonevm/token-transfer-ethers": "^4.4.1",
-    "@solana/spl-token": "^0.4.9",
+    "@solana/spl-token": "^0.3.11",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-wallets": "^0.19.32",
     "@solana/web3.js": "^1.95.5",
