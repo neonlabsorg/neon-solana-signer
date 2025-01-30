@@ -2,7 +2,17 @@
 
 > Note: this package is under development, run on neon test environment and is not ready for production use.
 
-## How to install and run tests
+## Installation
+
+Firstly, install the package:
+
+```sh
+yarn add @neonevm/solana-sign
+# or
+npm install @neonevm/solana-sign
+```
+
+## Local development - How to install and run tests
 
 ```sh
 yarn install
@@ -10,7 +20,7 @@ cd packages/core
 yarn test
 ```
 
-## How to using it in code
+## How to use it in code
 
 > Node: for more details run `yarn test` in `packages/core` folder and see [solana-signer.spec.ts](packages%2Fcore%2Ftests%2Fsolana-signer.spec.ts) file.
 
