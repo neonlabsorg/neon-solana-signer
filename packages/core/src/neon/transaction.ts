@@ -46,7 +46,7 @@ export class ScheduledTransaction {
     chainId: toBeHex(NeonChainId.testnetSol),
     gasLimit: toBeHex(9999999999),
     maxFeePerGas: toBeHex(100),
-    maxPriorityFeePerGas: toBeHex(10)
+    maxPriorityFeePerGas: toBeHex(1100000001)
   };
 
   /**

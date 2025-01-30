@@ -147,7 +147,7 @@ describe('Check Swap with Solana singer', () => {
       const transactions = await neonClientApi.waitTransactionTreeExecution({
         address: solanaUser.neonWallet,
         chain_id: chainId
-      }, nonce, 2e3);
+      }, nonce, 5e3);
 
       log(`Scheduled transactions result`, transactions);
       for (const { transaction_hash, status } of transactions) {
@@ -208,7 +208,7 @@ describe('Check Swap with Solana singer', () => {
     const transactions = await neonClientApi.waitTransactionTreeExecution({
       address: solanaUser.neonWallet,
       chain_id: chainId
-    }, nonce, 2e3);
+    }, nonce, 8e3);
 
     log(`Scheduled transactions result`, transactions);
     for (const { transaction_hash, status } of transactions) {
