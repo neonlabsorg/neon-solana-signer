@@ -192,7 +192,7 @@ export class MultipleTransactions {
     this._data = Buffer.concat([this._data, transaction.serializedNode(childIndex, successLimit)]);
   }
 
-  constructor(nonce: number, maxFeePerGas: number = 100, maxPriorityFeePerGas: number = 10) {
+  constructor(nonce: number, maxFeePerGas: number = 100, maxPriorityFeePerGas: number = 1100000001) {
     this.nonce = toBytes64BE(nonce, 8);
     this.maxFeePerGas = toBytes64BE(maxFeePerGas, 32, 24);
     this.maxPriorityFeePerGas = toBytes64BE(maxPriorityFeePerGas, 32, 24);

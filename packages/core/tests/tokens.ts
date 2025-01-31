@@ -6,8 +6,8 @@ import { NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer-core
 
 export const usdt: SPLToken = {
   chainId: 112,
-  address_spl: 'BLEBqY6Q9YzzMyX5M5rg38s8cs33SXuyf1fPWdoDpUq4',
-  address: '0x259634a8BEA2fB149E374F880072C93986D91e9A',
+  address_spl: 'EtLzKp1gUfHNiEZyrUTusvYuaBqbbgtosSXVkAcZoNS2',
+  address: '0x283a8F40c7bEe9EE8C36e9C4Dc0A1040597AD722',
   decimals: 6,
   name: 'USDT',
   symbol: 'USDT',
@@ -15,8 +15,8 @@ export const usdt: SPLToken = {
 };
 export const usdc: SPLToken = {
   chainId: 112,
-  address_spl: '8sWQ9jHG116SJETHkgMXgDr7ffCRa2kJdj8M7mTbXmXM',
-  address: '0x6C816fb9e44f85044d56175bA5822Aa2199421C8',
+  address_spl: 'AQtwkFgKis3J7gwjAExJ5SceYzDZDndzE8HceLLtJ8wV',
+  address: '0x4Ba8768e6e1234c7cbF0972dfF0bb97eeA4B3280',
   decimals: 6,
   name: 'USDC',
   symbol: 'USDC',

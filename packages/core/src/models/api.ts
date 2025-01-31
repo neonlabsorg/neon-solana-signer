@@ -1,6 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import { NeonProxyRpcApi } from '../api';
 import { GasToken } from './token';
+import { SolanaAccount } from '@neonevm/token-transfer-core';
 
 export type UUID = string;
 export type HexString = `0x${string}` | string;
@@ -91,12 +92,12 @@ export interface TransactionTreeResponse {
   max_priority_fee_per_gas: HexString;
   balance: HexString;
   last_index: number;
-  transactions: ScheduledTransactionStatus[];
+  transactions: ScheduledTransactionStatusResponse[];
 }
 
 export type TransactionStatus = 'NotStarted' | 'InProgress' | 'Success' | 'Empty' | string;
 
-export interface ScheduledTransactionStatus {
+export interface ScheduledTransactionStatusResponse {
   status: TransactionStatus;
   result_hash: HexString;
   transaction_hash: HexString;
@@ -136,4 +137,51 @@ export interface NeonBalance {
 export interface TransferTreeData {
   address: NeonAddress;
   chain_id: number;
+}
+
+export interface ScheduledTransactionStatus {
+  transactionHash: HexString;
+  status: TransactionStatus;
+  resultHash: HexString;
+  gasLimit: HexString;
+  value: HexString;
+  childTransactionIndex: HexString;
+  successExecutionLimit: HexString;
+  parentCount: HexString;
+}
+
+export interface ScheduledTreeAccount {
+  address: SolanaAddress;
+  status: 'Ok' | string;
+  activeStatus: TransactionStatus;
+  payer: NeonAddress;
+  chainId: HexString;
+  nonce: HexString;
+  lastSlot: HexString;
+  maxFeePerGas: HexString;
+  maxPriorityFeePerGas: HexString;
+  balance: HexString;
+  lastIndex: HexString;
+  transactions: ScheduledTransactionStatus[];
+}
+
+export interface EstimateScheduledTransaction {
+  from: string;
+  to: string;
+  data: string;
+}
+
+export interface EstimatedScheduledGasPayData {
+  scheduledSolanaPayer: string;
+  transactions: EstimateScheduledTransaction[];
+}
+
+export interface EstimatedScheduledGasPayResponse {
+  chainId: HexString;
+  maxFeePerGas: HexString;
+  maxPriorityFeePerGas: HexString;
+  nonce: HexString;
+  treasuryIndex: HexString;
+  accountList: SolanaAccount[],
+  gasList: HexString[]
 }

@@ -10,9 +10,13 @@ cd packages/core
 yarn test
 ```
 
-## How to using it in code
+## How to usage this code
 
-> Node: for more details run `yarn test` in `packages/core` folder and see [solana-signer.spec.ts](packages%2Fcore%2Ftests%2Fsolana-signer.spec.ts) file.
+Install the package
+
+```shell
+yarn install @neonevm/solana-sign
+```
 
 First, it is necessary to initialize all variables and providers for Solana and Neon EVM RPCs.
 
@@ -21,7 +25,6 @@ const result = await getProxyState(`<neon_proxy_rpc_url>`);
 const token = getGasToken(result.tokensList, NeonChainId.testnetSol);
 const connection = new Connection(`<solana_rpc_url>`, 'confirmed');
 const provider = new JsonRpcProvider(`<neon_proxy_rpc_url>`);
-const neonClientApi = new NeonClientApi(`<neon_client_api_url>`);
 const neonProxyRpcApi = result.proxyApi;
 const neonEvmProgram = result.evmProgramAddress;
 const chainId = Number(token.gasToken.tokenChainId);
@@ -92,10 +95,14 @@ console.log('Transaction signature', signature);
 Wait for the Scheduled transaction to execute on the Neon EVM and display the results.
 
 ```typescript
-const [transaction] = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 5e3);
-const { status, transaction_hash, result_hash } = transaction;
-console.log(`Scheduled transaction result`, transaction);
-console.log(await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`));
+const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
+console.log(transactions);
+
+console.log(`Scheduled transactions result`, transactions);
+for (const { transactionHash, status } of transactions) {
+  const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+  console.log(result);
+}
 ```
 
 ### Creating Multiple Scheduled Transactions
@@ -150,33 +157,14 @@ console.log(result === transaction.hash());
 Next, you need to wait for the transaction to be executed.
 
 ```typescript
-const transactions = await neonClientApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 5e3);
+const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
+console.log(transactions);
+
 console.log(`Scheduled transactions result`, transactions);
-for (const { transaction_hash, status } of transactions) {
-  const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
+for (const { transactionHash, status } of transactions) {
+  const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
   console.log(result);
 }
 ```
 
 By following these steps, you can create and execute a batch of Multiple Scheduled Transactions on Solana using Neon Proxy RPC.
-
-
-## Building Docs
-
-We can run TypeDoc with packages mode to generate a single docs folder in the root of the project.
-
-```sh
-# We need to build before building the docs so that `foo` can reference types from `bar`
-# TypeDoc can't use TypeScript's build mode to do this for us because build mode may skip
-# a project that needs documenting, or include packages that shouldn't be included in the docs
-yarn build:all
-# or
-npm run build:all
-```
-Now, we can run TypeDoc with packages mode to generate a single docs folder
-
-```sh
-yarn build:docs
-# or
-npm run build:docs
-```

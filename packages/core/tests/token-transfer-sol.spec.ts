@@ -8,7 +8,6 @@ import {
   getProxyState,
   log,
   NeonChainId,
-  NeonClientApi,
   NeonProgramStatus,
   NeonProxyRpcApi,
   sendSolanaTransaction,
@@ -30,7 +29,6 @@ config({ path: '.env' });
 
 // todo deploy contracts for /sol proxy endpoint
 const NEON_API_RPC_URL = `${process.env.NEON_CORE_API_RPC_URL!}/sol`;
-const NEON_CLIENT_API_URL = process.env.NEON_CORE_API_URL!;
 const SOLANA_DEVNET_URL = process.env.SOLANA_URL!;
 const NEON_FAUCET_URL = process.env.NEON_FAUCET_URL!;
 const SOLANA_WALLET = process.env.SOLANA_WALLET!;
@@ -49,7 +47,6 @@ const NEON: SPLToken = {
 let connection: Connection;
 let neonProxyRpcApi: NeonProxyRpcApi;
 let neonTokenProxyRpcApi: NeonTokenProxyRpcApi;
-let neonClientApi: NeonClientApi;
 let provider: JsonRpcProvider;
 let neonEvmProgram: PublicKey;
 let proxyStatus: NeonProgramStatus;
@@ -69,7 +66,6 @@ beforeAll(async () => {
   const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_WALLET));
   connection = new Connection(SOLANA_DEVNET_URL, 'confirmed');
   provider = new JsonRpcProvider(NEON_API_RPC_URL!);
-  neonClientApi = new NeonClientApi(NEON_CLIENT_API_URL);
   neonTokenProxyRpcApi = new NeonTokenProxyRpcApi(NEON_API_RPC_URL);
   neonProxyRpcApi = result.proxyApi;
   neonEvmProgram = result.evmProgramAddress;

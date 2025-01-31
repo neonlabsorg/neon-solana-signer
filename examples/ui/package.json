@@ -32,8 +32,8 @@
     ]
   },
   "dependencies": {
-    "@neonevm/solana-contracts": "0.1.0",
-    "@neonevm/solana-sign": "0.1.0",
+    "@neonevm/contracts-deployer": "^0.1.0-a5",
+    "@neonevm/solana-sign": "0.1.0-a3",
     "@neonevm/token-transfer-core": "^4.4.1",
     "@neonevm/token-transfer-ethers": "^4.4.1",
     "@solana/spl-token": "^0.3.11",

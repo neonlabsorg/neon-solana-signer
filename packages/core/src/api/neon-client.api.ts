@@ -6,11 +6,14 @@ import {
   NeonAddress,
   NeonApiResponse,
   NeonBalance,
-  ScheduledTransactionStatus,
+  ScheduledTransactionStatusResponse,
   TransactionTreeResponse,
   TransferTreeData
 } from '../models';
 
+/**
+ *  @deprecated use NeonProxyRpcApi
+ **/
 export class NeonClientApi {
   private url: string;
 
@@ -44,9 +47,9 @@ export class NeonClientApi {
     return post(`${this.url}/transaction_tree`, body);
   }
 
-  async waitTransactionTreeExecution(origin: TransferTreeData, nonce: number, timeout: number): Promise<ScheduledTransactionStatus[]> {
+  async waitTransactionTreeExecution(origin: TransferTreeData, nonce: number, timeout: number): Promise<ScheduledTransactionStatusResponse[]> {
     const start = Date.now();
-    const result: ScheduledTransactionStatus[] = [];
+    const result: ScheduledTransactionStatusResponse[] = [];
     while (timeout > Date.now() - start) {
       const { value, status } = await this.transactionTree(origin, nonce);
       const { transactions } = value;
