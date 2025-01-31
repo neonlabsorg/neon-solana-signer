@@ -133,8 +133,6 @@ export function skipScheduledTransactionInstruction(data: SkipScheduledTransacti
 /**
  * Creates a **transaction instruction** to destroy a scheduled transaction.
  *
- * It specifies the **signer, balance account, treasury pool, and tree account** required to perform the operation.
- *
  * @param {DestroyScheduledTransactionData} data - The necessary data for destroying the scheduled transaction.
  * @param {PublicKey} data.neonEvmProgram - The public key of the Neon EVM program.
  * @param {PublicKey} data.signerAddress - The public key of the signer executing the destroy operation - solana wallet.
