@@ -44,8 +44,8 @@ export class ScheduledTransaction {
   private readonly defaultData: Partial<ScheduledTransactionData> = {
     value: '0x',
     chainId: toBeHex(NeonChainId.testnetSol),
-    gasLimit: toBeHex(9999999999),
-    maxFeePerGas: toBeHex(100),
+    gasLimit: toBeHex(5e4),
+    maxFeePerGas: toBeHex(1100000002),
     maxPriorityFeePerGas: toBeHex(1100000001)
   };
 
