@@ -1,7 +1,6 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import { getGasToken, getProxyState, NeonChainId, ScheduledTransaction, SolanaNeonAccount } from '@neonevm/solana-sign';
-import { BaseContract } from '@neonevm/contracts-deployer';
 import { toBeHex } from 'ethers';
 import { config } from 'dotenv';
 import bs58 from 'bs58';
@@ -15,7 +14,6 @@ let neonEvmProgram: PublicKey;
 let chainId: number;
 let chainTokenMint: PublicKey;
 let solanaUser: SolanaNeonAccount;
-let baseContract: BaseContract;
 
 beforeAll(async () => {
   const result = await getProxyState(NEON_API_RPC_URL);
@@ -25,7 +23,6 @@ beforeAll(async () => {
   chainTokenMint = new PublicKey(token.gasToken.tokenMint);
   chainId = Number(token.gasToken.tokenChainId);
   solanaUser = SolanaNeonAccount.fromKeypair(keypair, neonEvmProgram, chainTokenMint, chainId);
-  baseContract = new BaseContract(chainId);
 });
 
 describe('Check ScheduledTransaction data', () => {
@@ -33,12 +30,12 @@ describe('Check ScheduledTransaction data', () => {
     const target = `0xc7e376be256bdb6a1fbedaee64ca860b2b6e95ee`;
     const callData = `0x3fb5c1cb0000000000000000000000000000000000000000000000000000000000000012`;
     const trx1 = new ScheduledTransaction({ payer: solanaUser.neonWallet, target, callData });
-    const trx2 = ScheduledTransaction.from([solanaUser.neonWallet, '0x', '0x', '0x', '0x', '0x', target, callData, '0x', toBeHex(NeonChainId.testnetSol), '0x02540be3ff', '0x64', '0x4190AB01']);
+    const trx2 = ScheduledTransaction.from([solanaUser.neonWallet, '0x', '0x', '0x', '0x', '0x', target, callData, '0x', toBeHex(NeonChainId.testnetSol), '0xC350', '0x4190AB02', '0x4190AB01']);
     expect(trx1.encode()).toBe(trx2.encode());
   });
 
   it(`Should decode transaction`, async () => {
-    const trx = `0xf86294b42bac632c2a69a49c6f5c4c80d933952b53a1dd808080808094c7e376be256bdb6a1fbedaee64ca860b2b6e95eea43fb5c1cb000000000000000000000000000000000000000000000000000000000000001280708502540be3ff64844190ab01`;
+    const trx = `0xf86394b42bac632c2a69a49c6f5c4c80d933952b53a1dd808080808094c7e376be256bdb6a1fbedaee64ca860b2b6e95eea43fb5c1cb0000000000000000000000000000000000000000000000000000000000000012807082c350844190ab02844190ab01`;
     const decoded = ScheduledTransaction.decodeFrom(trx);
     expect(trx).toBe(decoded.encode());
   });

@@ -102,7 +102,7 @@ describe('Check Solana signer instructions', () => {
     });
     log(`Scheduled transaction`, scheduledTransaction.serialize(), scheduledTransaction.hash());
 
-    const createScheduledTransaction = await createScheduledNeonEvmTransaction({
+    const createScheduledTransaction = createScheduledNeonEvmTransaction({
       chainId,
       signerAddress: solanaUser.publicKey,
       tokenMintAddress: solanaUser.tokenMint,
@@ -151,7 +151,7 @@ describe('Check Solana signer instructions', () => {
     const multiple = new MultipleTransactions(nonce, maxFeePerGas);
     multiple.addTransaction(transaction, NO_CHILD_INDEX, 0);
 
-    const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
+    const createScheduledTransaction = createScheduledNeonEvmMultipleTransaction({
       chainId,
       neonEvmProgram,
       neonTransaction: multiple.data,
@@ -213,7 +213,7 @@ describe('Check Solana signer instructions', () => {
     multiple.addTransaction(trx0, 1, 0);
     multiple.addTransaction(trx1, NO_CHILD_INDEX, 1);
 
-    const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
+    const createScheduledTransaction = createScheduledNeonEvmMultipleTransaction({
       chainId,
       neonEvmProgram,
       neonTransaction: multiple.data,
@@ -269,7 +269,7 @@ describe('Check Solana signer instructions', () => {
     multiple.addTransaction(trxs[2], 3, 0);
     multiple.addTransaction(trxs[3], NO_CHILD_INDEX, 3);
 
-    const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
+    const createScheduledTransaction = createScheduledNeonEvmMultipleTransaction({
       chainId: chainId,
       neonEvmProgram: neonEvmProgram,
       neonTransaction: multiple.data,
@@ -309,7 +309,7 @@ describe('Check Solana signer instructions', () => {
           log(result.transactions);
           if (result.transactions.some(t => ['NotStarted'].includes(t.status) && t.transactionHash === pendingTransaction.hash.slice(2))) {
             const [treeAccountAddress] = neonTreeAccountAddressSync(solanaUser.neonWallet, neonEvmProgram, chainId, nonce);
-            const destroyScheduledTransaction = await destroyScheduledNeonEvmMultipleTransaction({
+            const destroyScheduledTransaction = destroyScheduledNeonEvmMultipleTransaction({
               neonEvmProgram: neonEvmProgram,
               signerAddress: solanaUser.publicKey,
               balanceAddress: solanaUser.balanceAddress,

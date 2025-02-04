@@ -1,7 +1,5 @@
 # Library for Scheduled Neon EVM Transaction
 
-> Note: this package is under development, run on neon test environment and is not ready for production use.
-
 ## How to install and run tests
 
 ```sh
@@ -15,7 +13,9 @@ yarn test
 ### Install the package
 
 ```shell
-yarn install @neonevm/solana-sign
+yarn add @neonevm/solana-sign
+# or
+npm install @neonevm/solana-sign
 ```
 
 First, it is necessary to initialize all variables and providers for Solana and Neon EVM RPCs.
@@ -47,14 +47,28 @@ We create a Scheduled transaction and send it, embedding the contract address an
 
 ```typescript
 const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
-const maxFeePerGas = 0x77359400;
+
+const { result } = await neonProxyRpcApi.estimateScheduledGas({
+  scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+  transactions: [{
+    from: solanaUser.neonWallet,
+    to: `<contract_address>`,
+    data: `<call_contract_data>`
+  }]
+});
+
+const maxFeePerGas = result?.maxFeePerGas;
+const maxPriorityFeePerGas = result?.maxPriorityFeePerGas;
+const gasLimit = result?.gasList[0];
 
 const scheduledTransaction = new ScheduledTransaction({
   nonce: toBeHex(nonce),
   payer: solanaUser.neonWallet,
   target: `<contract_address>`,
   callData: `<call_contract_data>`,
-  maxFeePerGas: toBeHex(maxFeePerGas),
+  maxFeePerGas: maxFeePerGas,
+  maxPriorityFeePerGas: maxPriorityFeePerGas,
+  gasLimit: gasLimit,
   chainId: toBeHex(NeonChainId.testnetSol)
 });
 ```
@@ -170,9 +184,6 @@ By following these steps, you can create and execute a batch of Multiple Schedul
 We can run TypeDoc with packages mode to generate a single docs folder in the root of the project.
 
 ```sh
-# We need to build before building the docs so that `foo` can reference types from `bar`
-# TypeDoc can't use TypeScript's build mode to do this for us because build mode may skip
-# a project that needs documenting, or include packages that shouldn't be included in the docs
 yarn build:all
 # or
 npm run build:all

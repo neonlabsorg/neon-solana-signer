@@ -486,8 +486,7 @@ class TreeAccountTransaction {
    *   status: "Success",
    *   result_hash: "0xabc...",
    *   transaction_hash: "0x123...",
-   *   gas_limit: "50000",
-   *   value: "0.1",
+   *   gas_limit: 1e5,
    *   child_transaction: 2,
    *   success_execute_limit: 5,
    *   parent_count: 1

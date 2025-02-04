@@ -8,26 +8,17 @@ import {
   getProxyState,
   log,
   NeonChainId,
-  NeonProgramStatus,
-  NeonProxyRpcApi,
   sendSolanaTransaction,
   SolanaNeonAccount
 } from '@neonevm/solana-sign';
-import { BaseContract, createAssociatedTokenAccount, neonBalance, solanaBalance } from '@neonevm/contracts-deployer';
-import {
-  NEON_TOKEN_MINT_DECIMALS,
-  NeonProxyRpcApi as NeonTokenProxyRpcApi,
-  solanaSOLTransferTransaction,
-  SPLToken
-} from '@neonevm/token-transfer-core';
+import { createAssociatedTokenAccount, neonBalance, solanaBalance } from '@neonevm/contracts-deployer';
+import { NEON_TOKEN_MINT_DECIMALS, solanaSOLTransferTransaction, SPLToken } from '@neonevm/token-transfer-core';
 import { JsonRpcProvider, Wallet } from 'ethers';
 import { config } from 'dotenv';
 import bs58 from 'bs58';
 
 config({ path: '.env' });
 
-
-// todo deploy contracts for /sol proxy endpoint
 const NEON_API_RPC_URL = `${process.env.NEON_CORE_API_RPC_URL!}/sol`;
 const SOLANA_DEVNET_URL = process.env.SOLANA_URL!;
 const NEON_FAUCET_URL = process.env.NEON_FAUCET_URL!;
@@ -45,18 +36,14 @@ const NEON: SPLToken = {
 };
 
 let connection: Connection;
-let neonProxyRpcApi: NeonProxyRpcApi;
-let neonTokenProxyRpcApi: NeonTokenProxyRpcApi;
 let provider: JsonRpcProvider;
 let neonEvmProgram: PublicKey;
-let proxyStatus: NeonProgramStatus;
 let chainId: number;
 let chainTokenMint: PublicKey;
 let gasToken: GasToken;
 let faucet: FaucetDropper;
 let solanaUser: SolanaNeonAccount;
 let signer: Signer;
-let baseContract: BaseContract;
 let neonWallet: Wallet;
 let skipPreflight = false;
 
@@ -66,17 +53,13 @@ beforeAll(async () => {
   const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_WALLET));
   connection = new Connection(SOLANA_DEVNET_URL, 'confirmed');
   provider = new JsonRpcProvider(NEON_API_RPC_URL!);
-  neonTokenProxyRpcApi = new NeonTokenProxyRpcApi(NEON_API_RPC_URL);
-  neonProxyRpcApi = result.proxyApi;
   neonEvmProgram = result.evmProgramAddress;
-  proxyStatus = result.proxyStatus;
   chainId = Number(token.gasToken.tokenChainId);
   chainTokenMint = new PublicKey(token.gasToken.tokenMint);
   gasToken = token.gasToken;
   faucet = new FaucetDropper(NEON_FAUCET_URL);
   solanaUser = SolanaNeonAccount.fromKeypair(keypair, neonEvmProgram, chainTokenMint, chainId);
   signer = solanaUser.signer!;
-  baseContract = new BaseContract(chainId);
   neonWallet = new Wallet(NEON_WALLET, provider);
   NEON.address_spl = gasToken.tokenMint;
 
