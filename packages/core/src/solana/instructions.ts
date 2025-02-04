@@ -55,6 +55,31 @@ export function createScheduledTransactionInstruction(data: CreateScheduledTrans
   return new TransactionInstruction({ keys, programId, data: bufferConcat([type, count, transaction]) } as any);
 }
 
+/**
+ * Creates a **transaction instruction** to finalize a scheduled transaction.
+ *
+ * It specifies the **holder address, tree account, signer, and balance account** required to complete the transaction.
+ *
+ * @param {FinishScheduledTransactionData} data - The necessary data for finalizing the scheduled transaction.
+ * @param {PublicKey} data.neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} data.holderAddress - The public key of the holder account storing the scheduled transaction.
+ * @param {PublicKey} data.treeAccountAddress - The public key of the tree account managing the transaction.
+ * @param {PublicKey} data.signerAddress - The public key of the signer executing the transaction - solana wallet.
+ * @param {PublicKey} data.balanceAddress - The public key of the balance account involved in the transaction - contain information about neon wallet.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` to finalize the scheduled transaction.
+ *
+ * @example
+ * ```typescript
+ * const instruction = finishScheduledTransactionInstruction({
+ *   neonEvmProgram,
+ *   holderAddress,
+ *   treeAccountAddress,
+ *   signerAddress,
+ *   balanceAddress
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function finishScheduledTransactionInstruction(data: FinishScheduledTransactionData): TransactionInstruction {
   const { neonEvmProgram: programId, holderAddress, treeAccountAddress, signerAddress, balanceAddress } = data;
   const type = numberToBuffer(ScheduledTransactionTag.Finish);
@@ -67,6 +92,32 @@ export function finishScheduledTransactionInstruction(data: FinishScheduledTrans
   return new TransactionInstruction({ keys, programId, data: type });
 }
 
+/**
+ * Creates a **transaction instruction** to skip a scheduled transaction.
+ *
+ * This function constructs a **Solana transaction instruction** that marks a scheduled transaction as **skipped**.
+ * It specifies the **holder account, tree account, signer, and transaction index** required to perform the operation.
+ *
+ * @param {SkipScheduledTransactionData} data - The necessary data for skipping the scheduled transaction.
+ * @param {PublicKey} data.neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} data.signerAddress - The public key of the signer executing the skip operation - solana wallet.
+ * @param {PublicKey} data.holderAccount - The public key of the holder account storing the scheduled transaction.
+ * @param {PublicKey} data.treeAccountAddress - The public key of the tree account managing the transaction.
+ * @param {number} data.transactionIndex - The index of the transaction to be skipped.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` to skip the scheduled transaction.
+ *
+ * @example
+ * ```typescript
+ * const instruction = skipScheduledTransactionInstruction({
+ *   neonEvmProgram,
+ *   signerAddress,
+ *   holderAccount,
+ *   treeAccountAddress,
+ *   transactionIndex: 2
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function skipScheduledTransactionInstruction(data: SkipScheduledTransactionData): TransactionInstruction {
   const { neonEvmProgram: programId, signerAddress, holderAccount, treeAccountAddress, transactionIndex } = data;
   const type = numberToBuffer(ScheduledTransactionTag.Skip);
@@ -79,6 +130,27 @@ export function skipScheduledTransactionInstruction(data: SkipScheduledTransacti
   return new TransactionInstruction({ keys, programId, data: bufferConcat([type, index]) });
 }
 
+/**
+ * Creates a **transaction instruction** to destroy a scheduled transaction.
+ *
+ * @param {DestroyScheduledTransactionData} data - The necessary data for destroying the scheduled transaction.
+ * @param {PublicKey} data.neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} data.signerAddress - The public key of the signer executing the destroy operation - solana wallet.
+ * @param {PublicKey} data.balanceAddress - The public key of the balance account involved in the transaction.
+ * @param {PublicKey} data.treeAccountAddress - The public key of the tree account managing the transaction.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` to destroy the scheduled transaction.
+ *
+ * @example
+ * ```typescript
+ * const instruction = destroyScheduledTransactionInstruction({
+ *   neonEvmProgram,
+ *   signerAddress,
+ *   balanceAddress,
+ *   treeAccountAddress
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function destroyScheduledTransactionInstruction(data: DestroyScheduledTransactionData): TransactionInstruction {
   const { neonEvmProgram: programId, signerAddress, balanceAddress, treeAccountAddress } = data;
   const treasuryPool = TreasuryPoolAddress.find(programId, NEON_TREASURY_POOL_COUNT);
@@ -131,6 +203,29 @@ export function createAccountWithSeedInstruction(neonEvmProgram: PublicKey, oper
   });
 }
 
+/**
+ * Creates a **transaction instruction** to initialize a new holder account.
+ *
+ * This function constructs a **Solana transaction instruction** that **creates a holder account**
+ * using a specific seed. The holder account is used to store intermediate transaction data
+ *
+ * @param {PublicKey} neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} operator - The public key of the operator responsible for creating the holder account - instance of the SolanaNeonAccount.
+ * @param {PublicKey} holderAddress - The public key of the holder account to be created.
+ * @param {string} seed - The seed used to derive the holder account address.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` to create the holder account.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createHolderAccountInstruction(
+ *   neonEvmProgram,
+ *   operator,
+ *   holderAddress,
+ *   "unique-seed-value"
+ * );
+ * transaction.add(instruction);
+ * ```
+ */
 export function createHolderAccountInstruction(neonEvmProgram: PublicKey, operator: PublicKey, holderAddress: PublicKey, seed: string): TransactionInstruction {
   const instruction = numberToBuffer(InstructionTag.HolderCreate);
   const seedLength = toBytes64LE(seed.length, 8);
@@ -144,6 +239,26 @@ export function createHolderAccountInstruction(neonEvmProgram: PublicKey, operat
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Creates a **transaction instruction** to delete a holder account.
+ *
+ * The transaction requires the **Solana wallet** (operator) to sign the instruction to authorize the deletion.
+ *
+ * @param {PublicKey} neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} solanaWallet - The public key of the Solana wallet authorizing the deletion.
+ * @param {PublicKey} holderAddress - The public key of the holder account to be deleted.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` to delete the holder account.
+ *
+ * @example
+ * ```typescript
+ * const instruction = deleteHolderAccountInstruction(
+ *   neonEvmProgram,
+ *   solanaWallet,
+ *   holderAddress
+ * );
+ * transaction.add(instruction);
+ * ```
+ */
 export function deleteHolderAccountInstruction(neonEvmProgram: PublicKey, solanaWallet: PublicKey, holderAddress: PublicKey): TransactionInstruction {
   const data = numberToBuffer(InstructionTag.HolderDelete);
   const keys: AccountMeta[] = [
@@ -153,6 +268,33 @@ export function deleteHolderAccountInstruction(neonEvmProgram: PublicKey, solana
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Creates a **transaction instruction** to write data to a holder account.
+ *
+ * This function constructs a **Solana transaction instruction** that writes a part of a **transaction payload**
+ * into a holder account.
+ *
+ * @param {PublicKey} neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} operator - The public key of the operator executing the write operation - instance of the SolanaNeonAccount.
+ * @param {PublicKey} holderAddress - The public key of the holder account where data will be written.
+ * @param {string} transactionHash - The unique transaction hash associated with this write operation.
+ * @param {Buffer} transactionPart - A chunk of transaction data to be stored in the holder account.
+ * @param {number} offset - The byte offset at which the transaction part should be written.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` to write data to the holder account.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createWriteToHolderAccountInstruction(
+ *   neonEvmProgram,
+ *   operator,
+ *   holderAddress,
+ *   "0xabcdef1234567890",
+ *   Buffer.from("transaction data"),
+ *   0
+ * );
+ * transaction.add(instruction);
+ * ```
+ */
 export function createWriteToHolderAccountInstruction(neonEvmProgram: PublicKey, operator: PublicKey, holderAddress: PublicKey, transactionHash: string, transactionPart: Buffer, offset: number): TransactionInstruction {
   const type = numberToBuffer(InstructionTag.HolderWrite);
   const data = bufferConcat([type, hexToBuffer(transactionHash), toBytes64LE(offset, 8), transactionPart]);
@@ -166,6 +308,36 @@ export function createWriteToHolderAccountInstruction(neonEvmProgram: PublicKey,
   });
 }
 
+/**
+ * Creates a **transaction instruction** to start a scheduled transaction from an account.
+ *
+ * This function constructs a **Solana transaction instruction** that initiates a scheduled transaction
+ * using a **tree structure**. It requires the **holder account**, **tree account**, **operator**,
+ * and **balance account** to be provided. Additional accounts can be included as needed.
+ *
+ * @param {PublicKey} neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} operator - The public key of the operator executing the transaction - instance of the SolanaNeonAccount.
+ * @param {PublicKey} balanceAddress - The public key of the balance account involved in the transaction.
+ * @param {PublicKey} holderAddress - The public key of the holder account storing transaction data.
+ * @param {PublicKey} treeAddress - The public key of the tree account managing the transaction.
+ * @param {number} index - The nonce of the scheduled transaction.
+ * @param {PublicKey[]} [additionAccounts=[]] - An optional list of additional accounts required for execution.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` to start the scheduled transaction.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createScheduledTransactionStartFromAccountInstruction(
+ *   neonEvmProgram,
+ *   operator,
+ *   balanceAddress,
+ *   holderAddress,
+ *   treeAddress,
+ *   1,  // Transaction nonce
+ *   [additionalAccount1, additionalAccount2] // Optional additional accounts
+ * );
+ * transaction.add(instruction);
+ * ```
+ */
 export function createScheduledTransactionStartFromAccountInstruction(neonEvmProgram: PublicKey, operator: PublicKey, balanceAddress: PublicKey, holderAddress: PublicKey, treeAddress: PublicKey, index: number, additionAccounts: PublicKey[] = []): TransactionInstruction {
   const type = numberToBuffer(ScheduledTransactionTag.StartFromAccount);
   const indexBuffer = numberToBuffer(index);

@@ -1,4 +1,11 @@
+import bs58 from 'bs58';
 import { HexString } from '../models';
+
+export function base58ToHex(mint: string): string {
+  const bytes = bs58.decode(mint);
+  const bytes32Value = Buffer.from(bytes);
+  return `0x${bytes32Value.toString('hex')}`;
+}
 
 export function isValidHex(hex: string | number): boolean {
   const isHexStrict = /^(0x)?[0-9a-f]*$/i.test(hex.toString());

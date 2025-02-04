@@ -2,8 +2,6 @@
 
 This library provides a set of functions for creating and sending Scheduled transactions on the Neon EVM network.
 
-> Note: This package is under development.
-
 ### Install dependencies
 
 ```shell
@@ -17,12 +15,14 @@ yarn build
 yarn test
 ```
 
-## How to usage this code
+## How to use it in code
 
-Install the package
+### Install the package
 
 ```shell
-yarn install @neonevm/solana-sign
+yarn add @neonevm/solana-sign
+# or
+npm install @neonevm/solana-sign
 ```
 
 First, it is necessary to initialize all variables and providers for Solana and Neon EVM RPCs.
@@ -53,14 +53,28 @@ We create a Scheduled transaction and send it, embedding the contract address an
 
 ```typescript
 const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
-const maxFeePerGas = 0x77359400;
+
+const { result } = await neonProxyRpcApi.estimateScheduledGas({
+  scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+  transactions: [{
+    from: solanaUser.neonWallet,
+    to: `<contract_address>`,
+    data: `<call_contract_data>`
+  }]
+});
+
+const maxFeePerGas = result?.maxFeePerGas;
+const maxPriorityFeePerGas = result?.maxPriorityFeePerGas;
+const gasLimit = result?.gasList[0];
 
 const scheduledTransaction = new ScheduledTransaction({
   nonce: toBeHex(nonce),
   payer: solanaUser.neonWallet,
   target: `<contract_address>`,
   callData: `<call_contract_data>`,
-  maxFeePerGas: toBeHex(maxFeePerGas),
+  maxFeePerGas: maxFeePerGas,
+  maxPriorityFeePerGas: maxPriorityFeePerGas,
+  gasLimit: gasLimit,
   chainId: toBeHex(NeonChainId.testnetSol)
 });
 ```

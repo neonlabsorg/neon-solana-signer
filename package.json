@@ -1,7 +1,7 @@
 {
   "name": "@neonevm/solana-sign",
   "description": "Javascript Library for Execute Neon transactions with Solana's signature",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "cd packages/core && yarn build",
     "build:all": "yarn workspaces run build",
-    "test": "cd packages/core && jest",
+    "test": "cd packages/core && jest -i",
     "build:docs": "typedoc"
   },
   "repository": {

@@ -26,14 +26,12 @@ import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer, toBytes16LE, to
  *  payer: "0xPayerAddress",
  *  sender: "0xSenderAddress",
  *  nonce: 1,
- *  index: 1,
  *  target: "0xTargetAddress",
  *  callData: "0xCallData",
- *  value: 1,
- *  chainId: 245022926,
- *  gasLimit: 100,
- *  maxFeePerGas: 100,
- *  maxPriorityFeePerGas: 10
+ *  chainId: 245022927,
+ *  gasLimit: 50000,
+ *  maxFeePerGas: 1100000002,
+ *  maxPriorityFeePerGas: 1100000001
  *  });
  *  ```
  */

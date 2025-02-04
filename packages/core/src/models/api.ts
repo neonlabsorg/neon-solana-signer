@@ -15,6 +15,7 @@ export interface RPCResponse<T> {
   id: number | string;
   jsonrpc: string;
   result: T;
+  error?: any;
 }
 
 /**
@@ -166,7 +167,7 @@ export interface ScheduledTreeAccount {
 }
 
 export interface EstimateScheduledTransaction {
-  from: string;
+  from?: string;
   to: string;
   data: string;
 }

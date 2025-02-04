@@ -7,9 +7,7 @@ const config: Config.InitialOptions = {
   transform: { '^.+\\.(t|j)s$': 'ts-jest' },
   moduleFileExtensions: ['js', 'json', 'ts'],
   moduleNameMapper: {
-    '@neonevm/solana-sign': '<rootDir>/src',
-    '@neonevm/solana-contracts': '<rootDir>/../contracts/src',
-    '@neonevm/solana-contracts/build': '<rootDir>/../contracts/build',
+    '@neonevm/solana-sign': '<rootDir>/src'
   },
   testEnvironmentOptions: { path: '.env' },
   testTimeout: 2e5,
