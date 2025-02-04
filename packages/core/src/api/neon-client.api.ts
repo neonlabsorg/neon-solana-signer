@@ -6,12 +6,13 @@ import {
   NeonAddress,
   NeonApiResponse,
   NeonBalance,
-  ScheduledTransactionStatus,
+  ScheduledTransactionStatusResponse,
   TransactionTreeResponse,
   TransferTreeData
 } from '../models';
 
 /**
+ * @deprecated use NeonProxyRpcApi
  * A client API for interacting with **Neon EVM infrastructure**.
  *
  * This class provides a set of methods to **emulate transactions**, **query balances**,
@@ -24,7 +25,9 @@ import {
  * const balance = await neonClient.getBalance("0xNeonAddress", 245022926);
  * console.log(balance);
  * ```
- */
+
+ **/
+
 export class NeonClientApi {
   private url: string;
 
@@ -130,9 +133,9 @@ export class NeonClientApi {
    * @param {number} timeout - The **maximum waiting time** in milliseconds.
    * @returns {Promise<ScheduledTransactionStatus[]>} A **promise** resolving to an array of **executed transaction statuses**.
    */
-  async waitTransactionTreeExecution(origin: TransferTreeData, nonce: number, timeout: number): Promise<ScheduledTransactionStatus[]> {
+  async waitTransactionTreeExecution(origin: TransferTreeData, nonce: number, timeout: number): Promise<ScheduledTransactionStatusResponse[]> {
     const start = Date.now();
-    const result: ScheduledTransactionStatus[] = [];
+    const result: ScheduledTransactionStatusResponse[] = [];
     while (timeout > Date.now() - start) {
       const { value, status } = await this.transactionTree(origin, nonce);
       const { transactions } = value;

@@ -1,14 +1,20 @@
 import { PublicKey } from '@solana/web3.js';
 import {
+  EstimatedScheduledGasPayData,
+  EstimatedScheduledGasPayResponse,
   GasToken,
   HexString,
   NeonAddress,
   NeonAddressResponse,
   NeonGasPrice,
-  NeonProgramStatus, PendingTransactions,
+  NeonProgramStatus,
+  PendingTransactions,
   ProxyApiState,
   RPCResponse,
   RPCUrl,
+  ScheduledTransactionStatus,
+  ScheduledTreeAccount,
+  SolanaAddress,
   SolanaSignature,
   TransactionByHash
 } from '../models';
@@ -79,6 +85,37 @@ export class NeonProxyRpcApi {
       await delay(100);
     }
     return null;
+  }
+
+  async waitTransactionTreeExecution(address: NeonAddress | SolanaAddress, nonce: number, timeout: number): Promise<ScheduledTransactionStatus[]> {
+    const start = Date.now();
+    const trx: ScheduledTransactionStatus[] = [];
+    while (timeout > Date.now() - start) {
+      const { result } = await this.getScheduledTreeAccount(address, nonce);
+      const { transactions } = result;
+      if (transactions.length > 0) {
+        for (const tx of transactions) {
+          const index = trx.findIndex(i => i.transactionHash === tx.transactionHash);
+          if (index === -1) {
+            trx.push(tx);
+          } else {
+            trx[index] = tx;
+          }
+        }
+      } else {
+        return trx;
+      }
+      await delay(100);
+    }
+    return trx;
+  }
+
+  getScheduledTreeAccount(address: NeonAddress | SolanaAddress, nonce: number): Promise<RPCResponse<ScheduledTreeAccount>> {
+    return this.neonRpc<ScheduledTreeAccount>('neon_getScheduledTreeAccount', [address, nonce, 'latest']);
+  }
+
+  estimateScheduledGas(data: EstimatedScheduledGasPayData): Promise<RPCResponse<EstimatedScheduledGasPayResponse>> {
+    return this.neonRpc<EstimatedScheduledGasPayResponse>('neon_estimateScheduledGas', [data]);
   }
 
   ethGetTransactionReceipt(transaction: HexString): Promise<any> {

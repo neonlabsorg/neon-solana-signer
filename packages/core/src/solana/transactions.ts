@@ -7,6 +7,7 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { keccak256 } from 'ethers';
 import {
   bufferConcat,
@@ -127,7 +128,7 @@ export async function createHolderAccountTransaction(neonEvmProgram: PublicKey, 
  * @param {boolean} transactionData.isMultiple - A **flag indicating whether multiple transactions are scheduled together**.
  * @returns {Promise<Transaction>} A **Solana `Transaction` object**, ready to be signed and sent.
  */
-export async function createScheduledNeonEvmTransaction(transactionData: CreateScheduledTransactionData): Promise<Transaction> {
+export function createScheduledNeonEvmTransaction(transactionData: CreateScheduledTransactionData): Transaction {
   const {
     chainId,
     signerAddress,
@@ -142,7 +143,7 @@ export async function createScheduledNeonEvmTransaction(transactionData: CreateS
   const [balanceAddress] = neonBalanceProgramAddressSync(neonWallet, neonEvmProgram, chainId);
   const [treeAccountAddress] = neonTreeAccountAddressSync(neonWallet, neonEvmProgram, chainId, neonWalletNonce);
   const [authorityPoolAddress] = neonAuthorityPoolAddressSync(neonEvmProgram);
-  const associatedTokenAddress = await getAssociatedTokenAddress(tokenMintAddress, authorityPoolAddress, true);
+  const associatedTokenAddress = getAssociatedTokenAddressSync(tokenMintAddress, authorityPoolAddress, true);
 
   transaction.add(createScheduledTransactionInstruction({
     neonEvmProgram,
@@ -173,7 +174,7 @@ export async function createScheduledNeonEvmTransaction(transactionData: CreateS
  * @param {string} transactionData.neonTransaction - The **raw Neon EVM transaction data**.
  * @returns {Promise<Transaction>} A **Solana `Transaction` object**, ready to be signed and sent.
  */
-export async function createScheduledNeonEvmMultipleTransaction(transactionData: CreateScheduledTransactionData): Promise<Transaction> {
+export function createScheduledNeonEvmMultipleTransaction(transactionData: CreateScheduledTransactionData): Transaction {
   const {
     chainId,
     signerAddress,

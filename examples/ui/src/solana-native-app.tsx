@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
 import {
   createBalanceAccountInstruction,
   createScheduledNeonEvmTransaction,
-  NeonClientApi,
   NeonProxyRpcApi,
   ScheduledTransaction,
   solanaAirdrop,
@@ -16,23 +14,20 @@ import {
   NEON_TOKEN_MINT_DEVNET,
   NeonProgramStatus
 } from '@neonevm/token-transfer-core';
-import { JsonRpcProvider } from 'ethers';
 
-import { BaseContract, CHAIN_ID, NEON_CORE_API_RPC_URL, NEON_CORE_API_URL, SOLANA_URL } from './utils';
+import { BaseContract, CHAIN_ID, NEON_CORE_API_RPC_URL, SOLANA_URL } from './utils';
 
 const networkUrls = [{
   id: 111,
   token: 'NEON',
   solana: SOLANA_URL,
-  neonProxy: NEON_CORE_API_RPC_URL,
-  neonApi: NEON_CORE_API_URL
+  neonProxy: NEON_CORE_API_RPC_URL
 }, {
   id: 112,
   token: 'SOL',
   solana: SOLANA_URL,
-  neonProxy: NEON_CORE_API_RPC_URL,
+  neonProxy: NEON_CORE_API_RPC_URL
   //neonProxy: `${NEON_CORE_API_RPC_URL}/sol`,
-  neonApi: NEON_CORE_API_URL
 }];
 
 function SolanaNativeApp() {
@@ -57,16 +52,8 @@ function SolanaNativeApp() {
     return new PhantomWalletAdapter();
   }, [connection]);
 
-  const ethersProvider: any = useMemo(() => {
-    return new JsonRpcProvider(networkUrl.neonProxy);
-  }, [networkUrl]);
-
   const proxyRpcApi = useMemo(() => {
     return new NeonProxyRpcApi(networkUrl.neonProxy);
-  }, [networkUrl]);
-
-  const proxyClientApi = useMemo(() => {
-    return new NeonClientApi(networkUrl.neonApi);
   }, [networkUrl]);
 
   const neonEvmProgram = useMemo(() => {
@@ -163,15 +150,16 @@ function SolanaNativeApp() {
         const signedTransaction = await solanaProvider.signTransaction(createScheduledTransaction);
         const signature = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false });
         console.log(`Solana signature: ${signature}`);
-        const [transaction] = await proxyClientApi.waitTransactionTreeExecution({
-          address: solanaUser.neonWallet,
-          chain_id: chainId
-        }, nonce, 5e3);
-        const { transaction_hash, result_hash } = transaction;
-        console.log(`Scheduled transaction result`, transaction);
-        console.log(await proxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`));
-        console.log(await proxyRpcApi.getTransactionReceipt(`0x${result_hash}`));
-        setResponseLog(JSON.stringify(transaction, null, '  '));
+
+        const transactions = await proxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
+        console.log(`Scheduled transactions result`, transactions);
+        for (const transaction of transactions) {
+          const { transactionHash } = transaction;
+          const { result } = await proxyRpcApi.getTransactionReceipt(transactionHash);
+          console.log(result);
+          console.log(await proxyRpcApi.getTransactionReceipt(`0x${transactionHash}`));
+          setResponseLog(JSON.stringify(transaction, null, '  '));
+        }
       } catch (e: unknown) {
         console.log(e);
         setResponseLog(JSON.stringify(e, null, '  '));

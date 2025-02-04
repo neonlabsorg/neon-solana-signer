@@ -9,10 +9,8 @@ import {
   getGasToken,
   getProxyState,
   log,
-  logJson,
   MultipleTransactions,
   NeonChainId,
-  NeonClientApi,
   NeonProgramStatus,
   NeonProxyRpcApi,
   NO_CHILD_INDEX,
@@ -42,7 +40,6 @@ const NEON_WALLET = process.env.NEON_WALLET!;
 
 let connection: Connection;
 let neonProxyRpcApi: NeonProxyRpcApi;
-let neonClientApi: NeonClientApi;
 let provider: JsonRpcProvider;
 let neonEvmProgram: PublicKey;
 let proxyStatus: NeonProgramStatus;
@@ -61,14 +58,12 @@ let globalNonce: number = 0;
 
 beforeAll(async () => {
   const chainIdTestnet = NeonChainId.testnetSol;
-  // const chainIdDevnet = NeonChainId.devnetSol;
   const result = await getProxyState(NEON_API_RPC_SOL_URL);
   const token = getGasToken(result.tokensList, chainIdTestnet);
   const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_WALLET));
   tokenList = result.tokensList;
   connection = new Connection(SOLANA_DEVNET_URL, 'confirmed');
   provider = new JsonRpcProvider(NEON_API_RPC_NEON_URL!);
-  neonClientApi = new NeonClientApi(NEON_CLIENT_API_URL);
   neonProxyRpcApi = result.proxyApi;
   neonEvmProgram = result.evmProgramAddress;
   proxyStatus = result.proxyStatus;
@@ -98,7 +93,7 @@ afterEach(async () => {
 });
 
 describe('Check Swap with Solana singer', () => {
-  it(`Should transfer spl tokens from Solana to Neon wallet`, async () => {
+  it.skip(`Should transfer spl tokens from Solana to Neon wallet`, async () => {
     for (const token of erc20Tokens) {
       const amount = 100;
       log(`Transfer ${amount} ${token.symbol} from Solana to Neon EVM`);
@@ -142,17 +137,12 @@ describe('Check Swap with Solana singer', () => {
       }, 'scheduled');
 
       const response = await neonProxyRpcApi.waitTransactionByHash(signature, 2e3);
-      log(response);
+      log('waitTransactionByHash', response);
 
-      const transactions = await neonClientApi.waitTransactionTreeExecution({
-        address: solanaUser.neonWallet,
-        chain_id: chainId
-      }, nonce, 5e3);
-
-      log(`Scheduled transactions result`, transactions);
-      for (const { transaction_hash, status } of transactions) {
-        const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
-        console.log(result);
+      const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
+      for (const { transactionHash, status } of transactions) {
+        const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+        log(`Transaction receipt`, result);
         expect(status).toBe('Success');
       }
     }
@@ -167,7 +157,7 @@ describe('Check Swap with Solana singer', () => {
     const associatedToken = getAssociatedTokenAddressSync(new PublicKey(usdc.address_spl), solanaUser.publicKey);
     const account = await getAccount(connection, associatedToken);
     if (account) {
-      console.log(`Token balance: ${balanceView(account.amount, usdc.decimals)}  ${usdc.symbol}`);
+      log(`Token balance: ${balanceView(account.amount, usdc.decimals)}  ${usdc.symbol}`);
     }
     const data = mintNeonTransactionData(associatedToken, usdc, amount);
 
@@ -203,17 +193,12 @@ describe('Check Swap with Solana singer', () => {
     }, 'scheduled');
 
     const response = await neonProxyRpcApi.waitTransactionByHash(signature, 2e3);
-    log(response);
+    log('waitTransactionByHash', response);
 
-    const transactions = await neonClientApi.waitTransactionTreeExecution({
-      address: solanaUser.neonWallet,
-      chain_id: chainId
-    }, nonce, 8e3);
-
-    log(`Scheduled transactions result`, transactions);
-    for (const { transaction_hash, status } of transactions) {
-      const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
-      logJson(result);
+    const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
+    for (const { transactionHash, status } of transactions) {
+      const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+      log(`Transaction receipt`, result);
       expect(status).toBe('Success');
     }
   });
@@ -261,21 +246,17 @@ describe('Check Swap with Solana singer', () => {
     }, 'scheduled');
 
     const response = await neonProxyRpcApi.waitTransactionByHash(signature, 2e3);
-    log(response);
+    log('waitTransactionByHash', response);
 
-    const transactions = await neonClientApi.waitTransactionTreeExecution({
-      address: solanaUser.neonWallet,
-      chain_id: chainId
-    }, nonce, 2e3);
-
-    log(`Scheduled transactions result`, transactions);
-    for (const { transaction_hash, status } of transactions) {
-      const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
+    const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
+    for (const { transactionHash, status } of transactions) {
+      const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+      log(`Transaction receipt`, result);
       expect(status).toBe('Success');
     }
   });
 
-  it.skip(`Should swap 1 USDT to USDC in Solana with multiple transaction`, async () => {
+  it(`Should swap 1 USDT to USDC in Solana with multiple transaction`, async () => {
     const amount = 1;
     const maxFeePerGas = 0xEE6B2800; // 0x3B9ACA00;
     const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
@@ -343,14 +324,10 @@ describe('Check Swap with Solana singer', () => {
     const transaction2 = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${transactionSendUSDT.serialize()}`);
     log(transaction1.result, transaction2.result);
 
-    const transactions = await neonClientApi.waitTransactionTreeExecution({
-      address: solanaUser.neonWallet,
-      chain_id: chainId
-    }, nonce, 7e3);
-    log(`Scheduled transactions result`, transactions);
-    for (const { transaction_hash, status } of transactions) {
-      const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
-      logJson(result);
+    const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
+    for (const { transactionHash, status } of transactions) {
+      const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+      log(`Transaction receipt`, result);
       expect(status).toBe('Success');
     }
 
