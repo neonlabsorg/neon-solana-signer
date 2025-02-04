@@ -75,22 +75,22 @@ export class NeonProxyRpcApi {
     return this.neonRpc<TransactionByHash>('eth_getTransactionByHash', [signature]);
   }
 
-  async waitTransactionByHash(signature: string, timeout: number): Promise<TransactionByHash | null> {
+  async waitTransactionByHash(signature: string, duration: number, delayTimeout = 300): Promise<TransactionByHash | null> {
     const start = Date.now();
-    while (timeout > Date.now() - start) {
+    while (duration > Date.now() - start) {
       const { result } = await this.getTransactionByHash(signature);
       if (result?.hash) {
         return result;
       }
-      await delay(100);
+      await delay(delayTimeout);
     }
     return null;
   }
 
-  async waitTransactionTreeExecution(address: NeonAddress | SolanaAddress, nonce: number, timeout: number): Promise<ScheduledTransactionStatus[]> {
+  async waitTransactionTreeExecution(address: NeonAddress | SolanaAddress, nonce: number, duration: number, delayTimeout = 300): Promise<ScheduledTransactionStatus[]> {
     const start = Date.now();
     const trx: ScheduledTransactionStatus[] = [];
-    while (timeout > Date.now() - start) {
+    while (duration > Date.now() - start) {
       const { result } = await this.getScheduledTreeAccount(address, nonce);
       const { transactions } = result;
       if (transactions.length > 0) {
@@ -105,7 +105,7 @@ export class NeonProxyRpcApi {
       } else {
         return trx;
       }
-      await delay(100);
+      await delay(delayTimeout);
     }
     return trx;
   }
