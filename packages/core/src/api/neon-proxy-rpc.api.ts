@@ -93,7 +93,7 @@ export class NeonProxyRpcApi {
     while (duration > Date.now() - start) {
       const { result } = await this.getScheduledTreeAccount(address, nonce);
       const { transactions } = result;
-      if (transactions.length > 0) {
+      if (result?.activeStatus) {
         for (const tx of transactions) {
           const index = trx.findIndex(i => i.transactionHash === tx.transactionHash);
           if (index === -1) {
@@ -102,8 +102,9 @@ export class NeonProxyRpcApi {
             trx[index] = tx;
           }
         }
-      } else {
-        return trx;
+        if (['Success', 'Empty', 'Failed'].includes(result.activeStatus)) {
+          return trx;
+        }
       }
       await delay(delayTimeout);
     }

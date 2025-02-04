@@ -30,8 +30,8 @@ import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer, toBytes16LE, to
  *  callData: "0xCallData",
  *  chainId: 245022927,
  *  gasLimit: 50000,
- *  maxFeePerGas: 1100000002,
- *  maxPriorityFeePerGas: 1100000001
+ *  maxFeePerGas: 1250000001,
+ *  maxPriorityFeePerGas: 1250000000
  *  });
  *  ```
  */
@@ -43,8 +43,8 @@ export class ScheduledTransaction {
     value: '0x',
     chainId: toBeHex(NeonChainId.testnetSol),
     gasLimit: toBeHex(5e4),
-    maxFeePerGas: toBeHex(1100000002),
-    maxPriorityFeePerGas: toBeHex(1100000001)
+    maxFeePerGas: toBeHex(1250000001),
+    maxPriorityFeePerGas: toBeHex(1250000000)
   };
 
   /**

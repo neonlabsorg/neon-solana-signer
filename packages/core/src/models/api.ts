@@ -96,7 +96,7 @@ export interface TransactionTreeResponse {
   transactions: ScheduledTransactionStatusResponse[];
 }
 
-export type TransactionStatus = 'NotStarted' | 'InProgress' | 'Success' | 'Empty' | string;
+export type TransactionStatus = 'NotStarted' | 'InProgress' | 'Success' | 'Empty' | 'Failed' | string;
 
 export interface ScheduledTransactionStatusResponse {
   status: TransactionStatus;
