@@ -1,4 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
+import build from 'fetch-retry';
 import {
   EstimatedScheduledGasPayData,
   EstimatedScheduledGasPayResponse,
@@ -131,7 +132,8 @@ export class NeonProxyRpcApi {
     const id = uuid();
     const body = { id, jsonrpc: '2.0', method, params };
     log(`curl ${url} -X POST -H 'Content-Type: application/json' -d '${JSON.stringify(body)}' | jq .`);
-    return fetch(url, {
+    const retry = build(fetch, { retries: 5, retryDelay: 1e3 });
+    return retry(url, {
       method: 'POST',
       mode: 'cors',
       body: JSON.stringify(body)
