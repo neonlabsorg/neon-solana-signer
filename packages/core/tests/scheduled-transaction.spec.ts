@@ -1,6 +1,15 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { getGasToken, getProxyState, NeonChainId, ScheduledTransaction, SolanaNeonAccount } from '@neonevm/solana-sign';
+import {
+  GAS_LIMIT_DEFAULT,
+  getGasToken,
+  getProxyState,
+  MAX_FEE_PER_GAS_DEFAULT,
+  MAX_PRIORITY_FEE_PER_GAS_DEFAULT,
+  NeonChainId,
+  ScheduledTransaction,
+  SolanaNeonAccount
+} from '@neonevm/solana-sign';
 import { toBeHex } from 'ethers';
 import { config } from 'dotenv';
 import bs58 from 'bs58';
@@ -30,7 +39,7 @@ describe('Check ScheduledTransaction data', () => {
     const target = `0xc7e376be256bdb6a1fbedaee64ca860b2b6e95ee`;
     const callData = `0x3fb5c1cb0000000000000000000000000000000000000000000000000000000000000012`;
     const trx1 = new ScheduledTransaction({ payer: solanaUser.neonWallet, target, callData });
-    const trx2 = ScheduledTransaction.from([solanaUser.neonWallet, '0x', '0x', '0x', '0x', '0x', target, callData, '0x', toBeHex(NeonChainId.testnetSol), '0xC350', '0x4190AB02', '0x4190AB01']);
+    const trx2 = ScheduledTransaction.from([solanaUser.neonWallet, '0x', '0x', '0x', '0x', '0x', target, callData, '0x', toBeHex(NeonChainId.devnetSol), toBeHex(GAS_LIMIT_DEFAULT), toBeHex(MAX_FEE_PER_GAS_DEFAULT), toBeHex(MAX_PRIORITY_FEE_PER_GAS_DEFAULT)]);
     expect(trx1.encode()).toBe(trx2.encode());
   });
 

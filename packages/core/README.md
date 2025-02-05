@@ -29,12 +29,13 @@ First, it is necessary to initialize all variables and providers for Solana and 
 
 ```typescript
 const result = await getProxyState(`<neon_proxy_rpc_url>`);
-const token = getGasToken(result.tokensList, NeonChainId.testnetSol);
-const connection = new Connection(`<solana_rpc_url>`, 'confirmed');
 const provider = new JsonRpcProvider(`<neon_proxy_rpc_url>`);
+const connection = new Connection(`<solana_rpc_url>`, 'confirmed');
+const response = await provider.getNetwork();
+const chainId = Number(response.chainId);
+const token = getGasToken(result.tokensList, chainId);
 const neonProxyRpcApi = result.proxyApi;
 const neonEvmProgram = result.evmProgramAddress;
-const chainId = Number(token.gasToken.tokenChainId);
 const chainTokenMint = new PublicKey(token.gasToken.tokenMint);
 ```
 
@@ -75,7 +76,7 @@ const scheduledTransaction = new ScheduledTransaction({
   maxFeePerGas: maxFeePerGas,
   maxPriorityFeePerGas: maxPriorityFeePerGas,
   gasLimit: gasLimit,
-  chainId: toBeHex(NeonChainId.testnetSol)
+  chainId: chainId
 });
 ```
 
@@ -143,7 +144,7 @@ const transaction = new ScheduledTransaction({
   target: baseContract.address,
   callData: baseContract.transactionData(solanaUser.publicKey),
   maxFeePerGas: maxFeePerGas,
-  chainId: NeonChainId.testnetSol
+  chainId: chainId
 });
 multiple.addTransaction(transaction, NO_CHILD_INDEX, 0);
 ```

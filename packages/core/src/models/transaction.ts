@@ -1,5 +1,11 @@
 import { HexString, TransactionStatus } from './api';
 
+export interface ScheduledTransactionGas{
+  gasLimit?: number;
+  maxFeePerGas?: number;
+  maxPriorityFeePerGas?: number;
+}
+
 export interface ScheduledTransactionData {
   payer: string;
   sender: string;
