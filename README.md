@@ -13,7 +13,7 @@ yarn test
 ### Install the package
 
 ```shell
-yarn add @neonevm/solana-sign
+yarn add @neonevm/solana-sign 
 # or
 npm install @neonevm/solana-sign
 ```
