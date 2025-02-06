@@ -96,7 +96,7 @@ export interface TransactionTreeResponse {
   transactions: ScheduledTransactionStatusResponse[];
 }
 
-export type TransactionStatus = 'NotStarted' | 'InProgress' | 'Success' | 'Empty' | 'Failed' | string;
+export type TransactionStatus = 'NotStarted' | 'InProgress' | 'Success' | 'Empty' | 'Failed' | 'Skipped' | string;
 
 export interface ScheduledTransactionStatusResponse {
   status: TransactionStatus;
@@ -185,4 +185,33 @@ export interface EstimatedScheduledGasPayResponse {
   treasuryIndex: HexString;
   accountList: SolanaAccount[],
   gasList: HexString[]
+}
+
+export interface BlockByNumber {
+  logsBloom: HexString;
+  transactionsRoot: HexString;
+  receiptsRoot: HexString;
+  stateRoot: HexString;
+  sha3Uncles: HexString;
+  difficulty: HexString;
+  totalDifficulty: HexString;
+  extraData: HexString;
+  miner: HexString;
+  nonce: HexString;
+  mixHash: HexString;
+  size: HexString;
+  gasLimit: HexString;
+  gasUsed: HexString;
+  baseFeePerGas: HexString;
+  hash: HexString;
+  number: HexString;
+  parentHash: HexString;
+  timestamp: HexString;
+  uncles: HexString[];
+  transactions: any[];
+}
+
+export interface MaxFeePerGas {
+  maxPriorityFeePerGas: number;
+  maxFeePerGas: number;
 }

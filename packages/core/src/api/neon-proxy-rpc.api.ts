@@ -1,10 +1,12 @@
 import { PublicKey } from '@solana/web3.js';
 import build from 'fetch-retry';
 import {
+  BlockByNumber,
   EstimatedScheduledGasPayData,
   EstimatedScheduledGasPayResponse,
   GasToken,
   HexString,
+  MaxFeePerGas,
   NeonAddress,
   NeonAddressResponse,
   NeonGasPrice,
@@ -20,6 +22,7 @@ import {
   TransactionByHash
 } from '../models';
 import { delay, log, uuid } from '../utils';
+import { MAX_PRIORITY_FEE_PER_GAS_DEFAULT } from '../neon';
 
 export class NeonProxyRpcApi {
   readonly rpcUrl: RPCUrl;
@@ -121,6 +124,24 @@ export class NeonProxyRpcApi {
 
   estimateScheduledGas(data: EstimatedScheduledGasPayData): Promise<RPCResponse<EstimatedScheduledGasPayResponse>> {
     return this.neonRpc<EstimatedScheduledGasPayResponse>('neon_estimateScheduledGas', [data]);
+  }
+
+  maxPriorityFeePerGas(): Promise<RPCResponse<HexString>> {
+    return this.neonRpc(`eth_maxPriorityFeePerGas`, []);
+  }
+
+  getBlockByNumber(block: HexString, detail = false): Promise<RPCResponse<BlockByNumber>> {
+    return this.neonRpc(`eth_getBlockByNumber`, [block, detail]);
+  }
+
+  async getMaxFeePerGas(): Promise<MaxFeePerGas> {
+    const { result: maxPriorityFeePerGasHex } = await this.maxPriorityFeePerGas();
+    const { result } = await this.getBlockByNumber(`latest`, false);
+    const a = parseInt(maxPriorityFeePerGasHex, 16);
+    const b = MAX_PRIORITY_FEE_PER_GAS_DEFAULT;
+    const maxPriorityFeePerGas = a > b ? a : b;
+    const maxFeePerGas = parseInt(result.baseFeePerGas, 16) * 1.5 + maxPriorityFeePerGas;
+    return { maxPriorityFeePerGas, maxFeePerGas };
   }
 
   ethGetTransactionReceipt(transaction: HexString): Promise<any> {
