@@ -113,19 +113,20 @@ export class ScheduledTransaction {
     };
   }
 
-  changeGasPrice({ gasLimit, maxFeePerGas, maxPriorityFeePerGas }: ScheduledTransactionGas): void {
+  setGasPrice({ gasLimit, maxFeePerGas, maxPriorityFeePerGas }: ScheduledTransactionGas): void {
+    const data = { ...this.data };
     if (gasLimit) {
-      this.data.gasLimit = Number(this.defaultData.gasLimit) > gasLimit ?
-        this.defaultData.gasLimit! : toBeHex(gasLimit);
+      data.gasLimit = GAS_LIMIT_DEFAULT > gasLimit ? toBeHex(GAS_LIMIT_DEFAULT) : toBeHex(gasLimit);
     }
     if (maxFeePerGas) {
-      this.data.maxFeePerGas = Number(this.defaultData.maxFeePerGas) > maxFeePerGas ?
-        this.defaultData.maxFeePerGas! : toBeHex(maxFeePerGas);
+      data.maxFeePerGas = MAX_FEE_PER_GAS_DEFAULT > maxFeePerGas ?
+        toBeHex(MAX_FEE_PER_GAS_DEFAULT) : toBeHex(maxFeePerGas);
     }
     if (maxPriorityFeePerGas) {
-      this.data.maxPriorityFeePerGas = Number(this.defaultData.maxPriorityFeePerGas) > maxPriorityFeePerGas ?
-        this.defaultData.maxPriorityFeePerGas! : toBeHex(maxPriorityFeePerGas);
+      data.maxPriorityFeePerGas = MAX_PRIORITY_FEE_PER_GAS_DEFAULT > maxPriorityFeePerGas ?
+        toBeHex(MAX_PRIORITY_FEE_PER_GAS_DEFAULT) : toBeHex(maxPriorityFeePerGas);
     }
+    this.data = data;
   }
 
   constructor(data: Partial<ScheduledTransactionData>) {
@@ -206,6 +207,10 @@ export class MultipleTransactions {
   * */
   get data(): HexString {
     return `0x${this._data.toString('hex')}`;
+  }
+
+  hash(): HexString {
+    return keccak256(this.data);
   }
 
   /**

@@ -93,6 +93,9 @@ export class NeonProxyRpcApi {
     const trx: ScheduledTransactionStatus[] = [];
     while (duration > Date.now() - start) {
       const { result } = await this.getScheduledTreeAccount(address, nonce);
+      if (!result) {
+        return trx;
+      }
       const { transactions } = result;
       if (result?.activeStatus) {
         for (const tx of transactions) {
@@ -112,8 +115,8 @@ export class NeonProxyRpcApi {
     return trx;
   }
 
-  getScheduledTreeAccount(address: NeonAddress | SolanaAddress, nonce: number): Promise<RPCResponse<ScheduledTreeAccount>> {
-    return this.neonRpc<ScheduledTreeAccount>('neon_getScheduledTreeAccount', [address, nonce, 'latest']);
+  getScheduledTreeAccount(address: NeonAddress | SolanaAddress, nonce: number): Promise<RPCResponse<ScheduledTreeAccount | null>> {
+    return this.neonRpc<ScheduledTreeAccount | null>('neon_getScheduledTreeAccount', [address, nonce, 'latest']);
   }
 
   estimateScheduledGas(data: EstimatedScheduledGasPayData): Promise<RPCResponse<EstimatedScheduledGasPayResponse>> {
