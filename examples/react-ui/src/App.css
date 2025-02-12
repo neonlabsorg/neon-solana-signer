@@ -1,61 +1,18 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body, header {
-  position: relative;
-  height: 100%;
-}
-
-body {
-  background-color: #06010D;
-  color: #FFF;
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-}
-
-a {
-  color: #FFF;
-  transition: color 0.3s ease-in;
-}
-
-a:hover {
-  color: #14F195;
-}
-
-a:focus-visible {
-  @apply outline-none outline-0;
-  border-bottom: 1px solid #FFFFFF;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type=number] {
-  -moz-appearance: textfield;
-}
-
-* {
-  -webkit-tap-highlight-color: transparent;
-  -moz-tap-highlight-color: transparent;
-}
+@import "tailwindcss";
 
 .title-1 {
-  @apply  flex flex-row gap-[10px] items-center text-2xl leading-4 font-bold mb-[20px];
+  @apply  flex flex-row gap-[10px] text-2xl leading-4 font-bold items-center mb-[20px];
 }
 
 .title-1 .logo {
   @apply min-w-[32px] min-h-[32px];
-  background-image: url('~/public/logo192.png');
+  background-image: url('/logo192.png');
   background-size: contain;
 }
 
 .title-1 .github {
   @apply block min-w-[32px] min-h-[32px];
-  background-image: url('~/public/icons/github.svg');
+  background-image: url('/icons/github.svg');
   background-size: contain;
 }
 
@@ -140,12 +97,12 @@ input[type=number] {
 
 .icon-button {
   @apply w-[36px] h-[36px];
-  background-image: url('~/public/icons/change.svg');
+  background-image: url('/icons/change.svg');
 }
 
 .icon-loading {
   @apply w-[36px] h-[36px];
-  background-image: url('~/public/icons/change.svg');
+  background-image: url('/icons/change.svg');
 }
 
 .result-log {

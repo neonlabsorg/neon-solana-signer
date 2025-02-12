@@ -1,0 +1,40 @@
+body, header {
+  position: relative;
+  height: 100%;
+}
+
+body {
+  background-color: #06010D;
+  color: #FFF;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+a {
+  color: #FFF;
+  transition: color 0.3s ease-in;
+}
+
+a:hover {
+  color: #14F195;
+}
+
+a:focus-visible {
+  @apply outline-none outline-0;
+  border-bottom: 1px solid #FFFFFF;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -moz-tap-highlight-color: transparent;
+}

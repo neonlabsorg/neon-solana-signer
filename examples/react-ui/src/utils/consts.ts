@@ -8,6 +8,5 @@ export const NEON_CHAIN_IDS: any[] = [
 export const CHAIN_NAME = 'sol_local';
 export const CHAIN_ID = NEON_CHAIN_IDS.find(i => i.name === CHAIN_NAME)!.id;
 
-export const SOLANA_URL = process.env['REACT_APP_SOLANA_URL']!;
-export const NEON_CORE_API_RPC_URL = process.env['REACT_APP_NEON_CORE_API_RPC_URL']!;
-export const SOLANA_SIGNER = process.env['REACT_APP_SOLANA_SIGNER']!;
+export const SOLANA_URL = import.meta.env.VITE_SOLANA_URL!;
+export const NEON_CORE_API_RPC_URL = import.meta.env.VITE_NEON_CORE_API_RPC_URL!;

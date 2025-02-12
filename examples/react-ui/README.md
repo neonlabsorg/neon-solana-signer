@@ -7,7 +7,6 @@ To start the project, you need to set environment variables in the `.env` file:
 ```dotenv
 REACT_APP_SOLANA_URL: <solana_rpc_url>
 REACT_APP_NEON_CORE_API_RPC_URL: <neon_core_api_rpc_url>
-REACT_APP_NEON_CORE_API_URL: <neon_core_api_url>
 ```
 
 ### Solana localnet configuration
@@ -20,7 +19,7 @@ You need to rename this configuration file to `docker-compose.yaml` and specify 
 
 ```bash
 yarn install
-yarn start
+yarn dev
 ```
 
 For building run command:

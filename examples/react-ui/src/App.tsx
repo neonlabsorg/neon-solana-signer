@@ -14,6 +14,8 @@ import {
   NEON_TOKEN_MINT_DEVNET,
   NeonProgramStatus
 } from '@neonevm/token-transfer-core';
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
+import './App.css'
 
 import { BaseContract, CHAIN_ID, NEON_CORE_API_RPC_URL, SOLANA_URL } from './utils';
 
@@ -27,7 +29,6 @@ const networkUrls = [{
   token: 'SOL',
   solana: SOLANA_URL,
   neonProxy: NEON_CORE_API_RPC_URL
-  //neonProxy: `${NEON_CORE_API_RPC_URL}/sol`,
 }];
 
 function SolanaNativeApp() {
@@ -81,7 +82,6 @@ function SolanaNativeApp() {
   const getProxyStatus = useCallback(async () => {
     const proxyStatus = await proxyRpcApi.evmParams();
     const gasTokens = await proxyRpcApi.nativeTokenList();
-    // @ts-ignore
     setProxyStatus(proxyStatus);
     setGasTokens(gasTokens);
   }, [proxyRpcApi]);
@@ -107,7 +107,7 @@ function SolanaNativeApp() {
       setLoading(true);
       const baseContract = new BaseContract();
       let nonce = Number(await proxyRpcApi.getTransactionCount(solanaUser.neonWallet));
-      let account = await connection.getAccountInfo(solanaUser.balanceAddress);
+      const account = await connection.getAccountInfo(solanaUser.balanceAddress);
 
       // remove this finch
       if (account !== null) {
@@ -196,7 +196,7 @@ function SolanaNativeApp() {
       <h1 className="title-1">
         <i className="logo"></i>
         <div className="flex flex-row items-center justify-between w-full">
-          <span className="text-[18px]">Solana native</span>
+          <span className="text-[24px]">Solana native</span>
         </div>
         <a
           href="https://github.com/neonlabsorg/neon-solana-signer/tree/main/packages/ui"
