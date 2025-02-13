@@ -57,7 +57,8 @@ export async function solanaAirdrop(connection: Connection, publicKey: PublicKey
   let balance = await connection.getBalance(publicKey);
   if (balance < lamports) {
     const signature = await connection.requestAirdrop(publicKey, lamports);
-    await connection.confirmTransaction(signature, commitment);
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    await connection.confirmTransaction({ blockhash, lastValidBlockHeight, signature }, commitment);
     balance = await connection.getBalance(publicKey);
   }
   log(`${publicKey.toBase58()} balance: ${balance / LAMPORTS_PER_SOL} SOL`);

@@ -15,56 +15,43 @@ import {
   NeonProgramStatus
 } from '@neonevm/token-transfer-core';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
+import { JsonRpcProvider } from 'ethers';
 import './App.css'
 
 import { BaseContract, CHAIN_ID, NEON_CORE_API_RPC_URL, SOLANA_URL } from './utils';
 
-const networkUrls = [{
-  id: 111,
-  token: 'NEON',
-  solana: SOLANA_URL,
-  neonProxy: NEON_CORE_API_RPC_URL
-}, {
-  id: 112,
-  token: 'SOL',
-  solana: SOLANA_URL,
-  neonProxy: NEON_CORE_API_RPC_URL
-}];
-
 function SolanaNativeApp() {
-  const [chainId] = useState<any>(CHAIN_ID);
+  const [chainId, setChainId] = useState<number>(CHAIN_ID);
   const [proxyStatus, setProxyStatus] = useState<NeonProgramStatus>(NEON_STATUS_DEVNET_SNAPSHOT);
   const [gasTokens, setGasTokens] = useState<GasToken[]>([]);
   const [publicKey, setPublicKey] = useState<PublicKey | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [responseLog, setResponseLog] = useState<string>('');
 
-  // connect solana/neon networks
-  const networkUrl = useMemo(() => {
-    const id = networkUrls.findIndex(i => i.id === chainId);
-    return id > -1 ? networkUrls[id] : networkUrls[0];
-  }, [chainId]);
-  const connection = useMemo(() => {
-    console.log(networkUrl.solana);
-    return new Connection(networkUrl.solana, 'confirmed');
-  }, [networkUrl]);
+  const connection = useMemo<Connection>(() => {
+    return new Connection(SOLANA_URL, 'confirmed');
+  }, []);
 
-  const solanaProvider = useMemo(() => {
+  const provider = useMemo<JsonRpcProvider>(() => {
+    return  new JsonRpcProvider(NEON_CORE_API_RPC_URL);
+  }, []);
+
+  const solanaProvider = useMemo<PhantomWalletAdapter>(() => {
     return new PhantomWalletAdapter();
-  }, [connection]);
+  }, []);
 
   const proxyRpcApi = useMemo(() => {
-    return new NeonProxyRpcApi(networkUrl.neonProxy);
-  }, [networkUrl]);
+    return new NeonProxyRpcApi(NEON_CORE_API_RPC_URL);
+  }, []);
 
-  const neonEvmProgram = useMemo(() => {
+  const neonEvmProgram = useMemo<PublicKey>(() => {
     if (proxyStatus) {
-      return new PublicKey(proxyStatus?.neonEvmProgramId!);
+      return new PublicKey(proxyStatus?.neonEvmProgramId);
     }
     return new PublicKey(NEON_STATUS_DEVNET_SNAPSHOT.neonEvmProgramId);
   }, [proxyStatus]);
 
-  const chainTokenMint = useMemo(() => {
+  const chainTokenMint = useMemo<PublicKey>(() => {
     const id = gasTokens.findIndex(i => parseInt(i.tokenChainId, 16) === chainId);
     if (id > -1) {
       return new PublicKey(gasTokens[id].tokenMint);
@@ -72,48 +59,62 @@ function SolanaNativeApp() {
     return new PublicKey(NEON_TOKEN_MINT_DEVNET);
   }, [gasTokens, chainId]);
 
-  const solanaUser = useMemo(() => {
-    if (publicKey) {
-      return new SolanaNeonAccount(publicKey, neonEvmProgram, chainTokenMint, chainId);
-    }
-    return null;
-  }, [publicKey]);
-
   const getProxyStatus = useCallback(async () => {
     const proxyStatus = await proxyRpcApi.evmParams();
     const gasTokens = await proxyRpcApi.nativeTokenList();
+    console.log(`Proxy status: ${JSON.stringify(proxyStatus)},\n\nGas tokens: ${JSON.stringify(gasTokens)}`);
     setProxyStatus(proxyStatus);
     setGasTokens(gasTokens);
   }, [proxyRpcApi]);
+
+  const initData = useCallback(async () => {
+    try {
+      const chainId = Number((await provider.getNetwork())?.chainId);
+      console.log(`CHAIN ID: ${chainId}`);
+      setChainId(chainId);
+      getProxyStatus();
+    } catch (err) {
+      console.error('Can\'t fetch chain ID: ', err);
+    }
+  }, [provider]);
+
+  //Get all necessary proxy data
+  useEffect(() => {
+    initData();
+  }, []);
+
+  const solanaUser = useMemo(() => {
+    if (!publicKey) return null;
+    return new SolanaNeonAccount(publicKey, neonEvmProgram, chainTokenMint, chainId);
+  }, [publicKey, neonEvmProgram, chainTokenMint, chainId]);
 
   const handleConnect = useCallback(async () => {
     if (!solanaProvider.connected && !solanaProvider.connecting) {
       await solanaProvider.connect();
       if (solanaProvider.publicKey) {
         setPublicKey(solanaProvider.publicKey);
-        await solanaAirdrop(connection, solanaProvider.publicKey, 21e9);
+        try{
+          console.log("Solana Airdrop");
+          await solanaAirdrop(connection, solanaProvider.publicKey, 1e9);
+        } catch (e) {
+          console.error('Can\'t airdrop SOL: ', e);
+        }
       }
     } else {
       await solanaProvider.disconnect();
       setPublicKey(null);
     }
     setResponseLog('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [solanaProvider, publicKey]);
+  }, [connection, solanaProvider]);
 
   const handleTransaction = useCallback(async () => {
     setResponseLog('');
     if (publicKey && solanaUser) {
       setLoading(true);
       const baseContract = new BaseContract();
-      let nonce = Number(await proxyRpcApi.getTransactionCount(solanaUser.neonWallet));
+      const nonce = Number(await proxyRpcApi.getTransactionCount(solanaUser.neonWallet));
       const account = await connection.getAccountInfo(solanaUser.balanceAddress);
-
-      // remove this finch
-      if (account !== null) {
-        const balanceNonce = solanaUser.nonce(account);
-        nonce = balanceNonce > nonce ? balanceNonce : nonce;
-      }
+      console.log('Balance account: ', account);
 
       const maxFeePerGas = 0x77359400;
       console.log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
@@ -124,10 +125,10 @@ function SolanaNativeApp() {
         target: baseContract.address,
         callData: baseContract.transactionData(solanaUser.publicKey),
         maxFeePerGas: maxFeePerGas,
-        chainId: 112
+        chainId: chainId //Important! Use only SOL chain ID: 245022927 for devnet or 112 for local development
       });
 
-      const createScheduledTransaction = await createScheduledNeonEvmTransaction({
+      const createScheduledTransaction = createScheduledNeonEvmTransaction({
         chainId,
         signerAddress: solanaUser.publicKey,
         tokenMintAddress: solanaUser.tokenMint,
@@ -137,11 +138,12 @@ function SolanaNativeApp() {
         neonTransaction: scheduledTransaction.serialize()
       });
 
+
       const treasuryPool = createScheduledTransaction.instructions[0].keys[2].pubkey;
       await solanaAirdrop(connection, treasuryPool, 21e9);
 
       try {
-        if (account === null) {
+        if (!account) {
           createScheduledTransaction.instructions.unshift(createBalanceAccountInstruction(neonEvmProgram, solanaUser.publicKey, solanaUser.neonWallet, solanaUser.chainId));
         }
 
@@ -157,7 +159,7 @@ function SolanaNativeApp() {
           const { transactionHash } = transaction;
           const { result } = await proxyRpcApi.getTransactionReceipt(transactionHash);
           console.log(result);
-          console.log(await proxyRpcApi.getTransactionReceipt(`0x${transactionHash}`));
+          console.log(await proxyRpcApi.getTransactionReceipt(transactionHash));
           setResponseLog(JSON.stringify(transaction, null, '  '));
         }
       } catch (e: unknown) {
@@ -186,10 +188,6 @@ function SolanaNativeApp() {
   const disabled = useMemo(() => {
     return !publicKey;
   }, [publicKey]);
-
-  useEffect(() => {
-    getProxyStatus();
-  }, [getProxyStatus]);
 
   return (
     <div className="form-content">
