@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import {
   createBalanceAccountInstruction,
@@ -16,7 +16,7 @@ import {
 } from '@neonevm/token-transfer-core';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
 import { JsonRpcProvider } from 'ethers';
-import './App.css'
+import './App.css';
 
 import { BaseContract, CHAIN_ID, NEON_CORE_API_RPC_URL, SOLANA_URL } from './utils';
 
@@ -33,7 +33,7 @@ function SolanaNativeApp() {
   }, []);
 
   const provider = useMemo<JsonRpcProvider>(() => {
-    return  new JsonRpcProvider(NEON_CORE_API_RPC_URL);
+    return new JsonRpcProvider(NEON_CORE_API_RPC_URL);
   }, []);
 
   const solanaProvider = useMemo<PhantomWalletAdapter>(() => {
@@ -46,7 +46,7 @@ function SolanaNativeApp() {
 
   const neonEvmProgram = useMemo<PublicKey>(() => {
     if (proxyStatus) {
-      return new PublicKey(proxyStatus?.neonEvmProgramId);
+      return new PublicKey(proxyStatus?.neonEvmProgramId!);
     }
     return new PublicKey(NEON_STATUS_DEVNET_SNAPSHOT.neonEvmProgramId);
   }, [proxyStatus]);
@@ -93,8 +93,8 @@ function SolanaNativeApp() {
       await solanaProvider.connect();
       if (solanaProvider.publicKey) {
         setPublicKey(solanaProvider.publicKey);
-        try{
-          console.log("Solana Airdrop");
+        try {
+          console.log('Solana Airdrop');
           await solanaAirdrop(connection, solanaProvider.publicKey, 1e9);
         } catch (e) {
           console.error('Can\'t airdrop SOL: ', e);
