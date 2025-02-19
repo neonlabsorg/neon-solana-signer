@@ -4,7 +4,7 @@ import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { Contract, JsonRpcProvider, Wallet } from 'ethers';
 import { Big } from 'big.js';
 
-export async function neonBalanceEthers(provider: JsonRpcProvider, address: Wallet): Promise<Big> {
+export async function neonBalanceEthers(provider: JsonRpcProvider, address: Wallet | string): Promise<Big> {
   const balance = await provider.getBalance(address);
   return new Big(balance.toString()).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
 }
@@ -21,11 +21,11 @@ export async function splTokenBalance(connection: Connection, walletPubkey: Publ
   return response?.value;
 }
 
-export async function mintTokenBalanceEthers(wallet: Wallet, token: SPLToken, contractAbi: any = erc20Abi, method = 'balanceOf'): Promise<Big> {
-  const tokenInstance = new Contract(token.address, contractAbi, wallet);
+export async function mintTokenBalanceEthers(wallet: string, token: SPLToken, provider: JsonRpcProvider, contractAbi: any = erc20Abi, method = 'balanceOf'): Promise<Big> {
+  const tokenInstance = new Contract(token.address, contractAbi, provider);
   if (tokenInstance[method]) {
     const balanceOf = tokenInstance[method];
-    const balance: bigint = await balanceOf(wallet.address);
+    const balance: bigint = await balanceOf(wallet);
     return new Big(balance.toString()).div(Math.pow(10, token.decimals));
   }
   return Big(0);
