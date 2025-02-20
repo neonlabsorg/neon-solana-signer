@@ -5,7 +5,6 @@ import {
   SolanaNeonAccount,
   ScheduledTransaction
 } from '@neonevm/solana-sign';
-import { BaseMessageSignerWalletAdapter } from '@solana/wallet-adapter-base';
 
 export interface TransferDirection {
   direction: 'solana' | 'neon';
@@ -26,5 +25,5 @@ export type CreateScheduledTransactionParams = {
   nonce: number;
   chainId: number;
   proxyRpcApi: NeonProxyRpcApi;
-  solanaProvider: BaseMessageSignerWalletAdapter;
+  signMethod: any;
 }

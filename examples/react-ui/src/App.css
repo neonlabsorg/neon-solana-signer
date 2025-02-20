@@ -20,6 +20,10 @@
   @apply p-[20px] max-w-[600px] mx-auto;
 }
 
+.tab-content {
+  @apply py-5 w-full mx-auto;
+}
+
 .form-input {
   @apply flex flex-col justify-center items-center w-full leading-[24px] h-[48px] py-[12px] px-[20px] rounded-[8px] text-[20px] text-[#444] transition-all font-bold;
 }
@@ -72,10 +76,23 @@
   font-weight: normal;
 }
 
-.form-button {
-  @apply flex flex-col justify-center items-center w-full h-[64px] leading-[24px] h-[48px] px-[20px] rounded-[8px] text-center text-[20px] text-[#fff] transition-all font-bold;
+.form-button,
+button.wallet-adapter-button-trigger {
+  @apply flex justify-center items-center w-full h-[64px] leading-[24px] px-[20px] rounded-[8px] text-center text-[20px] text-[#fff] transition-all font-bold;
   background: linear-gradient(91.79deg, #6115DF 59.46%, #BA3CD9 80.5%, #F77137 101.11%);
   margin-bottom: 20px;
+}
+
+.form-button {
+  @apply flex-col;
+}
+
+button.wallet-adapter-button-trigger {
+  @apply flex-row;
+}
+
+.wallet-adapter-dropdown {
+  @apply w-full flex flex-col justify-center items-center;
 }
 
 .form-button:hover {
@@ -92,7 +109,7 @@
 }
 
 .form-field {
-  margin-bottom: 18px;
+  margin-bottom: 18px !important;
 }
 
 .icon-button {

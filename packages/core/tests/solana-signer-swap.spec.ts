@@ -76,7 +76,7 @@ afterEach(async () => {
 });
 
 describe('Check Swap with Solana singer', () => {
-  it.skip(`Should transfer spl tokens from Solana to Neon wallet`, async () => {
+  it(`Should transfer spl tokens from Solana to Neon wallet`, async () => {
     for (const token of erc20Tokens) {
       const amount = 100;
       log(`Transfer ${amount} ${token.symbol} from Solana to Neon EVM`);
@@ -130,6 +130,7 @@ describe('Check Swap with Solana singer', () => {
         neonTransaction: scheduledTransaction.serialize()
       });
 
+      //Need only on test environments
       const treasuryPool = createScheduledTransaction.instructions[0].keys[2].pubkey;
       await solanaAirdrop(connection, treasuryPool, 20e9);
 
