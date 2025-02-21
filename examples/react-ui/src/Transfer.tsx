@@ -26,6 +26,7 @@ import {
   createAndSendScheduledTransaction
 } from './utils';
 import { FormInput } from './components/FormInput/FormInput.tsx';
+import { FormSelect } from './components/FormSelect/FormSelect.tsx';
 import { useProxyContext } from './contexts/Proxy.tsx';
 
 function SolanaNativeTransferApp() {
@@ -39,7 +40,7 @@ function SolanaNativeTransferApp() {
     connection
   } = useProxyContext();
   const [token, setToken] = useState<string>('');
-  // const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [amount, setAmount] = useState<string>('0.1');
   const [submitDisable, setSubmitDisable] = useState<boolean>(false);
   const [log, setLog] = useState<string>('');
@@ -145,6 +146,10 @@ function SolanaNativeTransferApp() {
     }
   }, [provider, publicKey, connection, neonWallet]);
 
+  const sendText = useMemo(() => {
+    return loading ? `Wait...` : `Submit`;
+  }, [loading]);
+
   useEffect(() => {
     if (publicKey) {
       getTokenBalance();
@@ -154,6 +159,7 @@ function SolanaNativeTransferApp() {
 
   const handleSubmit = useCallback(async () => {
     if (token && splToken && solanaUser) {
+      setLoading(true);
       setSubmitDisable(true);
       if (transfer.direction === 'solana') {
         try {
@@ -244,6 +250,7 @@ function SolanaNativeTransferApp() {
           setLog(`Transfer ${amount} ${token} from Neon EVM to Solana failed due to: \n${e}`);
         }
       }
+      setLoading(false);
       setSubmitDisable(false);
       await getTokenBalance();
       await getWalletBalance();
@@ -271,15 +278,16 @@ function SolanaNativeTransferApp() {
             rightLabel={`(${directionBalance('to')})`}
           />
         </div>
-        <div className="form-field">
-          <label htmlFor="select" className="form-label">Select token</label>
-          <select value={token} onChange={handleSelect} className="form-select"
-                  disabled={submitDisable}>
-            <option value="" disabled={true}>Select Token</option>
-            {tokenList.map((i, k) =>
-              <option value={i.symbol} key={k}>{i.name} ({i.symbol})</option>)}
-          </select>
-        </div>
+        <FormSelect
+          label="Select token"
+          value={token}
+          onChange={handleSelect}
+          options={tokenList.map(i => ({
+            value: i.symbol,
+            label: `${i.name} (${i.symbol})`
+          }))}
+          disabled={submitDisable}
+        />
         <FormInput
           label="Amount"
           value={amount}
@@ -289,7 +297,7 @@ function SolanaNativeTransferApp() {
           rightLabel={amountView}
         />
         <button type="button" className="form-button mt-8" onClick={handleSubmit} disabled={transferDisabled}>
-          Submit
+          {sendText}
         </button>
       </form>
       { log && <div className="result-log">{log}</div> }

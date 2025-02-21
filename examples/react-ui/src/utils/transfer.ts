@@ -1,9 +1,7 @@
 import { Connection, Commitment, Transaction, PublicKey } from '@solana/web3.js';
-import { BaseMessageSignerWalletAdapter } from '@solana/wallet-adapter-base';
 import {
   ScheduledTransactionStatus,
   createScheduledNeonEvmTransaction,
-  EstimatedScheduledGasPayResponse,
   HexString,
   NeonProxyRpcApi,
   SolanaNeonAccount
@@ -35,8 +33,8 @@ export function balanceView(amount: string | bigint | number, decimals: number):
 }
 
 export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: SolanaNeonAccount, transactionData: string, splTokenAddress: string): Promise<{
-  maxFeePerGas: HexString;
-  maxPriorityFeePerGas: HexString;
+  maxFeePerGas: HexString | number;
+  maxPriorityFeePerGas: HexString | number;
   gasLimit: HexString;
 }> {
   const { result } = await proxyRpcApi.estimateScheduledGas({
@@ -57,8 +55,6 @@ export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: Sola
 }
 
 export async function createAndSendScheduledTransaction({ chainId, scheduledTransaction, neonEvmProgram, proxyRpcApi, solanaUser, nonce, connection, signMethod }: CreateScheduledTransactionParams): Promise<string> {
-  //TODO: fix return type of createScheduledNeonEvmTransaction
-  //@ts-ignore
   const createScheduledTransaction = createScheduledNeonEvmTransaction({
     chainId: chainId,
     signerAddress: solanaUser.publicKey,
@@ -69,8 +65,6 @@ export async function createAndSendScheduledTransaction({ chainId, scheduledTran
     neonTransaction: scheduledTransaction.serialize()
   });
 
-  //TODO: fix return type of createScheduledNeonEvmTransaction
-  //@ts-ignore
   const scheduledTransactionSignature = await sendSolanaTransaction(connection, createScheduledTransaction, signMethod, solanaUser.publicKey, true);
   console.log(`Scheduled tx signature: ${scheduledTransactionSignature} \nhttps://explorer.solana.com/tx/${scheduledTransactionSignature}?cluster=devnet`);
 

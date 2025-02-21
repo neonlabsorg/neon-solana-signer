@@ -96,7 +96,7 @@ function SolanaNativeSimpleTransaction() {
       }
     }
     setLoading(false);
-  }, [publicKey, neonEvmProgram, connection]);
+  }, [chainId, solanaUser, proxyRpcApi, publicKey, signTransaction, neonEvmProgram, connection]);
 
   const sendText = useMemo(() => {
     return loading ? `Wait...` : `Send simple scheduled transaction`;
