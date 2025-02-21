@@ -140,7 +140,7 @@ export class NeonProxyRpcApi {
     const a = parseInt(maxPriorityFeePerGasHex, 16);
     const b = MAX_PRIORITY_FEE_PER_GAS_DEFAULT;
     const maxPriorityFeePerGas = a > b ? a : b;
-    const maxFeePerGas = parseInt(result.baseFeePerGas, 16) * 1.5 + maxPriorityFeePerGas;
+    const maxFeePerGas = Math.floor(parseInt(result.baseFeePerGas, 16) * 1.5 + maxPriorityFeePerGas);
     return { maxPriorityFeePerGas, maxFeePerGas };
   }
 
