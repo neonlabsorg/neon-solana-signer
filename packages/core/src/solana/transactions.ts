@@ -126,7 +126,7 @@ export async function createHolderAccountTransaction(neonEvmProgram: PublicKey, 
  * @param {number} transactionData.neonWalletNonce - A **nonce value** of the root **Neon transaction** in the tree of scheduled Neon transactions.
  * @param {string} transactionData.neonTransaction - The **raw Neon EVM transaction data**.
  * @param {boolean} transactionData.isMultiple - A **flag indicating whether multiple transactions are scheduled together**.
- * @returns {Promise<Transaction>} A **Solana `Transaction` object**, ready to be signed and sent.
+ * @returns {Transaction} A **Solana `Transaction` object**, ready to be signed and sent.
  */
 export function createScheduledNeonEvmTransaction(transactionData: CreateScheduledTransactionData): Transaction {
   const {

@@ -1,61 +1,18 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body, header {
-  position: relative;
-  height: 100%;
-}
-
-body {
-  background-color: #06010D;
-  color: #FFF;
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-}
-
-a {
-  color: #FFF;
-  transition: color 0.3s ease-in;
-}
-
-a:hover {
-  color: #14F195;
-}
-
-a:focus-visible {
-  @apply outline-none outline-0;
-  border-bottom: 1px solid #FFFFFF;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type=number] {
-  -moz-appearance: textfield;
-}
-
-* {
-  -webkit-tap-highlight-color: transparent;
-  -moz-tap-highlight-color: transparent;
-}
+@import "tailwindcss";
 
 .title-1 {
-  @apply  flex flex-row gap-[10px] items-center text-2xl leading-4 font-bold mb-[20px];
+  @apply  flex flex-row gap-[10px] text-2xl leading-4 font-bold items-center mb-[20px];
 }
 
 .title-1 .logo {
   @apply min-w-[32px] min-h-[32px];
-  background-image: url('~/public/logo192.png');
+  background-image: url('/logo192.png');
   background-size: contain;
 }
 
 .title-1 .github {
   @apply block min-w-[32px] min-h-[32px];
-  background-image: url('~/public/icons/github.svg');
+  background-image: url('/icons/github.svg');
   background-size: contain;
 }
 
@@ -63,8 +20,12 @@ input[type=number] {
   @apply p-[20px] max-w-[600px] mx-auto;
 }
 
+.tab-content {
+  @apply py-5 w-full mx-auto;
+}
+
 .form-input {
-  @apply flex flex-col justify-center items-center w-full h-[64px] leading-[24px] h-[48px] py-[12px] px-[20px] rounded-[8px] text-[20px] text-[#444] transition-all font-bold;
+  @apply flex flex-col justify-center items-center w-full leading-[24px] h-[48px] py-[12px] px-[20px] rounded-[8px] text-[20px] text-[#444] transition-all font-bold;
 }
 
 .form-input[disabled] {
@@ -72,7 +33,7 @@ input[type=number] {
 }
 
 .form-select {
-  @apply flex flex-col justify-center items-center w-full h-[64px] leading-[24px] h-[48px] py-[12px] px-[20px] rounded-[8px] text-[20px] text-[#444] transition-all font-bold;
+  @apply flex flex-col justify-center items-center w-full leading-[24px] h-[48px] py-[12px] px-[20px] rounded-[8px] text-[20px] text-[#444] transition-all font-bold;
   box-sizing: border-box;
   appearance: none;
   background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'), linear-gradient(to bottom, #ffffff 0%, #e5e5e5 100%);
@@ -115,10 +76,23 @@ input[type=number] {
   font-weight: normal;
 }
 
-.form-button {
-  @apply flex flex-col justify-center items-center w-full h-[64px] leading-[24px] h-[48px] px-[20px] rounded-[8px] text-center text-[20px] text-[#fff] transition-all font-bold;
+.form-button,
+button.wallet-adapter-button-trigger {
+  @apply flex justify-center items-center w-full h-[64px] leading-[24px] px-[20px] rounded-[8px] text-center text-[20px] text-[#fff] transition-all font-bold;
   background: linear-gradient(91.79deg, #6115DF 59.46%, #BA3CD9 80.5%, #F77137 101.11%);
   margin-bottom: 20px;
+}
+
+.form-button {
+  @apply flex-col;
+}
+
+button.wallet-adapter-button-trigger {
+  @apply flex-row;
+}
+
+.wallet-adapter-dropdown {
+  @apply w-full flex flex-col justify-center items-center;
 }
 
 .form-button:hover {
@@ -135,24 +109,19 @@ input[type=number] {
 }
 
 .form-field {
-  margin-bottom: 18px;
+  margin-bottom: 18px !important;
 }
 
 .icon-button {
   @apply w-[36px] h-[36px];
-  background-image: url('~/public/icons/change.svg');
+  background-image: url('/icons/change.svg');
 }
 
 .icon-loading {
   @apply w-[36px] h-[36px];
-  background-image: url('~/public/icons/change.svg');
+  background-image: url('/icons/change.svg');
 }
 
 .result-log {
-  white-space: pre-wrap;
-  font-family: monospace;
-  font-size: 12px;
-  padding: 5px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  @apply p-4 whitespace-pre-wrap font-mono text-[12px] bg-[#1C1920] rounded-[4px] overflow-auto;
 }
