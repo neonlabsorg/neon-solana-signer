@@ -14,7 +14,6 @@ export const CHAIN_ID = NEON_CHAIN_IDS.find(i => i.name === CHAIN_NAME)!.id;
 export const SOLANA_URL = import.meta.env.VITE_SOLANA_URL!;
 export const NEON_CORE_API_RPC_URL = import.meta.env.VITE_NEON_CORE_API_RPC_URL!;
 export const COUNTER_CONTRACT_ADDRESS = import.meta.env.VITE_COUNTER_CONTRACT_ADDRESS;
-export const NEON_WALLET = import.meta.env.VITE_NEON_WALLET;
 
 export const tokenList: SPLToken[] = [
   {
