@@ -32,7 +32,7 @@ export function balanceView(amount: string | bigint | number, decimals: number):
   return (new Big(amount.toString()).div(Big(10).pow(decimals))).toNumber();
 }
 
-export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: SolanaNeonAccount, transactionData: string, splTokenAddress: string): Promise<{
+export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: SolanaNeonAccount, transactionData: string, toAddress: string): Promise<{
   maxFeePerGas: HexString | number;
   maxPriorityFeePerGas: HexString | number;
   gasLimit: HexString;
@@ -41,7 +41,7 @@ export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: Sola
     scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
     transactions: [{
       from: solanaUser.neonWallet,
-      to: splTokenAddress,
+      to: toAddress,
       data: transactionData
     }]
   });

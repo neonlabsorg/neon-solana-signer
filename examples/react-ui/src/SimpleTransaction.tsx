@@ -1,13 +1,12 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import {
-  createBalanceAccountInstruction,
-  createScheduledNeonEvmTransaction,
-  ScheduledTransaction,
-  solanaAirdrop,
+  ScheduledTransaction
 } from '@neonevm/solana-sign';
 import {
-  BaseContract
+  CounterContract,
+  createAndSendScheduledTransaction,
+  estimateFee
 } from './utils';
 import { useProxyContext } from './contexts/Proxy.tsx';
 
@@ -18,89 +17,74 @@ function SolanaNativeSimpleTransaction() {
     proxyRpcApi,
     chainId,
     neonEvmProgram,
-    connection
+    connection,
+    provider
   } = useProxyContext();
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [responseLog, setResponseLog] = useState<string>('');
+  const [count, setCount] = useState<number>(0);
 
-  const handleTransaction = useCallback(async () => {
+  const counterContract = useMemo(() => {
+    return new CounterContract(provider);
+  }, [provider]);
+
+  const getCount = useCallback(async () => {
+    const counter = await counterContract.getCount();
+    setCount(counter);
+  }, [counterContract]);
+
+  useEffect(() => {
+    if(provider) {
+      getCount();
+    }
+  }, [provider, getCount]);
+
+  const handleTransaction = useCallback(async (action: string) => {
     setResponseLog('');
     if (publicKey && solanaUser && signTransaction) {
-      setLoading(true);
-      const baseContract = new BaseContract();
+      setLoadingAction(action);
       const nonce = Number(await proxyRpcApi.getTransactionCount(solanaUser.neonWallet));
-      const account = await connection.getAccountInfo(solanaUser.balanceAddress);
-      console.log('Balance account: ', account);
+      //Encodes the data for a transaction that calls specified function
+      const data = counterContract.transactionData(action);
 
-      const data = baseContract.transactionData(solanaUser.publicKey);
-
-      const { result } = await proxyRpcApi.estimateScheduledGas({
-        scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
-        transactions: [{
-          from: solanaUser.neonWallet,
-          to: baseContract.address,
-          data: data
-        }]
-      });
-      console.log('Estimated scheduled gas: ', result);
-      const maxFeePerGas = result?.maxFeePerGas || 0x77359400;
-      console.log(`Neon wallet ${solanaUser.neonWallet} nonce: ${nonce}`);
+      const { maxPriorityFeePerGas, gasLimit, maxFeePerGas } = await estimateFee(proxyRpcApi, solanaUser, data, counterContract.address);
 
       const scheduledTransaction = new ScheduledTransaction({
         nonce: nonce,
         payer: solanaUser.neonWallet,
-        target: baseContract.address,
+        target: counterContract.address,
         callData: data,
         maxFeePerGas: maxFeePerGas,
+        maxPriorityFeePerGas: maxPriorityFeePerGas,
+        gasLimit: gasLimit,
         chainId: chainId //Important! Use only SOL chain ID: 245022927 for devnet or 112 for local development
       });
 
-      const createScheduledTransaction = createScheduledNeonEvmTransaction({
-        chainId,
-        signerAddress: solanaUser.publicKey,
-        tokenMintAddress: solanaUser.tokenMint,
-        neonEvmProgram,
-        neonWallet: solanaUser.neonWallet,
-        neonWalletNonce: nonce,
-        neonTransaction: scheduledTransaction.serialize()
-      });
-
-
-      const treasuryPool = createScheduledTransaction.instructions[0].keys[2].pubkey;
-      await solanaAirdrop(connection, treasuryPool, 21e9);
-
       try {
-        if (!account) {
-          createScheduledTransaction.instructions.unshift(createBalanceAccountInstruction(neonEvmProgram, solanaUser.publicKey, solanaUser.neonWallet, solanaUser.chainId));
-        }
-
-        createScheduledTransaction.feePayer = publicKey;
-        createScheduledTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-        const signedTransaction = await signTransaction(createScheduledTransaction);
-        const signature = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false });
-        console.log(`Solana signature: ${signature}`);
-
-        const transactions = await proxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
-        console.log(`Scheduled transactions result`, transactions);
-        for (const transaction of transactions) {
-          const { transactionHash } = transaction;
-          const { result } = await proxyRpcApi.getTransactionReceipt(transactionHash);
-          console.log(result);
-          console.log(await proxyRpcApi.getTransactionReceipt(transactionHash));
-          setResponseLog(JSON.stringify(transaction, null, '  '));
-        }
+        const txLog = await createAndSendScheduledTransaction({
+          chainId,
+          scheduledTransaction,
+          neonEvmProgram,
+          proxyRpcApi,
+          solanaUser,
+          nonce,
+          connection,
+          signMethod: signTransaction
+        });
+        setResponseLog(txLog);
+        await getCount();
       } catch (e: unknown) {
         console.log(e);
         setResponseLog(JSON.stringify(e, null, '  '));
       }
     }
-    setLoading(false);
-  }, [chainId, solanaUser, proxyRpcApi, publicKey, signTransaction, neonEvmProgram, connection]);
+    setLoadingAction(null);
+  }, [counterContract, getCount, chainId, solanaUser, proxyRpcApi, publicKey, signTransaction, neonEvmProgram, connection]);
 
-  const sendText = useMemo(() => {
-    return loading ? `Wait...` : `Send simple scheduled transaction`;
-  }, [loading]);
+  const getButtonText = useCallback((action: string) => {
+    return loadingAction === action ? 'Wait...' : `Send ${action} transaction`;
+  }, [loadingAction]);
 
   const disabled = useMemo(() => {
     return !publicKey;
@@ -109,8 +93,14 @@ function SolanaNativeSimpleTransaction() {
   return (
     <div className="tab-content">
       <form className="form mb-[20px]">
-        <button type="button" className="form-button" onClick={handleTransaction} disabled={disabled || loading}>
-          {sendText}
+        <div className="form-label pb-4">
+          <label>Current count: <span className='font-bold text-xl'>{count}</span></label>
+        </div>
+        <button type="button" className="form-button" onClick={() => handleTransaction('increase')} disabled={disabled || !!loadingAction}>
+          {getButtonText('increase')}
+        </button>
+        <button type="button" className="form-button" onClick={() => handleTransaction('clear')} disabled={disabled || !!loadingAction || count === 0 }>
+          {getButtonText('clear')}
         </button>
       </form>
       {responseLog && <div className="result-log">{responseLog}</div>}
