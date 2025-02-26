@@ -429,10 +429,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@neonevm/solana-sign@^0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@neonevm/solana-sign/-/solana-sign-0.1.5.tgz#c8eefd26342bc43dab505b331617c302ea87858a"
-  integrity sha512-+UWVb59ceEMRiADIOS+1oO5WwIheXDUMDx3A8Q94VzUHLrVinMK76XfJ93crOVM8qu+tCMD+bf/48+w3AOxwLA==
+"@neonevm/solana-sign@^0.1.7":
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/@neonevm/solana-sign/-/solana-sign-0.1.7.tgz#f42c17e6266ad5699227f22f15d0161dcadb3842"
+  integrity sha512-SNb9uyg0UZcHV4VjRU+yu7Bl0+BaYR9HLWmYrrA6Sxoi8VATyYlg9SMGXVetdR9rYqzuhz7XbF+ZywemqVMTMQ==
   dependencies:
     "@solana/spl-token" "0.4.9"
     "@solana/web3.js" "^1.98.0"
@@ -3414,9 +3414,9 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
-"token-list@https://github.com/neonlabsorg/token-list.git#v5.8.5":
+"token-list@git+https://github.com/neonlabsorg/token-list.git#v5.8.5":
   version "0.0.0"
-  resolved "https://github.com/neonlabsorg/token-list.git#314ced2a16004577477159b49cc17f8e97848721"
+  resolved "git+https://github.com/neonlabsorg/token-list.git#314ced2a16004577477159b49cc17f8e97848721"
 
 tr46@~0.0.3:
   version "0.0.3"
