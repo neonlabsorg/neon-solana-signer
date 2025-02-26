@@ -19,14 +19,21 @@
     "declaration": true,
     "declarationMap": true,
     "allowJs": true,
+    "skipLibCheck": true,
     "paths": {
       "@neonevm/solana-sign": [
         "src"
-      ],
-      "@neonevm/solana-contracts": [
-        "../contracts/src"
       ]
     }
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test/**/*",
+    "**/*spec.ts",
+    "jest.config.ts"
+  ]
 }

@@ -1,20 +1,22 @@
 import { PublicKey } from '@solana/web3.js';
 import { NeonProxyRpcApi } from '../api';
 import { GasToken } from './token';
+import { SolanaAccount } from '@neonevm/token-transfer-core';
 
 export type UUID = string;
 export type HexString = `0x${string}` | string;
 export type PublicKeyString = string;
 export type NeonAddress = HexString;
 export type SolanaAddress = string;
+export type SolanaSignature = string;
 export type RPCUrl = string;
 
 export interface RPCResponse<T> {
   id: number | string;
   jsonrpc: string;
   result: T;
+  error?: any;
 }
-
 
 /**
  * Represents the status and configuration of the Neon EVM Program.
@@ -91,11 +93,13 @@ export interface TransactionTreeResponse {
   max_priority_fee_per_gas: HexString;
   balance: HexString;
   last_index: number;
-  transactions: ScheduledTransactionStatus[];
+  transactions: ScheduledTransactionStatusResponse[];
 }
 
-export interface ScheduledTransactionStatus {
-  status: 'NotStarted' | 'InProgress' | 'Success' | string;
+export type TransactionStatus = 'NotStarted' | 'InProgress' | 'Success' | 'Empty' | 'Failed' | 'Skipped' | string;
+
+export interface ScheduledTransactionStatusResponse {
+  status: TransactionStatus;
   result_hash: HexString;
   transaction_hash: HexString;
   gas_limit: HexString;
@@ -134,4 +138,80 @@ export interface NeonBalance {
 export interface TransferTreeData {
   address: NeonAddress;
   chain_id: number;
+}
+
+export interface ScheduledTransactionStatus {
+  transactionHash: HexString;
+  status: TransactionStatus;
+  resultHash: HexString;
+  gasLimit: HexString;
+  value: HexString;
+  childTransactionIndex: HexString;
+  successExecutionLimit: HexString;
+  parentCount: HexString;
+}
+
+export interface ScheduledTreeAccount {
+  address: SolanaAddress;
+  status: 'Ok' | string;
+  activeStatus: TransactionStatus;
+  payer: NeonAddress;
+  chainId: HexString;
+  nonce: HexString;
+  lastSlot: HexString;
+  maxFeePerGas: HexString;
+  maxPriorityFeePerGas: HexString;
+  balance: HexString;
+  lastIndex: HexString;
+  transactions: ScheduledTransactionStatus[];
+}
+
+export interface EstimateScheduledTransaction {
+  from?: string;
+  to: string;
+  data: string;
+}
+
+export interface EstimatedScheduledGasPayData {
+  scheduledSolanaPayer: string;
+  transactions: EstimateScheduledTransaction[];
+}
+
+export interface EstimatedScheduledGasPayResponse {
+  chainId: HexString;
+  maxFeePerGas: HexString;
+  maxPriorityFeePerGas: HexString;
+  nonce: HexString;
+  treasuryIndex: HexString;
+  accountList: SolanaAccount[],
+  gasList: HexString[]
+}
+
+export interface BlockByNumber {
+  logsBloom: HexString;
+  transactionsRoot: HexString;
+  receiptsRoot: HexString;
+  stateRoot: HexString;
+  sha3Uncles: HexString;
+  difficulty: HexString;
+  totalDifficulty: HexString;
+  extraData: HexString;
+  miner: HexString;
+  nonce: HexString;
+  mixHash: HexString;
+  size: HexString;
+  gasLimit: HexString;
+  gasUsed: HexString;
+  baseFeePerGas: HexString;
+  hash: HexString;
+  number: HexString;
+  parentHash: HexString;
+  timestamp: HexString;
+  uncles: HexString[];
+  transactions: any[];
+}
+
+export interface MaxFeePerGas {
+  maxPriorityFeePerGas: number;
+  maxFeePerGas: number;
 }

@@ -3,6 +3,30 @@ import { encodeDecode } from '@solana/buffer-layout-utils';
 import { hexToBuffer } from '../utils';
 import { HexString } from '../models';
 
+/**
+ * Creates a **custom binary layout** for encoding and decoding **hexadecimal strings**.
+ *
+ * This function provides a structured way to store and retrieve **HexString** values
+ * within binary data layouts, commonly used for **binary serialization** in **Neon EVM transactions**.
+ *
+ * @param {number} length - The **length (in bytes)** of the expected hexadecimal string.
+ * @param {string} [property] - An optional **property** for the layout.
+ * @returns {Layout<HexString>} A **binary layout structure** capable of encoding and decoding hex strings.
+ *
+ * ### **How It Works**
+ * - **Encodes hex strings into binary format** for efficient storage.
+ * - **Decodes binary data back into a prefixed `0x` hex string** for readability.
+ * - Uses **buffer operations** to **manipulate hex data** in a structured format.
+ *
+ * ### **Example Usage**
+ * ```typescript
+ * const layout = hexStringLayout(32, "publicKey");
+ * const buffer = Buffer.alloc(32);
+ * layout.encode("0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890", buffer, 0);
+ * const decodedHex = layout.decode(buffer, 0);
+ * console.log(decodedHex); // Outputs: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+ * ```
+ */
 export const hexStringLayout = (length: number, property?: string): Layout<HexString> => {
   const layout = blob(length, property);
   const { encode, decode } = encodeDecode(layout);

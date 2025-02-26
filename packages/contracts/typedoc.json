@@ -1,4 +1,0 @@
-{
-  "extends": ["../../typedoc.base.jsonc"],
-  "entryPoints": ["./src/index.ts"]
-}

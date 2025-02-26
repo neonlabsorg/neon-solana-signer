@@ -6,6 +6,7 @@ import {
   createScheduledNeonEvmMultipleTransaction,
   createScheduledNeonEvmTransaction,
   delay,
+  destroyScheduledNeonEvmMultipleTransaction,
   FaucetDropper,
   GasToken,
   getGasToken,
@@ -15,16 +16,16 @@ import {
   logJson,
   MultipleTransactions,
   NeonChainId,
-  NeonClientApi,
   NeonProgramStatus,
   NeonProxyRpcApi,
+  neonTreeAccountAddressSync,
   NO_CHILD_INDEX,
   ScheduledTransaction,
   sendSolanaTransaction,
   solanaAirdrop,
   SolanaNeonAccount
 } from '@neonevm/solana-sign';
-import { BaseContract } from '@neonevm/solana-contracts';
+import { BaseContract } from '@neonevm/contracts-deployer';
 import { JsonRpcProvider } from 'ethers';
 import { config } from 'dotenv';
 import bs58 from 'bs58';
@@ -32,14 +33,12 @@ import bs58 from 'bs58';
 config({ path: '.env' });
 
 const NEON_API_RPC_URL = `${process.env.NEON_CORE_API_RPC_URL!}/sol`;
-const NEON_CLIENT_API_URL = process.env.NEON_CORE_API_URL!;
 const SOLANA_DEVNET_URL = process.env.SOLANA_URL!;
 const NEON_FAUCET_URL = process.env.NEON_FAUCET_URL!;
 const SOLANA_WALLET = process.env.SOLANA_WALLET!;
 
 let connection: Connection;
 let neonProxyRpcApi: NeonProxyRpcApi;
-let neonClientApi: NeonClientApi;
 let provider: JsonRpcProvider;
 let neonEvmProgram: PublicKey;
 let proxyStatus: NeonProgramStatus;
@@ -58,7 +57,6 @@ beforeAll(async () => {
   const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_WALLET));
   connection = new Connection(SOLANA_DEVNET_URL, 'confirmed');
   provider = new JsonRpcProvider(NEON_API_RPC_URL!);
-  neonClientApi = new NeonClientApi(NEON_CLIENT_API_URL);
   neonProxyRpcApi = result.proxyApi;
   neonEvmProgram = result.evmProgramAddress;
   proxyStatus = result.proxyStatus;
@@ -104,7 +102,7 @@ describe('Check Solana signer instructions', () => {
     });
     log(`Scheduled transaction`, scheduledTransaction.serialize(), scheduledTransaction.hash());
 
-    const createScheduledTransaction = await createScheduledNeonEvmTransaction({
+    const createScheduledTransaction = createScheduledNeonEvmTransaction({
       chainId,
       signerAddress: solanaUser.publicKey,
       tokenMintAddress: solanaUser.tokenMint,
@@ -123,14 +121,13 @@ describe('Check Solana signer instructions', () => {
       preflightCommitment: 'confirmed'
     }, 'scheduled');
 
-    const transactions = await neonClientApi.waitTransactionTreeExecution({
-      address: solanaUser.neonWallet,
-      chain_id: chainId
-    }, nonce, 2e3);
+    const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
+    logJson(transactions);
+
     log(`Scheduled transactions result`, transactions);
-    for (const { transaction_hash, status } of transactions) {
-      const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
-      logJson(result);
+    for (const { transactionHash, status } of transactions) {
+      const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+      log(result);
       expect(status).toBe('Success');
     }
   });
@@ -154,7 +151,7 @@ describe('Check Solana signer instructions', () => {
     const multiple = new MultipleTransactions(nonce, maxFeePerGas);
     multiple.addTransaction(transaction, NO_CHILD_INDEX, 0);
 
-    const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
+    const createScheduledTransaction = createScheduledNeonEvmMultipleTransaction({
       chainId,
       neonEvmProgram,
       neonTransaction: multiple.data,
@@ -174,14 +171,13 @@ describe('Check Solana signer instructions', () => {
     const { result } = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${transaction.serialize()}`);
     log(result);
 
-    const transactions = await neonClientApi.waitTransactionTreeExecution({
-      address: solanaUser.neonWallet,
-      chain_id: chainId
-    }, nonce, 5e3);
+    const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
+    logJson(transactions);
+
     log(`Scheduled transactions result`, transactions);
-    for (const { transaction_hash, status } of transactions) {
-      const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
-      logJson(result);
+    for (const { transactionHash, status } of transactions) {
+      const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+      log(result);
       expect(status).toBe('Success');
     }
   });
@@ -217,7 +213,7 @@ describe('Check Solana signer instructions', () => {
     multiple.addTransaction(trx0, 1, 0);
     multiple.addTransaction(trx1, NO_CHILD_INDEX, 1);
 
-    const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
+    const createScheduledTransaction = createScheduledNeonEvmMultipleTransaction({
       chainId,
       neonEvmProgram,
       neonTransaction: multiple.data,
@@ -238,14 +234,11 @@ describe('Check Solana signer instructions', () => {
     const transaction2 = await neonProxyRpcApi.sendRawScheduledTransaction(`0x${trx1.serialize()}`);
     log(transaction1.result, transaction2.result);
 
-    const transactions = await neonClientApi.waitTransactionTreeExecution({
-      address: solanaUser.neonWallet,
-      chain_id: chainId
-    }, nonce, 5e3);
+    const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
     log(`Scheduled transactions result`, transactions);
-    for (const { transaction_hash, status } of transactions) {
-      const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
-      logJson(result);
+    for (const { transactionHash, status } of transactions) {
+      const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+      console.log(result);
       expect(status).toBe('Success');
     }
   });
@@ -276,9 +269,9 @@ describe('Check Solana signer instructions', () => {
     multiple.addTransaction(trxs[2], 3, 0);
     multiple.addTransaction(trxs[3], NO_CHILD_INDEX, 3);
 
-    const createScheduledTransaction = await createScheduledNeonEvmMultipleTransaction({
-      chainId,
-      neonEvmProgram,
+    const createScheduledTransaction = createScheduledNeonEvmMultipleTransaction({
+      chainId: chainId,
+      neonEvmProgram: neonEvmProgram,
       neonTransaction: multiple.data,
       signerAddress: solanaUser.publicKey,
       tokenMintAddress: solanaUser.tokenMint,
@@ -295,21 +288,39 @@ describe('Check Solana signer instructions', () => {
 
     const result = await neonProxyRpcApi.sendRawScheduledTransactions(trxs.map(t => t.serialize()));
     logJson(result);
-    const transactions = await neonClientApi.waitTransactionTreeExecution({
-      address: solanaUser.neonWallet,
-      chain_id: chainId
-    }, nonce, 9e3);
+
+    const transactions = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
     log(`Scheduled transactions result`, transactions);
-    for (const { transaction_hash, status } of transactions) {
-      const { result } = await neonProxyRpcApi.getTransactionReceipt(`0x${transaction_hash}`);
-      logJson(result);
+    for (const { transactionHash, status } of transactions) {
+      const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+      console.log(result);
       expect(status).toBe('Success');
     }
   });
 
-  it(`Check if we have pending transactions`, async () => {
-    const response = await neonProxyRpcApi.getPendingTransactions(solanaUser.publicKey);
-    console.log(response);
+  it(`Check if we have pending transactions and cancel it`, async () => {
+    const { result } = await neonProxyRpcApi.getPendingTransactions(solanaUser.publicKey);
+    log(result);
+    for (const key in result) {
+      if (result.hasOwnProperty(key)) {
+        const nonce = Number(key);
+        for (const pendingTransaction of result[key]) {
+          const { result } = await neonProxyRpcApi.getScheduledTreeAccount(solanaUser.neonWallet, nonce);
+          log(result.transactions);
+          if (result.transactions.some(t => ['NotStarted'].includes(t.status) && t.transactionHash === pendingTransaction.hash.slice(2))) {
+            const [treeAccountAddress] = neonTreeAccountAddressSync(solanaUser.neonWallet, neonEvmProgram, chainId, nonce);
+            const destroyScheduledTransaction = destroyScheduledNeonEvmMultipleTransaction({
+              neonEvmProgram: neonEvmProgram,
+              signerAddress: solanaUser.publicKey,
+              balanceAddress: solanaUser.balanceAddress,
+              treeAccountAddress: treeAccountAddress
+            });
+            await sendSolanaTransaction(connection, destroyScheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
+            await delay(2e3);
+          }
+        }
+      }
+    }
   });
 
   it.skip(`Create holder account`, async () => {
@@ -323,6 +334,5 @@ describe('Check Solana signer instructions', () => {
       account = await connection.getAccountInfo(holderAccount);
     }
     expect(account).not.toBeNull();
-    log(await neonClientApi.getHolder(holderAccount));
   });
 });

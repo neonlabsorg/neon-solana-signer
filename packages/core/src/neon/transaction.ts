@@ -1,5 +1,5 @@
 import { decodeRlp, encodeRlp, keccak256, RlpStructuredData, toBeHex } from 'ethers';
-import { HexString, ScheduledTransactionData } from '../models';
+import { EstimateScheduledTransaction, HexString, ScheduledTransactionData, ScheduledTransactionGas } from '../models';
 import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer, toBytes16LE, toBytes64BE } from '../utils';
 
 /**
@@ -26,27 +26,30 @@ import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer, toBytes16LE, to
  *  payer: "0xPayerAddress",
  *  sender: "0xSenderAddress",
  *  nonce: 1,
- *  index: 1,
  *  target: "0xTargetAddress",
  *  callData: "0xCallData",
- *  value: 1,
- *  chainId: 245022926,
- *  gasLimit: 100,
- *  maxFeePerGas: 100,
- *  maxPriorityFeePerGas: 10
+ *  chainId: 245022927,
+ *  gasLimit: 50000,
+ *  maxFeePerGas: 1250000001,
+ *  maxPriorityFeePerGas: 1250000000
  *  });
  *  ```
  */
+
+export const GAS_LIMIT_DEFAULT = 5e4;
+export const MAX_FEE_PER_GAS_DEFAULT = 1250000001;
+export const MAX_PRIORITY_FEE_PER_GAS_DEFAULT = 1250000000;
+
 export class ScheduledTransaction {
   readonly type = 0x7F;
   readonly neonSubType = 0x01;
-  readonly data: ScheduledTransactionData;
+  data: ScheduledTransactionData;
   private readonly defaultData: Partial<ScheduledTransactionData> = {
     value: '0x',
-    chainId: toBeHex(NeonChainId.testnetSol),
-    gasLimit: toBeHex(9999999999),
-    maxFeePerGas: toBeHex(100),
-    maxPriorityFeePerGas: toBeHex(10)
+    chainId: toBeHex(NeonChainId.devnetSol),
+    gasLimit: toBeHex(GAS_LIMIT_DEFAULT),
+    maxFeePerGas: toBeHex(MAX_FEE_PER_GAS_DEFAULT),
+    maxPriorityFeePerGas: toBeHex(MAX_PRIORITY_FEE_PER_GAS_DEFAULT)
   };
 
   /**
@@ -99,6 +102,31 @@ export class ScheduledTransaction {
     const success = toBytes16LE(successLimit, 2);
     const hash = hexToBuffer(this.hash());
     return bufferConcat([gasLimit, value, index, success, hash]);
+  }
+
+  feeEstimateData(): EstimateScheduledTransaction {
+    const { payer, sender, target, callData } = this.data;
+    return {
+      from: sender !== '0x' ? sender : payer,
+      to: target,
+      data: callData
+    };
+  }
+
+  setGasPrice({ gasLimit, maxFeePerGas, maxPriorityFeePerGas }: ScheduledTransactionGas): void {
+    const data = { ...this.data };
+    if (gasLimit) {
+      data.gasLimit = GAS_LIMIT_DEFAULT > gasLimit ? toBeHex(GAS_LIMIT_DEFAULT) : toBeHex(gasLimit);
+    }
+    if (maxFeePerGas) {
+      data.maxFeePerGas = MAX_FEE_PER_GAS_DEFAULT > maxFeePerGas ?
+        toBeHex(MAX_FEE_PER_GAS_DEFAULT) : toBeHex(maxFeePerGas);
+    }
+    if (maxPriorityFeePerGas) {
+      data.maxPriorityFeePerGas = MAX_PRIORITY_FEE_PER_GAS_DEFAULT > maxPriorityFeePerGas ?
+        toBeHex(MAX_PRIORITY_FEE_PER_GAS_DEFAULT) : toBeHex(maxPriorityFeePerGas);
+    }
+    this.data = data;
   }
 
   constructor(data: Partial<ScheduledTransactionData>) {
@@ -155,19 +183,19 @@ export class ScheduledTransaction {
   }
 
   /**
-  * Decode a RLP string into a RlpStructuredData object.
-  */
+   * Decode a RLP string into a RlpStructuredData object.
+   */
   static decodeRpl(data: string): RlpStructuredData {
     return decodeRlp(data);
   }
 }
 
 /**
-* MultipleTransactions is used to create a list of transactions that will be executed in a specific order.
+ * MultipleTransactions is used to create a list of transactions that will be executed in a specific order.
  * @constructor {number} nonce - The nonce of the transaction.
  * @constructor {number} maxFeePerGas - The maximum transaction fee (must match the fee of ScheduleTransaction).
  * @constructor {number} maxPriorityFeePerGas - The maximum fee to increase the priority of the transaction.
-*/
+ */
 export class MultipleTransactions {
   nonce: Buffer;
   maxFeePerGas: Buffer;
@@ -181,18 +209,22 @@ export class MultipleTransactions {
     return `0x${this._data.toString('hex')}`;
   }
 
-/**
- * Adds a ScheduledTransaction to the list of multiple transactions.
- * @param {ScheduledTransaction} transaction - The Scheduled transaction object.
- * @param {number} childIndex - The index of dependent transactions that must be executed before this one. Use the constant `NO_CHILD_INDEX` if there are no dependencies.
- * @param {number} successLimit - The number of successful preceding transactions required before this one can be executed.
- * @return void;
-**/
+  hash(): HexString {
+    return keccak256(this.data);
+  }
+
+  /**
+   * Adds a ScheduledTransaction to the list of multiple transactions.
+   * @param {ScheduledTransaction} transaction - The Scheduled transaction object.
+   * @param {number} childIndex - The index of dependent transactions that must be executed before this one. Use the constant `NO_CHILD_INDEX` if there are no dependencies.
+   * @param {number} successLimit - The number of successful preceding transactions required before this one can be executed.
+   * @return void;
+   **/
   addTransaction(transaction: ScheduledTransaction, childIndex: number, successLimit: number): void {
     this._data = Buffer.concat([this._data, transaction.serializedNode(childIndex, successLimit)]);
   }
 
-  constructor(nonce: number, maxFeePerGas: number = 100, maxPriorityFeePerGas: number = 10) {
+  constructor(nonce: number, maxFeePerGas: number = MAX_FEE_PER_GAS_DEFAULT, maxPriorityFeePerGas: number = MAX_PRIORITY_FEE_PER_GAS_DEFAULT) {
     this.nonce = toBytes64BE(nonce, 8);
     this.maxFeePerGas = toBytes64BE(maxFeePerGas, 32, 24);
     this.maxPriorityFeePerGas = toBytes64BE(maxPriorityFeePerGas, 32, 24);

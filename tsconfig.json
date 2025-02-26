@@ -15,24 +15,21 @@
     "lib": [
       "es2020",
       "dom"
-    ]
+    ],
+    "paths": {
+      "@neonevm/solana-sign": [
+        "./src"
+      ]
+    }
   },
   "exclude": [
     "node_modules",
     "**/*spec.ts",
     "**/*config.ts"
   ],
-  "paths": {
-    "@neonevm/solana-sign": [
-      "./src"
-    ]
-  },
   "references": [
     {
       "path": "./packages/core"
-    },
-    {
-      "path": "./packages/contracts"
     }
   ]
 }
