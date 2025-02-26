@@ -1,18 +1,31 @@
 import { HexString } from '@neonevm/solana-sign';
-import { PublicKey } from '@solana/web3.js';
-import { neonWrapperContract } from '@neonevm/token-transfer-ethers';
-import { NEON_TRANSFER_CONTRACT_DEVNET, neonWrapperAbi } from '@neonevm/token-transfer-core';
-import { Interface } from 'ethers';
+import { Contract, Interface, JsonRpcProvider } from 'ethers';
+import { COUNTER_CONTRACT_ADDRESS } from './consts';
+import { counterContractAbi } from '../data/abi';
 
-export class BaseContract {
+export function counterContract(): Interface {
+  return new Interface(counterContractAbi);
+}
+
+export class CounterContract {
+  contract: Contract;
   address: HexString;
 
-  transactionData(publicKey: PublicKey) {
-    return neonWrapperContract().encodeFunctionData('withdraw', [publicKey.toBuffer()]);
+  transactionData(method: string): string {
+    return counterContract().encodeFunctionData(method);
   }
 
-  constructor() {
-    this.address = NEON_TRANSFER_CONTRACT_DEVNET;
-    new Interface(neonWrapperAbi);
+  async getCount(): Promise<number> {
+    try {
+      return Number(await this.contract.getCount());
+    } catch (error) {
+      console.error("Error fetching counter:", error);
+      return 0;
+    }
+  }
+
+  constructor(provider: JsonRpcProvider) {
+    this.contract = new Contract(COUNTER_CONTRACT_ADDRESS, counterContractAbi, provider);
+    this.address = COUNTER_CONTRACT_ADDRESS;
   }
 }
