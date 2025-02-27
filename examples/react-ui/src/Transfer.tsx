@@ -279,7 +279,7 @@ function SolanaNativeTransferApp() {
           />
         </div>
         <FormSelect
-          label="Select token"
+          label="token"
           value={token}
           onChange={handleSelect}
           options={tokenList.map(i => ({

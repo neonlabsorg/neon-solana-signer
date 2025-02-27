@@ -45,7 +45,7 @@ function SolanaNativeApp() {
           <span className="text-[24px]">Solana native</span>
         </div>
         <a
-          href="https://github.com/neonlabsorg/neon-solana-signer/tree/main/packages/ui"
+          href="https://github.com/neonlabsorg/neon-solana-signer/tree/main/examples/react-ui"
           target="_blank" rel="noreferrer">
           <i className="github"></i>
         </a>
