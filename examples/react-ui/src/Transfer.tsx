@@ -197,7 +197,7 @@ function SolanaNativeTransferApp() {
             solanaUser,
             nonce,
             connection,
-            signMethod: signTransaction
+            signMethod: signTransaction!
           });
           setLog(txLog);
         } catch (e) {
@@ -243,7 +243,7 @@ function SolanaNativeTransferApp() {
             solanaUser,
             nonce,
             connection,
-            signMethod: signTransaction
+            signMethod: signTransaction!
           });
           setLog(txLog);
         } catch (e) {
@@ -279,7 +279,7 @@ function SolanaNativeTransferApp() {
           />
         </div>
         <FormSelect
-          label="Select token"
+          label="token"
           value={token}
           onChange={handleSelect}
           options={tokenList.map(i => ({

@@ -5,7 +5,7 @@ import {
   SolanaNeonAccount,
   ScheduledTransaction
 } from '@neonevm/solana-sign';
-import { SignerWalletAdapterProps } from '@solana/wallet-adapter-base';
+import type { SignerWalletAdapterProps } from '@solana/wallet-adapter-base';
 
 export interface TransferDirection {
   direction: 'solana' | 'neon';
