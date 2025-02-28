@@ -4,7 +4,7 @@
       <div class="flex flex-row gap-[8px] items-end mb-[18px]">
         <FormInput
           label="From"
-          :value="transfer.from"
+          :value="transfer.from!"
           :disabled="true"
           :rightLabel="directionBalance('from')"
         />
@@ -13,20 +13,24 @@
         </div>
         <FormInput
           label="To"
-          :value="transfer.to"
+          :value="transfer.to!"
           :disabled="true"
           :rightLabel="directionBalance('to')"
         />
       </div>
       <FormSelect
         label="Token"
+        placeholder="Select token"
         v-model="token"
+        :value="token"
         :options="tokenOptions"
         :disabled="submitDisable"
+        @updateValue="handleSelect"
       />
       <FormInput
         label="Amount"
         v-model="amount"
+        :value="amount"
         @input="handleAmount"
         placeholder="0"
         :disabled="true"
@@ -46,7 +50,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, toRaw, onMounted } from 'vue';
 import { useWallet } from 'solana-wallets-vue';
 import FormInput from '@/components/FormInput.vue';
 import FormSelect from '@/components/FormSelect.vue';
@@ -63,10 +67,19 @@ import {
   estimateFee,
   createAndSendScheduledTransaction
 } from '@/utils';
-import { TokenBalance, TransferDirection } from '@/models';
+import type { TokenBalance, TransferDirection } from '@/models';
 import { Big } from 'big.js';
 import { useProxyStore } from '@/stores'
 import { storeToRefs } from 'pinia'
+import { Connection, Transaction, PublicKey } from '@solana/web3.js';
+import type { JsonRpcProvider } from 'ethers';
+import { claimTransactionData, mintNeonTransactionData } from '@neonevm/token-transfer-ethers';
+import { createApproveInstruction, getAccount, getAssociatedTokenAddressSync } from '@solana/spl-token';
+import {
+  authAccountAddress,
+  toFullAmount
+} from '@neonevm/token-transfer-core';
+import { NeonProxyRpcApi, ScheduledTransaction, SolanaNeonAccount } from '@neonevm/solana-sign'
 
 const proxyStore = useProxyStore();
 
@@ -86,18 +99,19 @@ const walletBalance = ref<TokenBalance>({
   neon: BIG_ZERO,
   solana: BIG_ZERO,
 });
+
+const neonWallet = computed(() => {
+  return solanaUser.value?.neonWallet;
+});
+
 const transfer = ref<TransferDirection>({
   direction: 'solana',
   from: publicKey?.value?.toBase58() || '',
-  to: neonEvmProgram || ''
+  to: neonWallet.value || ''
 });
 
 const splToken = computed(() => {
   return tokenList.find(i => i.symbol === token.value);
-});
-
-const neonWallet = computed(() => {
-  return solanaUser?.neonWallet;
 });
 
 onMounted(() => {
@@ -105,7 +119,14 @@ onMounted(() => {
     getTokenBalance();
     getWalletBalance();
   }
-});
+})
+
+watch(publicKey, () => {
+  if(publicKey.value) {
+    getTokenBalance();
+    getWalletBalance();
+  }
+})
 
 const transferDisabled = computed(() => {
   const balance = tokenBalance.value[transfer.value.direction];
@@ -125,16 +146,28 @@ const handleTransferDirection = () => {
     from: isSolanaDirection ? neonWallet.value : (publicKey.value?.toBase58() || ''),
     to: isSolanaDirection ? (publicKey.value?.toBase58() || '') : neonWallet.value
   };
+  checkBalance();
 };
+
+const checkBalance = () => {
+  if (token.value && splToken.value) {
+    if (transfer.value.direction === 'solana') {
+      if (tokenBalance.value.solana.eq(0)) log.value = `You need to have some ${splToken.value.symbol} on Solana`;
+    } else {
+      if (tokenBalance.value.neon.eq(0)) log.value = `You need to have some ${splToken.value.symbol} on Neon`;
+    }
+  }
+}
 
 const handleAmount = (event: Event) => {
   amount.value = (event.target as HTMLInputElement).value;
   log.value = '';
 };
 
-const handleSelect = (event: Event) => {
-  token.value = (event.target as HTMLSelectElement).value;
+const handleSelect = async (value: string) => {
+  token.value = value;
   log.value = '';
+  await getTokenBalance();
 };
 
 const directionBalance = (position: 'from' | 'to') => {
@@ -156,32 +189,116 @@ const amountView = computed(() => {
 
 const getTokenBalance = async () => {
   if (splToken.value && neonWallet.value) {
-    const solana = await splTokenBalance(connection, publicKey.value!, splToken.value);
-    const neon = await mintTokenBalanceEthers(neonWallet.value, splToken.value, provider);
+    const rawProvider = toRaw(provider.value)
+    const solana = await splTokenBalance(<Connection>connection.value, publicKey.value!, splToken.value);
+    const neon = await mintTokenBalanceEthers(neonWallet.value, splToken.value, <JsonRpcProvider>rawProvider);
     tokenBalance.value = { solana, neon };
-    if (solana.eq(0) && transfer.value.direction === 'solana') log.value = `You need to have some ${splToken.value.symbol} on Solana`;
-    if (neon.eq(0) && transfer.value.direction === 'neon') log.value = `You need to have some ${splToken.value.symbol} on Neon`;
+    checkBalance();
   }
 };
 
 const getWalletBalance = async () => {
   if (neonWallet.value) {
-    const solana = await solanaBalance(connection, publicKey.value!);
-    const neon = await neonBalanceEthers(provider, neonWallet.value);
+    const rawProvider = toRaw(provider.value);
+    const solana = await solanaBalance(<Connection>connection.value, publicKey.value!);
+    const neon = await neonBalanceEthers(<JsonRpcProvider>rawProvider, neonWallet.value);
     walletBalance.value = { solana, neon };
   }
 };
 
 const handleSubmit = async () => {
-  if (token.value && splToken.value && solanaUser) {
+  if (token.value && splToken.value && solanaUser.value && proxyRpcApi.value && signTransaction.value) {
     loading.value = true;
     submitDisable.value = true;
     try {
       console.log(`Transfer ${amount.value} ${token.value} from Solana to Neon EVM`);
       if (transfer.value.direction === 'solana') {
-        // Transfer logic for Solana to Neon
+        const fromATA = getAssociatedTokenAddressSync(new PublicKey(splToken.value.address_spl), solanaUser.value.publicKey);
+        const tokenAmount = toFullAmount(amount.value, splToken.value.decimals);
+        const climeToData = claimTransactionData(fromATA, solanaUser.value.neonWallet, tokenAmount);
+        const nonce = Number(await proxyRpcApi.value.getTransactionCount(solanaUser.value.neonWallet));
+
+        //Approve for climeTo
+        const transaction = new Transaction();
+        const [delegatePDA] = authAccountAddress(solanaUser.value.neonWallet, neonEvmProgram.value!, splToken.value);
+        const approveInstruction = createApproveInstruction(fromATA, delegatePDA, solanaUser.value.publicKey, tokenAmount);
+        transaction.instructions.push(approveInstruction);
+        const signature = await sendSolanaTransaction(<Connection>connection.value, transaction, signTransaction.value, solanaUser.value.publicKey, true);
+        console.log(`Solana signature: ${signature}`);
+
+        const { maxPriorityFeePerGas, gasLimit, maxFeePerGas } = await estimateFee(
+          proxyRpcApi.value!,
+          <SolanaNeonAccount>solanaUser.value,
+          climeToData,
+          splToken.value.address,
+        );
+        const scheduledTransaction = new ScheduledTransaction({
+          nonce: nonce,
+          payer: solanaUser.value.neonWallet,
+          target: splToken.value.address,
+          callData: climeToData,
+          maxFeePerGas: maxFeePerGas,
+          maxPriorityFeePerGas: maxPriorityFeePerGas,
+          gasLimit: gasLimit,
+          chainId: chainId.value
+        });
+
+        log.value = await createAndSendScheduledTransaction({
+          chainId: chainId.value,
+          scheduledTransaction,
+          neonEvmProgram: <PublicKey>neonEvmProgram.value,
+          proxyRpcApi: <NeonProxyRpcApi>proxyRpcApi.value,
+          solanaUser: <SolanaNeonAccount>solanaUser.value,
+          nonce,
+          connection: <Connection>connection.value,
+          signMethod: signTransaction.value,
+        });
       } else {
-        // Transfer logic for Neon to Solana
+        const rawProvider = toRaw(provider.value);
+        await getOrCreateAssociatedTokenAccount(<Connection>connection.value, signTransaction.value, solanaUser.value.publicKey, splToken.value);
+        const balance = await mintTokenBalanceEthers(solanaUser.value.neonWallet, splToken.value, <JsonRpcProvider>rawProvider);
+        console.log(`Token balance: ${balance} ${splToken.value.symbol}`);
+
+        const associatedToken = getAssociatedTokenAddressSync(new PublicKey(splToken.value.address_spl), solanaUser.value.publicKey);
+        const account = await getAccount(<Connection>connection.value, associatedToken);
+        if (account) {
+          console.log(`Token balance: ${balanceView(account.amount, splToken.value.decimals)}  ${splToken.value.symbol}`);
+        }
+        const data = mintNeonTransactionData(associatedToken, splToken.value, amount.value);
+
+        const nonce = Number(await proxyRpcApi.value.getTransactionCount(solanaUser.value.neonWallet));
+
+        const { maxPriorityFeePerGas, gasLimit, maxFeePerGas } = await estimateFee(
+          proxyRpcApi.value!,
+          <SolanaNeonAccount>solanaUser.value,
+          data,
+          splToken.value.address,
+        );
+
+        const scheduledTransaction = new ScheduledTransaction({
+          nonce: nonce,
+          payer: solanaUser.value.neonWallet,
+          index: 0,
+          target: splToken.value.address,
+          callData: data,
+          maxFeePerGas: maxFeePerGas,
+          maxPriorityFeePerGas: maxPriorityFeePerGas,
+          gasLimit: gasLimit,
+          chainId: chainId.value
+        });
+
+        console.log(scheduledTransaction.data);
+
+        log.value = await createAndSendScheduledTransaction({
+          chainId: chainId.value,
+          scheduledTransaction,
+          neonEvmProgram: <PublicKey>neonEvmProgram.value,
+          proxyRpcApi: <NeonProxyRpcApi>proxyRpcApi.value,
+          solanaUser: <SolanaNeonAccount>solanaUser.value,
+          nonce,
+          connection: <Connection>connection.value,
+          signMethod: signTransaction.value,
+        });
       }
     } catch (e) {
       log.value = `Transfer failed: \n${e}`;

@@ -6,6 +6,7 @@
     <select
       v-model="selectedValue"
       @change="handleChange"
+      :placeholder="placeholder"
       :disabled="disabled"
       :class="['form-select', selectClassName]"
     >
@@ -28,15 +29,16 @@ const props = defineProps<{
   className?: string;
   selectClassName?: string;
   labelClassName?: string;
+  placeholder?: string;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:value', value: string): void;
+  (e: 'updateValue', value: string): void;
 }>();
 
 const selectedValue = ref<string>(props.value);
 
 const handleChange = () => {
-  emit('update:value', selectedValue.value);
+  emit('updateValue', selectedValue.value);
 };
 </script>

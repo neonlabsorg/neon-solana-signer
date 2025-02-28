@@ -16,7 +16,7 @@ type ProxyState = {
   _neonEvmProgram: PublicKey | null;
   _solanaUser: SolanaNeonAccount | null;
   _proxyRpcApi: NeonProxyRpcApi | null;
-  _provider: JsonRpcProvider | null;
+  _provider: JsonRpcProvider;
   _connection: Connection;
 }
 

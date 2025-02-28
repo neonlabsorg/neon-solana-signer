@@ -27,7 +27,9 @@
       :id="'tab-panel-' + index"
       :class="['py-4', activeTab === index ? 'block' : 'hidden']"
     >
-      <component :is="tab.content" v-if="activeTab === index" />
+      <keep-alive>
+        <component :is="tab.content" v-if="activeTab === index" />
+      </keep-alive>
     </div>
   </div>
 </template>
