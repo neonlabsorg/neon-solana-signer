@@ -167,9 +167,10 @@ export interface ScheduledTreeAccount {
 }
 
 export interface EstimateScheduledTransaction {
-  from?: string;
-  to: string;
-  data: string;
+  from?: HexString;
+  to: HexString;
+  data: HexString;
+  childTransaction?: HexString;
 }
 
 export interface EstimatedScheduledGasPayData {
