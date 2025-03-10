@@ -57,7 +57,7 @@ function SolanaNativeSimpleTransaction() {
         callData: data,
         maxFeePerGas: maxFeePerGas,
         maxPriorityFeePerGas: maxPriorityFeePerGas,
-        gasLimit: gasLimit,
+        gasLimit: gasLimit[0],
         chainId: chainId //Important! Use only SOL chain ID: 245022927 for devnet or 112 for local development
       });
 

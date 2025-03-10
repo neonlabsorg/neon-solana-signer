@@ -89,7 +89,7 @@ const handleTransaction = async (action: string) => {
       callData: data,
       maxFeePerGas,
       maxPriorityFeePerGas,
-      gasLimit,
+      gasLimit: gasLimit[0],
       chainId: chainId.value,
     })
 

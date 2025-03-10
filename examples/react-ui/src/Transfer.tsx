@@ -185,7 +185,7 @@ function SolanaNativeTransferApp() {
             callData: climeToData,
             maxFeePerGas: maxFeePerGas,
             maxPriorityFeePerGas: maxPriorityFeePerGas,
-            gasLimit: gasLimit,
+            gasLimit: gasLimit[0],
             chainId: chainId
           });
 
@@ -229,7 +229,7 @@ function SolanaNativeTransferApp() {
             callData: data,
             maxFeePerGas: maxFeePerGas,
             maxPriorityFeePerGas: maxPriorityFeePerGas,
-            gasLimit: gasLimit,
+            gasLimit: gasLimit[0],
             chainId: chainId
           });
 

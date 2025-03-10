@@ -35,8 +35,9 @@ export function balanceView(amount: string | bigint | number, decimals: number):
 export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: SolanaNeonAccount, transactionData: string, toAddress: string): Promise<{
   maxFeePerGas: HexString | number;
   maxPriorityFeePerGas: HexString | number;
-  gasLimit: HexString;
+  gasLimit: number[];
 }> {
+  const { maxPriorityFeePerGas: maxPriorityFee, maxFeePerGas: maxFee } = await proxyRpcApi.getMaxFeePerGas();
   const { result } = await proxyRpcApi.estimateScheduledGas({
     scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
     transactions: [{
@@ -45,12 +46,11 @@ export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: Sola
       data: transactionData
     }]
   });
-  const { maxPriorityFeePerGas: priorityFee, maxFeePerGas: maxFee } = await proxyRpcApi.getMaxFeePerGas();
-  console.log(`Max fee per Gas: ${result} \n${priorityFee} \n${maxFee}`);
+  console.log(`Max fee per Gas: ${result} \n${maxPriorityFee} \n${maxFee}`);
 
-  const maxFeePerGas = maxFee || result?.maxFeePerGas;
-  const maxPriorityFeePerGas = priorityFee || result?.maxPriorityFeePerGas;
-  const gasLimit = result?.gasList[0];
+  const maxFeePerGas = parseInt(result?.maxFeePerGas, 16) || maxFee;
+  const maxPriorityFeePerGas = parseInt(result?.maxPriorityFeePerGas, 16) || maxPriorityFee;
+  const gasLimit = result?.gasList.map(i => parseInt(i, 16));
   return { maxFeePerGas, maxPriorityFeePerGas, gasLimit }
 }
 

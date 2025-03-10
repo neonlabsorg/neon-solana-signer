@@ -239,7 +239,7 @@ const handleSubmit = async () => {
           callData: climeToData,
           maxFeePerGas: maxFeePerGas,
           maxPriorityFeePerGas: maxPriorityFeePerGas,
-          gasLimit: gasLimit,
+          gasLimit: gasLimit[0],
           chainId: chainId.value
         });
 
@@ -283,7 +283,7 @@ const handleSubmit = async () => {
           callData: data,
           maxFeePerGas: maxFeePerGas,
           maxPriorityFeePerGas: maxPriorityFeePerGas,
-          gasLimit: gasLimit,
+          gasLimit: gasLimit[0],
           chainId: chainId.value
         });
 
