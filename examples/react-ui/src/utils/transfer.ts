@@ -3,10 +3,11 @@ import {
   ScheduledTransactionStatus,
   createScheduledNeonEvmTransaction,
   NeonProxyRpcApi,
-  SolanaNeonAccount
+  SolanaNeonAccount, ScheduledTransaction
 } from '@neonevm/solana-sign';
 import { Big } from 'big.js';
 import { CreateScheduledTransactionParams } from '../models';
+import { delay } from './delay.ts';
 
 
 export async function sendSolanaTransaction(connection: Connection, transaction: Transaction, signTransaction: any, feePayer: PublicKey, confirm = false, commitment: Commitment = 'finalized'): Promise<string> {
@@ -56,7 +57,7 @@ export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: Sola
   return { maxFeePerGas, maxPriorityFeePerGas, gasLimit }
 }
 
-export async function createAndSendScheduledTransaction({ chainId, scheduledTransaction, neonEvmProgram, proxyRpcApi, solanaUser, nonce, connection, signMethod }: CreateScheduledTransactionParams): Promise<string> {
+export async function createAndSendScheduledTransaction({ chainId, scheduledTransaction, neonEvmProgram, proxyRpcApi, solanaUser, nonce, connection, signMethod, approveInstruction }: CreateScheduledTransactionParams): Promise<string> {
   const createScheduledTransaction = createScheduledNeonEvmTransaction({
     chainId: chainId,
     signerAddress: solanaUser.publicKey,
@@ -67,9 +68,25 @@ export async function createAndSendScheduledTransaction({ chainId, scheduledTran
     neonTransaction: scheduledTransaction.serialize()
   });
 
+  if (approveInstruction) createScheduledTransaction.instructions.unshift(approveInstruction);
+
   const scheduledTransactionSignature = await sendSolanaTransaction(connection, createScheduledTransaction, signMethod, solanaUser.publicKey, true);
   console.log(`Scheduled tx signature: ${scheduledTransactionSignature} \nhttps://explorer.solana.com/tx/${scheduledTransactionSignature}?cluster=devnet`);
 
   const transactions = await proxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 3e5);
   return scheduledTransactionsLog(transactions);
+}
+
+export async function sendMultipleScheduledTransaction(transaction: Transaction, transactions: ScheduledTransaction[], { proxyRpcApi, solanaUser, connection, signMethod }: Omit<CreateScheduledTransactionParams, 'nonce' | 'chainId' | 'scheduledTransaction' | 'neonEvmProgram'>): Promise<string> {
+  const scheduledTransactionSignature = await sendSolanaTransaction(connection, transaction, signMethod, solanaUser.publicKey, true);
+  console.log(`Scheduled tx signature: ${scheduledTransactionSignature} \nhttps://explorer.solana.com/tx/${scheduledTransactionSignature}?cluster=devnet`);
+  const results = [];
+  for (const transaction of transactions) {
+    results.push(proxyRpcApi.sendRawScheduledTransaction(`0x${transaction.serialize()}`));
+  }
+  const resultsHash = await Promise.all(results);
+  await delay(3e3);
+  return resultsHash ? resultsHash.map(({ result }) => {
+    return `transactionHash: ${result} <br> check transaction status on: <a href="https://devnet.neonscan.org/tx/${result}" target="_blank">neonscan</a>`;
+  }).join('\n') : '';
 }
