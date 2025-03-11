@@ -1,5 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 import build from 'fetch-retry';
+import { JsonRpcProvider } from 'ethers';
 import {
   BlockByNumber,
   EstimatedScheduledGasPayData,
@@ -11,6 +12,7 @@ import {
   NeonAddressResponse,
   NeonGasPrice,
   NeonProgramStatus,
+  NeonProxyRpcOptions,
   PendingTransactions,
   ProxyApiState,
   RPCResponse,
@@ -21,11 +23,17 @@ import {
   SolanaSignature,
   TransactionByHash
 } from '../models';
-import { delay, log, uuid } from '../utils';
+import { delay, getGasToken, log, prepareHeaders, uuid } from '../utils';
 import { MAX_PRIORITY_FEE_PER_GAS_DEFAULT } from '../neon';
+
+const neonProxyRpcOptionsDefault: NeonProxyRpcOptions = {
+  showRequestLog: true,
+  space: undefined
+};
 
 export class NeonProxyRpcApi {
   readonly rpcUrl: RPCUrl;
+  private readonly options?: NeonProxyRpcOptions;
 
   async evmParams(): Promise<NeonProgramStatus> {
     return this.neonRpc<NeonProgramStatus>('neon_getEvmParams', []).then(({ result }) => result);
@@ -149,30 +157,41 @@ export class NeonProxyRpcApi {
   }
 
   async neonRpc<T>(method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
-    return NeonProxyRpcApi.rpc<T>(this.rpcUrl, method, params);
+    return NeonProxyRpcApi.rpc<T>(this.rpcUrl, method, params, this.options);
   }
 
-  static rpc<T>(url: string, method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
+  static async rpc<T>(url: string, method: string, params: unknown[] = [], options?: NeonProxyRpcOptions): Promise<RPCResponse<T>> {
     const id = uuid();
-    const body = { id, jsonrpc: '2.0', method, params };
-    log(`curl ${url} -X POST -H 'Content-Type: application/json' -d '${JSON.stringify(body)}' | jq .`);
-    const retry = build(fetch, { retries: 5, retryDelay: 1e3 });
-    return retry(url, {
+    const [headers, headersString] = prepareHeaders({});
+    const body = JSON.stringify({ id, jsonrpc: '2.0', method, params }, null, options?.space);
+    const fetchData: RequestInit = {
+      headers,
+      body,
       method: 'POST',
-      mode: 'cors',
-      body: JSON.stringify(body)
-    }).then(r => r.json());
+      mode: 'cors'
+    };
+    if (options?.showRequestLog) {
+      log(`curl ${url} -X POST ${headersString} -d '${body}' | jq .`);
+    }
+    const retry = build(fetch, { retries: 5, retryDelay: 1e3 });
+    const response = await retry(url, fetchData);
+    const result = await response.text();
+    return JSON.parse(result);
   }
 
-  constructor(url: RPCUrl) {
+  constructor(url: RPCUrl, options: NeonProxyRpcOptions = {}) {
     this.rpcUrl = url;
+    this.options = { ...neonProxyRpcOptionsDefault, ...options };
   }
 }
 
-export async function getProxyState(proxyUrl: string): Promise<ProxyApiState> {
-  const proxyApi = new NeonProxyRpcApi(proxyUrl);
+export async function getProxyState(proxyUrl: string, options: NeonProxyRpcOptions = {}): Promise<ProxyApiState> {
+  const provider = new JsonRpcProvider(proxyUrl);
+  const proxyApi = new NeonProxyRpcApi(proxyUrl, options);
   const proxyStatus = await proxyApi.evmParams();
   const tokensList = await proxyApi.nativeTokenList();
+  const { chainId } = await provider.getNetwork();
   const evmProgramAddress = new PublicKey(proxyStatus.neonEvmProgramId);
-  return { proxyApi, proxyStatus, tokensList, evmProgramAddress };
+  const gasToken = getGasToken(tokensList, Number(chainId));
+  return { proxyApi, provider, chainId: Number(chainId), proxyStatus, gasToken, tokensList, evmProgramAddress };
 }

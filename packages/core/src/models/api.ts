@@ -1,15 +1,22 @@
 import { PublicKey } from '@solana/web3.js';
-import { NeonProxyRpcApi } from '../api';
-import { GasToken } from './token';
 import { SolanaAccount } from '@neonevm/token-transfer-core';
+import { JsonRpcProvider } from 'ethers';
+import { NeonProxyRpcApi } from '../api';
+import { GasToken, GasTokenData } from './token';
 
 export type UUID = string;
 export type HexString = `0x${string}` | string;
+export type Bs58String = string;
 export type PublicKeyString = string;
 export type NeonAddress = HexString;
 export type SolanaAddress = string;
 export type SolanaSignature = string;
 export type RPCUrl = string;
+
+export interface NeonProxyRpcOptions {
+  space?: string | number;
+  showRequestLog?: boolean;
+}
 
 export interface RPCResponse<T> {
   id: number | string;
@@ -57,8 +64,11 @@ export interface NeonAddressResponse {
 export interface ProxyApiState {
   evmProgramAddress: PublicKey;
   proxyApi: NeonProxyRpcApi;
+  provider: JsonRpcProvider;
+  chainId: number;
   proxyStatus: NeonProgramStatus;
   tokensList: GasToken[];
+  gasToken: GasTokenData;
 }
 
 export interface NeonGasPrice {
@@ -173,9 +183,26 @@ export interface EstimateScheduledTransaction {
   childTransaction?: HexString;
 }
 
+export interface SolanaAccountData {
+  address: SolanaAddress;
+  isSigner: boolean;
+  isWritable: boolean;
+}
+
+export interface PreparatorySolanaInstruction {
+  programId: SolanaAddress;
+  accounts: SolanaAccountData[];
+  data: Bs58String;
+}
+
+export interface PreparatorySolanaTransaction {
+  instructions: PreparatorySolanaInstruction[];
+}
+
 export interface EstimatedScheduledGasPayData {
   scheduledSolanaPayer: string;
   transactions: EstimateScheduledTransaction[];
+  preparatorySolanaTransactions?: PreparatorySolanaTransaction[];
 }
 
 export interface EstimatedScheduledGasPayResponse {

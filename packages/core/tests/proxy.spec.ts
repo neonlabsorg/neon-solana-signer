@@ -4,10 +4,8 @@ import {
   delay,
   FaucetDropper,
   GasToken,
-  getGasToken,
   getProxyState,
   log,
-  NeonChainId,
   NeonProgramStatus,
   NeonProxyRpcApi,
   SolanaNeonAccount
@@ -37,10 +35,10 @@ let globalNonce: number = 0;
 
 beforeAll(async () => {
   const result = await getProxyState(NEON_API_RPC_URL);
-  const token = getGasToken(result.tokensList, NeonChainId.testnetSol);
   const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_WALLET));
+  const token = result.gasToken;
   connection = new Connection(SOLANA_DEVNET_URL, 'confirmed');
-  provider = new JsonRpcProvider(NEON_API_RPC_URL!);
+  provider = result.provider;
   neonProxyRpcApi = result.proxyApi;
   neonEvmProgram = result.evmProgramAddress;
   proxyStatus = result.proxyStatus;

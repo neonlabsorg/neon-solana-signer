@@ -2,7 +2,6 @@ import { beforeAll, describe, expect, it } from '@jest/globals';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import {
   GAS_LIMIT_DEFAULT,
-  getGasToken,
   getProxyState,
   MAX_FEE_PER_GAS_DEFAULT,
   MAX_PRIORITY_FEE_PER_GAS_DEFAULT,
@@ -27,10 +26,10 @@ let solanaUser: SolanaNeonAccount;
 beforeAll(async () => {
   const result = await getProxyState(NEON_API_RPC_URL);
   const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_WALLET));
-  const token = getGasToken(result.tokensList, NeonChainId.testnetSol);
+  const token = result.gasToken;
   neonEvmProgram = result.evmProgramAddress;
+  chainId = result.chainId;
   chainTokenMint = new PublicKey(token.gasToken.tokenMint);
-  chainId = Number(token.gasToken.tokenChainId);
   solanaUser = SolanaNeonAccount.fromKeypair(keypair, neonEvmProgram, chainTokenMint, chainId);
 });
 

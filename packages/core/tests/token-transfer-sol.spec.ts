@@ -49,13 +49,13 @@ let skipPreflight = false;
 
 beforeAll(async () => {
   const result = await getProxyState(NEON_API_RPC_URL);
-  const token = getGasToken(result.tokensList, NeonChainId.testnetSol);
+  const token = result.gasToken;
   const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_WALLET));
   connection = new Connection(SOLANA_DEVNET_URL, 'confirmed');
-  provider = new JsonRpcProvider(NEON_API_RPC_URL!);
+  provider = result.provider;
   neonEvmProgram = result.evmProgramAddress;
-  chainId = Number(token.gasToken.tokenChainId);
-  chainTokenMint = new PublicKey(token.gasToken.tokenMint);
+  chainId = result.chainId;
+  chainTokenMint = token.tokenMintAddress;
   gasToken = token.gasToken;
   faucet = new FaucetDropper(NEON_FAUCET_URL);
   solanaUser = SolanaNeonAccount.fromKeypair(keypair, neonEvmProgram, chainTokenMint, chainId);

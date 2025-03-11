@@ -9,6 +9,7 @@ import {
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { keccak256 } from 'ethers';
+import bs58 from 'bs58';
 import {
   bufferConcat,
   delay,
@@ -25,6 +26,9 @@ import {
   HexString,
   InstructionTag,
   NeonAddress,
+  PreparatorySolanaInstruction,
+  PreparatorySolanaTransaction,
+  SolanaAccountData,
   SolanaTransactionSignature
 } from '../models';
 import {
@@ -44,7 +48,6 @@ import {
   destroyScheduledTransactionInstruction
 } from './instructions';
 import { ScheduledTransaction } from '../neon';
-import { getAssociatedTokenAddress } from '@solana/spl-token';
 
 /**
  * Creates a **Solana transaction** to initialize a balance account for a given **Neon EVM wallet**.
@@ -512,4 +515,31 @@ export function createPartialCallOrContinueFromRawEthereumTransaction(
   transaction.add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1000000 }));
   transaction.add(createPartialCallOrContinueFromRawEthereumInstruction(index, stepCount, neonEvmProgram, solanaUser.publicKey, solanaUser.balanceAddress, holderAddress, treasuryPoolAddress, additionAccounts, transactionPart));
   return transaction;
+}
+
+export function prepareSolanaInstruction(instruction: TransactionInstruction): PreparatorySolanaInstruction {
+  // @ts-ignore
+  const data = bs58.encode(instruction.data);
+  const programId = instruction.programId.toBase58();
+  const accounts: SolanaAccountData[] = [];
+  for (const { pubkey, isSigner, isWritable } of instruction.keys) {
+    accounts.push({ address: pubkey.toBase58(), isSigner, isWritable });
+  }
+  return { programId, data, accounts };
+}
+
+export function prepareSolanaInstructions(instructions: TransactionInstruction[]): PreparatorySolanaInstruction[] {
+  const result: PreparatorySolanaInstruction[] = [];
+  for (const instruction of instructions) {
+    result.push(prepareSolanaInstruction(instruction));
+  }
+  return result;
+}
+
+export function prepareSolanaTransaction(transaction: Transaction): PreparatorySolanaTransaction {
+  const instructions: PreparatorySolanaInstruction[] = [];
+  for (const instruction of transaction.instructions) {
+    instructions.push(prepareSolanaInstruction(instruction));
+  }
+  return { instructions };
 }

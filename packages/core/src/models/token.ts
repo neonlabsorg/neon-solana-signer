@@ -1,8 +1,9 @@
 import { PublicKey } from '@solana/web3.js';
+import { SolanaAddress } from './api';
 
 export interface GasToken {
   tokenName: string;
-  tokenMint: string;
+  tokenMint: SolanaAddress;
   tokenChainId: `0x${string}`;
 }
 

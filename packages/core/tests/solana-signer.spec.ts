@@ -9,13 +9,11 @@ import {
   destroyScheduledNeonEvmMultipleTransaction,
   FaucetDropper,
   GasToken,
-  getGasToken,
   getProxyState,
   holderAddressWithSeed,
   log,
   logJson,
   MultipleTransactions,
-  NeonChainId,
   NeonProgramStatus,
   NeonProxyRpcApi,
   neonTreeAccountAddressSync,
@@ -53,16 +51,17 @@ let globalNonce: number = 0;
 
 beforeAll(async () => {
   const result = await getProxyState(NEON_API_RPC_URL);
-  const token = getGasToken(result.tokensList, NeonChainId.testnetSol);
+  const token = result.gasToken;
   const keypair = Keypair.fromSecretKey(bs58.decode(SOLANA_WALLET));
   connection = new Connection(SOLANA_DEVNET_URL, 'confirmed');
-  provider = new JsonRpcProvider(NEON_API_RPC_URL!);
+  provider = result.provider;
   neonProxyRpcApi = result.proxyApi;
   neonEvmProgram = result.evmProgramAddress;
   proxyStatus = result.proxyStatus;
-  chainId = Number(token.gasToken.tokenChainId);
+  chainId = result.chainId;
   chainTokenMint = new PublicKey(token.gasToken.tokenMint);
   gasToken = token.gasToken;
+
   faucet = new FaucetDropper(NEON_FAUCET_URL);
   solanaUser = SolanaNeonAccount.fromKeypair(keypair, neonEvmProgram, chainTokenMint, chainId);
   baseContract = new BaseContract(chainId);
@@ -306,8 +305,8 @@ describe('Check Solana signer instructions', () => {
         const nonce = Number(key);
         for (const pendingTransaction of result[key]) {
           const { result } = await neonProxyRpcApi.getScheduledTreeAccount(solanaUser.neonWallet, nonce);
-          log(result.transactions);
-          if (result.transactions.some(t => ['NotStarted'].includes(t.status) && t.transactionHash === pendingTransaction.hash.slice(2))) {
+          log(result?.transactions);
+          if (result?.transactions.some(t => ['NotStarted'].includes(t.status) && t.transactionHash === pendingTransaction.hash.slice(2))) {
             const [treeAccountAddress] = neonTreeAccountAddressSync(solanaUser.neonWallet, neonEvmProgram, chainId, nonce);
             const destroyScheduledTransaction = destroyScheduledNeonEvmMultipleTransaction({
               neonEvmProgram: neonEvmProgram,
