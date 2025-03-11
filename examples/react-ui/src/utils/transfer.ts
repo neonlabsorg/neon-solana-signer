@@ -2,7 +2,6 @@ import { Connection, Commitment, Transaction, PublicKey } from '@solana/web3.js'
 import {
   ScheduledTransactionStatus,
   createScheduledNeonEvmTransaction,
-  HexString,
   NeonProxyRpcApi,
   SolanaNeonAccount
 } from '@neonevm/solana-sign';
@@ -38,7 +37,7 @@ export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: Sola
   gasLimit: number[];
 }> {
   const { maxPriorityFeePerGas: maxPriorityFee, maxFeePerGas: maxFee } = await proxyRpcApi.getMaxFeePerGas();
-  const { result } = await proxyRpcApi.estimateScheduledGas({
+  const { result, error } = await proxyRpcApi.estimateScheduledGas({
     scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
     transactions: [{
       from: solanaUser.neonWallet,
@@ -46,11 +45,14 @@ export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: Sola
       data: transactionData
     }]
   });
+  if(error) {
+    console.error('Error estimateScheduledGas: ', error);
+  }
   console.log(`Max fee per Gas: ${result} \n${maxPriorityFee} \n${maxFee}`);
 
   const maxFeePerGas = parseInt(result?.maxFeePerGas, 16) || maxFee;
   const maxPriorityFeePerGas = parseInt(result?.maxPriorityFeePerGas, 16) || maxPriorityFee;
-  const gasLimit = result?.gasList.map(i => parseInt(i, 16));
+  const gasLimit = result?.gasList.map(i => parseInt(i, 16)) || [1e7];
   return { maxFeePerGas, maxPriorityFeePerGas, gasLimit }
 }
 
