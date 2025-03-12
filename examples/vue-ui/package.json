@@ -14,7 +14,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@neonevm/solana-sign": "^0.1.7",
+    "@neonevm/solana-sign": "^0.1.9",
     "@neonevm/token-transfer-core": "^4.4.2",
     "@neonevm/token-transfer-ethers": "^4.4.2",
     "@solana/spl-token": "^0.4.9",
