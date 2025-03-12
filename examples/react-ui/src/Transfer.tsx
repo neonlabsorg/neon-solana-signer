@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import {
   createScheduledNeonEvmMultipleTransaction,
   MultipleTransactions,
+  PreparatorySolanaTransaction,
+  prepareSolanaInstruction,
   ScheduledTransaction
 } from '@neonevm/solana-sign';
 import {
@@ -20,7 +22,6 @@ import {
   NO_CHILD_INDEX,
   mintTokenBalanceEthers,
   neonBalanceEthers,
-  sendSolanaTransaction,
   solanaBalance,
   splTokenBalance,
   tokenList,
@@ -174,15 +175,18 @@ function SolanaNativeTransferApp() {
           const nonce = Number(await proxyRpcApi.getTransactionCount(solanaUser.neonWallet));
 
           //Approve for climeTo
-          // const transaction = new Transaction();
           const [delegatePDA] = authAccountAddress(solanaUser.neonWallet, neonEvmProgram, splToken);
           const approveInstruction = createApproveInstruction(fromATA, delegatePDA, solanaUser.publicKey, tokenAmount);
-          // transaction.instructions.push(approveInstruction);
-          // const signature = await sendSolanaTransaction(connection, transaction, signTransaction, solanaUser.publicKey, true);
-          // console.log(`Solana signature: ${signature}`);
 
-          //TODO: need to estimate gas during the simulation
-          const { maxPriorityFeePerGas, gasLimit, maxFeePerGas } = await estimateFee(proxyRpcApi, solanaUser, climeToData, splToken.address);
+          const preparatorySolanaTransactions: PreparatorySolanaTransaction[] = [];
+          if (approveInstruction) {
+            preparatorySolanaTransactions.push({
+              instructions: [prepareSolanaInstruction(approveInstruction!)]
+            });
+          }
+
+          //Need to estimate gas during the simulation
+          const { maxPriorityFeePerGas, gasLimit, maxFeePerGas } = await estimateFee(proxyRpcApi, solanaUser, climeToData, splToken.address, preparatorySolanaTransactions);
           const multiple = new MultipleTransactions(nonce, maxFeePerGas, maxPriorityFeePerGas);
           const transactions: ScheduledTransaction[] = [];
 
@@ -219,29 +223,6 @@ function SolanaNativeTransferApp() {
               connection,
               signMethod: signTransaction!
           })
-
-          // const scheduledTransaction = new ScheduledTransaction({
-          //   nonce: nonce,
-          //   payer: solanaUser.neonWallet,
-          //   target: splToken.address,
-          //   callData: climeToData,
-          //   maxFeePerGas: maxFeePerGas,
-          //   maxPriorityFeePerGas: maxPriorityFeePerGas,
-          //   gasLimit: gasLimit[0],
-          //   chainId: chainId
-          // });
-
-          // const txLog = await createAndSendScheduledTransaction({
-          //   chainId,
-          //   scheduledTransaction,
-          //   neonEvmProgram,
-          //   proxyRpcApi,
-          //   solanaUser,
-          //   nonce,
-          //   connection,
-          //   signMethod: signTransaction!,
-          //   approveInstruction
-          // });
           setLog(txLog);
         } catch (e) {
           setLog(`Transfer ${amount} ${token} from Solana to Neon EVM failed due to: \n${e}`);

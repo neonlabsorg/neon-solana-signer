@@ -3,7 +3,9 @@ import {
   ScheduledTransactionStatus,
   createScheduledNeonEvmTransaction,
   NeonProxyRpcApi,
-  SolanaNeonAccount, ScheduledTransaction
+  SolanaNeonAccount,
+  ScheduledTransaction,
+  PreparatorySolanaTransaction
 } from '@neonevm/solana-sign';
 import { Big } from 'big.js';
 import { CreateScheduledTransactionParams } from '../models';
@@ -32,7 +34,7 @@ export function balanceView(amount: string | bigint | number, decimals: number):
   return (new Big(amount.toString()).div(Big(10).pow(decimals))).toNumber();
 }
 
-export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: SolanaNeonAccount, transactionData: string, toAddress: string): Promise<{
+export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: SolanaNeonAccount, transactionData: string, toAddress: string, preparatorySolanaTransactions?: PreparatorySolanaTransaction[]): Promise<{
   maxFeePerGas: number;
   maxPriorityFeePerGas: number;
   gasLimit: number[];
@@ -44,7 +46,8 @@ export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: Sola
       from: solanaUser.neonWallet,
       to: toAddress,
       data: transactionData
-    }]
+    }],
+    preparatorySolanaTransactions
   });
   if(error) {
     console.error('Error estimateScheduledGas: ', error);
