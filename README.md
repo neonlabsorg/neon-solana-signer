@@ -1,5 +1,10 @@
 # Library for Scheduled Neon EVM Transaction
 
+- The demo is available on [GitHub](https://github.com/neonlabsorg/neon-solana-signature-demo).
+- Demo on [Devnet](https://neon-solana-signature-demo.pages.dev/).
+
+---
+
 ## How to install and run tests
 
 ```sh
