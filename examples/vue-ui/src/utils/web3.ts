@@ -43,7 +43,7 @@ export function solanaSignature(signature: string): string {
 }
 
 export function neonSignature(signature: string): string {
-  return `https://devnet.neonscan.org/tx/${signature}`;
+  return `https://neon-devnet.blockscout.com/tx/${signature}`;
 }
 
 export function stringShort(data: string, len = 30): string {
