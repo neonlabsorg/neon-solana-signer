@@ -1,5 +1,5 @@
 import Big from 'big.js';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 import {
   NeonProxyRpcApi,
   SolanaNeonAccount,
@@ -27,4 +27,5 @@ export type CreateScheduledTransactionParams = {
   chainId: number;
   proxyRpcApi: NeonProxyRpcApi;
   signMethod: SignerWalletAdapterProps['signTransaction'];
+  approveInstruction?: TransactionInstruction;
 }

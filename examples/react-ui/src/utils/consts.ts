@@ -10,6 +10,7 @@ export const NEON_CHAIN_IDS: Record<string, number | string>[] = [
 ];
 export const CHAIN_NAME = 'sol_local';
 export const CHAIN_ID = NEON_CHAIN_IDS.find(i => i.name === CHAIN_NAME)!.id;
+export const NO_CHILD_INDEX = 65535;
 
 export const SOLANA_URL = import.meta.env.VITE_SOLANA_URL!;
 export const NEON_CORE_API_RPC_URL = import.meta.env.VITE_NEON_CORE_API_RPC_URL!;
