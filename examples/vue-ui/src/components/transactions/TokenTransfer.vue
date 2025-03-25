@@ -59,7 +59,6 @@ import {
   BIG_ZERO,
   mintTokenBalanceEthers,
   neonBalanceEthers,
-  sendSolanaTransaction,
   solanaBalance,
   splTokenBalance,
   tokenList,
@@ -71,7 +70,7 @@ import type { TokenBalance, TransferDirection } from '@/models';
 import { Big } from 'big.js';
 import { useProxyStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import { Connection, Transaction, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import type { JsonRpcProvider } from 'ethers';
 import { claimTransactionData, mintNeonTransactionData } from '@neonevm/token-transfer-ethers';
 import { createApproveInstruction, getAccount, getAssociatedTokenAddressSync } from '@solana/spl-token';
@@ -79,7 +78,8 @@ import {
   authAccountAddress,
   toFullAmount
 } from '@neonevm/token-transfer-core';
-import { NeonProxyRpcApi, ScheduledTransaction, SolanaNeonAccount } from '@neonevm/solana-sign'
+import { NeonProxyRpcApi, prepareSolanaInstruction, ScheduledTransaction, SolanaNeonAccount } from '@neonevm/solana-sign'
+import type { PreparatorySolanaTransaction } from '@neonevm/solana-sign';
 
 const proxyStore = useProxyStore();
 
@@ -219,18 +219,22 @@ const handleSubmit = async () => {
         const nonce = Number(await proxyRpcApi.value.getTransactionCount(solanaUser.value.neonWallet));
 
         //Approve for climeTo
-        const transaction = new Transaction();
         const [delegatePDA] = authAccountAddress(solanaUser.value.neonWallet, neonEvmProgram.value!, splToken.value);
         const approveInstruction = createApproveInstruction(fromATA, delegatePDA, solanaUser.value.publicKey, tokenAmount);
-        transaction.instructions.push(approveInstruction);
-        const signature = await sendSolanaTransaction(<Connection>connection.value, transaction, signTransaction.value, solanaUser.value.publicKey, true);
-        console.log(`Solana signature: ${signature}`);
+
+        const preparatorySolanaTransactions: PreparatorySolanaTransaction[] = [];
+        if (approveInstruction) {
+          preparatorySolanaTransactions.push({
+            instructions: [prepareSolanaInstruction(approveInstruction!)]
+          });
+        }
 
         const { maxPriorityFeePerGas, gasLimit, maxFeePerGas } = await estimateFee(
           proxyRpcApi.value!,
           <SolanaNeonAccount>solanaUser.value,
           climeToData,
           splToken.value.address,
+          preparatorySolanaTransactions
         );
         const scheduledTransaction = new ScheduledTransaction({
           nonce: nonce,
@@ -252,6 +256,7 @@ const handleSubmit = async () => {
           nonce,
           connection: <Connection>connection.value,
           signMethod: signTransaction.value,
+          approveInstruction
         });
       } else {
         const rawProvider = toRaw(provider.value);

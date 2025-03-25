@@ -324,7 +324,10 @@ function SolanaNativeTransferApp() {
           {sendText}
         </button>
       </form>
-      { log && <div className="result-log">{log}</div> }
+      { log && <div
+        className="result-log"
+        dangerouslySetInnerHTML={{ __html: log }}
+      /> }
     </div>
   );
 }

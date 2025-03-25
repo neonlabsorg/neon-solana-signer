@@ -88,8 +88,8 @@ export async function sendMultipleScheduledTransaction(transaction: Transaction,
     results.push(proxyRpcApi.sendRawScheduledTransaction(`0x${transaction.serialize()}`));
   }
   const resultsHash = await Promise.all(results);
-  await delay(3e3);
+  await delay(7e3);
   return resultsHash ? resultsHash.map(({ result }) => {
-    return `transactionHash: ${result} <br> check transaction status on: <a href="https://devnet.neonscan.org/tx/${result}" target="_blank">neonscan</a>`;
+    return `transactionHash: ${result} <br>check transaction status on: <a style="color: #14F195; text-decoration: underline;" href="https://neon-devnet.blockscout.com/tx/${result}" target="_blank">blockscout</a>`;
   }).join('\n') : '';
 }
