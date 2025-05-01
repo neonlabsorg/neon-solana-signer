@@ -1,6 +1,5 @@
 import { Connection, Keypair, SendOptions, Signer, Transaction } from '@solana/web3.js';
-import { log, SolanaTransactionSignature } from '@neonevm/solana-sign';
-import { solanaTransactionLog } from '@neonevm/token-transfer-core';
+import { log, solanaTransactionLog, SolanaTransactionSignature } from '@neonevm/solana-sign';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
   return { publicKey, secretKey };

@@ -1,6 +1,15 @@
 import { AccountInfo, Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { dataSlice, keccak256 } from 'ethers';
-import { hexToBuffer, numberToBuffer, stringToBuffer, toBytes64LE, toBytesInt32, toSigner, toU256BE } from '../utils';
+import {
+  hexToBuffer,
+  isValidHex,
+  numberToBuffer,
+  stringToBuffer,
+  toBytes64LE,
+  toBytesInt32,
+  toSigner,
+  toU256BE
+} from '../utils';
 import { AccountSeedTag, NeonAddress, TreeAccountData, TreeAccountTransactionData } from '../models';
 import { BalanceAccountLayout } from './layout';
 import { createBalanceAccountTransaction } from './transactions';
@@ -200,6 +209,17 @@ export async function holderAddressWithSeed(neonEvmProgram: PublicKey, solanaWal
   const seed = Math.floor(Math.random() * 1e12).toString();
   const holder = await PublicKey.createWithSeed(solanaWallet, seed, neonEvmProgram);
   return [holder, seed];
+}
+
+export function authAccountAddress(neonEvmProgram: PublicKey, neonWallet: string, tokenAddress: NeonAddress): [PublicKey, number] {
+  const neonAccountAddressBytes = Buffer.concat([Buffer.alloc(12), Buffer.from(isValidHex(neonWallet) ? neonWallet.replace(/^0x/i, '') : neonWallet, 'hex')]);
+  const neonContractAddressBytes = Buffer.from(isValidHex(tokenAddress) ? tokenAddress.replace(/^0x/i, '') : tokenAddress, 'hex');
+  const seed = [
+    new Uint8Array([AccountSeedTag.SeedVersion]),
+    new Uint8Array(Buffer.from('AUTH', 'utf-8')),
+    new Uint8Array(neonContractAddressBytes),
+    new Uint8Array(neonAccountAddressBytes)];
+  return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 
 /**

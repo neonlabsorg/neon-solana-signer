@@ -24,3 +24,9 @@ export interface TreeAccountData {
     transactions: TreeAccountTransactionData[];
   };
 }
+
+export interface SolanaAccount {
+  pubkey: string;
+  isWritable: boolean;
+  isLegacy: boolean;
+}

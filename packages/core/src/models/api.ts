@@ -1,8 +1,9 @@
 import { PublicKey } from '@solana/web3.js';
-import { SolanaAccount } from '@neonevm/token-transfer-core';
 import { JsonRpcProvider } from 'ethers';
+import { SolanaNeonAccount } from '../solana';
 import { NeonProxyRpcApi } from '../api';
 import { GasToken, GasTokenData } from './token';
+import { SolanaAccount } from './account';
 
 export type UUID = string;
 export type HexString = `0x${string}` | string;
@@ -16,6 +17,17 @@ export type RPCUrl = string;
 export interface NeonProxyRpcOptions {
   space?: string | number;
   showRequestLog?: boolean;
+  retries?: number;
+  retryDelay?: number;
+}
+
+export interface NeonProxyRpcInitData {
+  chainId: number;
+  programAddress: PublicKey;
+  tokenMintAddress: PublicKey;
+  params: NeonEvmParams;
+  provider: JsonRpcProvider;
+  solanaUser: SolanaNeonAccount;
 }
 
 export interface RPCResponse<T> {
@@ -23,6 +35,13 @@ export interface RPCResponse<T> {
   jsonrpc: string;
   result: T;
   error?: any;
+}
+
+export interface RPCRequest {
+  id: number | string;
+  method: string;
+  jsonrpc: string;
+  params: unknown[];
 }
 
 /**
@@ -38,7 +57,7 @@ export interface RPCResponse<T> {
  * @property {string} neonTreasuryPoolSeed - The seed used for generating treasury pool addresses.
  * @property {string} neonEvmProgramId - The program ID of the Neon EVM program deployed on the blockchain.
  */
-export interface NeonProgramStatus {
+export interface NeonEvmParams {
   neonAccountSeedVersion: number;
   neonMaxEvmStepsInLastIteration: number;
   neonMinEvmStepsInIteration: number;
@@ -50,6 +69,7 @@ export interface NeonProgramStatus {
   neonTreasuryPoolSeed: string;
   neonEvmProgramId: string;
 }
+export type NeonProgramStatus = NeonEvmParams;
 
 export interface NeonAddressResponse {
   status: 'ok' | 'error';
@@ -176,7 +196,7 @@ export interface ScheduledTreeAccount {
   transactions: ScheduledTransactionStatus[];
 }
 
-export interface EstimateScheduledTransaction {
+export interface TransactionData {
   from?: HexString;
   to: HexString;
   data: HexString;
@@ -201,7 +221,7 @@ export interface PreparatorySolanaTransaction {
 
 export interface EstimatedScheduledGasPayData {
   scheduledSolanaPayer: string;
-  transactions: EstimateScheduledTransaction[];
+  transactions: TransactionData[];
   preparatorySolanaTransactions?: PreparatorySolanaTransaction[];
 }
 
@@ -211,8 +231,8 @@ export interface EstimatedScheduledGasPayResponse {
   maxPriorityFeePerGas: HexString;
   nonce: HexString;
   treasuryIndex: HexString;
-  accountList: SolanaAccount[],
-  gasList: HexString[]
+  accountList: SolanaAccount[];
+  gasList: HexString[];
 }
 
 export interface BlockByNumber {

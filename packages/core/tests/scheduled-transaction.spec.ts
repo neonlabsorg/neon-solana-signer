@@ -37,7 +37,7 @@ describe('Check ScheduledTransaction data', () => {
   it(`Compare ScheduledTransaction: new and from`, async () => {
     const target = `0xc7e376be256bdb6a1fbedaee64ca860b2b6e95ee`;
     const callData = `0x3fb5c1cb0000000000000000000000000000000000000000000000000000000000000012`;
-    const trx1 = new ScheduledTransaction({ payer: solanaUser.neonWallet, target, callData });
+    const trx1 = new ScheduledTransaction({ from: solanaUser.neonWallet, to: target, data: callData });
     const trx2 = ScheduledTransaction.from([solanaUser.neonWallet, '0x', '0x', '0x', '0x', '0x', target, callData, '0x', toBeHex(NeonChainId.devnetSol), toBeHex(GAS_LIMIT_DEFAULT), toBeHex(MAX_FEE_PER_GAS_DEFAULT), toBeHex(MAX_PRIORITY_FEE_PER_GAS_DEFAULT)]);
     expect(trx1.encode()).toBe(trx2.encode());
   });

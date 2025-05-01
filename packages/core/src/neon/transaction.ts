@@ -1,18 +1,18 @@
 import { decodeRlp, encodeRlp, keccak256, RlpStructuredData, toBeHex } from 'ethers';
-import { EstimateScheduledTransaction, HexString, ScheduledTransactionData, ScheduledTransactionGas } from '../models';
+import { TransactionData, HexString, ScheduledTransactionData, ScheduledTransactionGas } from '../models';
 import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer, toBytes16LE, toBytes64BE } from '../utils';
 
 /**
  * ScheduledTransaction is used to create a transaction that will be executed
  * @constructor {Partial<ScheduledTransactionData>} data - The data required to create a ScheduledTransaction.
- * @constructor {string} data.payer - The address of the account that will pay for the transaction.
+ * @constructor {string} data.from - The address of the account that will pay for the transaction.
  * @constructor {string} data.sender - The address of the account that will send the transaction.
  * @constructor {number} data.nonce - The nonce counter of the transaction.
  * @constructor {number} data.index - The index of the transaction.
  * @constructor {string} data.intent - The intent of the transaction.
  * @constructor {string} data.intentCallData - The call data of the intent.
- * @constructor {string} data.target - The target address of the transaction (contract address or destination account address).
- * @constructor {string} data.callData - The call data of the transaction.
+ * @constructor {string} data.to - The target address of the transaction (contract address or destination account address).
+ * @constructor {string} data.data - The call data of the transaction.
  * @constructor {number} data.value - The value of the transaction.
  * @constructor {number} data.chainId - The chain ID of the transaction.
  * @constructor {number} data.gasLimit - The gas limit of the transaction.
@@ -23,15 +23,11 @@ import { bufferConcat, hexToBuffer, NeonChainId, numberToBuffer, toBytes16LE, to
  * @example
  * ```typescript
  * const transaction = new ScheduledTransaction({
- *  payer: "0xPayerAddress",
- *  sender: "0xSenderAddress",
  *  nonce: 1,
- *  target: "0xTargetAddress",
- *  callData: "0xCallData",
- *  chainId: 245022927,
- *  gasLimit: 50000,
- *  maxFeePerGas: 1250000001,
- *  maxPriorityFeePerGas: 1250000000
+ *  from: "0xSenderAddress",
+ *  to: "0xTargetAddress",
+ *  data: "0xCallData",
+ *  chainId: 245022927
  *  });
  *  ```
  */
@@ -104,13 +100,9 @@ export class ScheduledTransaction {
     return bufferConcat([gasLimit, value, index, success, hash]);
   }
 
-  feeEstimateData(): EstimateScheduledTransaction {
-    const { payer, sender, target, callData } = this.data;
-    return {
-      from: sender !== '0x' ? sender : payer,
-      to: target,
-      data: callData
-    };
+  feeEstimateData(): TransactionData {
+    const { from, to, data } = this.data;
+    return { from, to, data };
   }
 
   setGasPrice({ gasLimit, maxFeePerGas, maxPriorityFeePerGas }: ScheduledTransactionGas): void {
@@ -140,8 +132,8 @@ export class ScheduledTransaction {
   }
 
   private static keys: string[] = [
-    'payer', 'sender', 'nonce', 'index', 'intent', 'intentCallData', 'target',
-    'callData', 'value', 'chainId', 'gasLimit', 'maxFeePerGas', 'maxPriorityFeePerGas'
+    'from', 'sender', 'nonce', 'index', 'intent', 'intentCallData', 'to',
+    'data', 'value', 'chainId', 'gasLimit', 'maxFeePerGas', 'maxPriorityFeePerGas'
   ];
 
   private convertData(data: number | string | bigint | Buffer): string {
@@ -191,12 +183,12 @@ export class ScheduledTransaction {
 }
 
 /**
- * MultipleTransactions is used to create a list of transactions that will be executed in a specific order.
+ * MultipleTransaction is used to create a list of transactions that will be executed in a specific order.
  * @constructor {number} nonce - The nonce of the transaction.
  * @constructor {number} maxFeePerGas - The maximum transaction fee (must match the fee of ScheduleTransaction).
  * @constructor {number} maxPriorityFeePerGas - The maximum fee to increase the priority of the transaction.
  */
-export class MultipleTransactions {
+export class MultipleTransaction {
   nonce: Buffer;
   maxFeePerGas: Buffer;
   maxPriorityFeePerGas: Buffer;
@@ -231,3 +223,7 @@ export class MultipleTransactions {
     this._data = Buffer.concat([this.nonce, this.maxFeePerGas, this.maxPriorityFeePerGas]);
   }
 }
+/**
+* MultipleTransactions is used to create a list of transactions that will be executed in a specific order.
+* */
+export const MultipleTransactions = MultipleTransaction;

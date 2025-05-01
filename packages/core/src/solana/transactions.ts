@@ -16,6 +16,7 @@ import {
   EVM_STEPS,
   hexToBuffer,
   log,
+  NO_CHILD_INDEX,
   numberToBuffer,
   sendSolanaTransaction,
   toBytes64LE
@@ -25,6 +26,10 @@ import {
   DestroyScheduledTransactionData,
   HexString,
   InstructionTag,
+  MultipleTransactionData,
+  MultipleTransactionMethod,
+  MultipleTransactionResult,
+  MultipleTransactionType,
   NeonAddress,
   PreparatorySolanaInstruction,
   PreparatorySolanaTransaction,
@@ -47,7 +52,7 @@ import {
   createWriteToHolderAccountInstruction,
   destroyScheduledTransactionInstruction
 } from './instructions';
-import { ScheduledTransaction } from '../neon';
+import { MultipleTransaction, ScheduledTransaction } from '../neon';
 
 /**
  * Creates a **Solana transaction** to initialize a balance account for a given **Neon EVM wallet**.
@@ -517,8 +522,11 @@ export function createPartialCallOrContinueFromRawEthereumTransaction(
   return transaction;
 }
 
+/**
+ * Prepare a Solana Instruction for the NeonProxyRpcApi.estimateScheduledTransactionGas() method
+ * @param {TransactionInstruction} instruction - The **Solana instruction** data
+ **/
 export function prepareSolanaInstruction(instruction: TransactionInstruction): PreparatorySolanaInstruction {
-  // @ts-ignore
   const data = bs58.encode(instruction.data);
   const programId = instruction.programId.toBase58();
   const accounts: SolanaAccountData[] = [];
@@ -528,6 +536,10 @@ export function prepareSolanaInstruction(instruction: TransactionInstruction): P
   return { programId, data, accounts };
 }
 
+/**
+ * Prepare a Solana Instructions for the NeonProxyRpcApi.estimateScheduledTransactionGas() method
+ * @param {TransactionInstruction[]} instructions - The **Solana instructions** data
+ */
 export function prepareSolanaInstructions(instructions: TransactionInstruction[]): PreparatorySolanaInstruction[] {
   const result: PreparatorySolanaInstruction[] = [];
   for (const instruction of instructions) {
@@ -536,10 +548,143 @@ export function prepareSolanaInstructions(instructions: TransactionInstruction[]
   return result;
 }
 
+/**
+ * Prepare a Solana Instructions for the NeonProxyRpcApi.estimateScheduledTransactionGas() method from {Transaction} data
+ * @param {Transaction} transaction - The **Solana transaction** data that contain transaction instructions for prepare
+ */
 export function prepareSolanaTransaction(transaction: Transaction): PreparatorySolanaTransaction {
   const instructions: PreparatorySolanaInstruction[] = [];
   for (const instruction of transaction.instructions) {
     instructions.push(prepareSolanaInstruction(instruction));
   }
   return { instructions };
+}
+
+/**
+ * Creates a {MultipleTransaction} containing one or more {ScheduledTransaction}
+ * instances that will be executed sequentially.
+ * Used in the {NeonProxyRpcApi.createMultipleTransaction} method.
+ *
+ * @param {MultipleTransactionData} multipleData - the data used to create the MultipleTransaction.
+ */
+export const createMultipleTransactionSequential: MultipleTransactionMethod = (multipleData: MultipleTransactionData): MultipleTransactionResult => {
+  const { nonce, chainId, transactionsData, transactionGas } = multipleData;
+  const { maxFeePerGas, maxPriorityFeePerGas, gasLimit } = transactionGas;
+  const multiple = new MultipleTransaction(nonce, maxFeePerGas, maxPriorityFeePerGas);
+  const transactions: ScheduledTransaction[] = [];
+  for (let index = 0; index < transactionsData.length; index++) {
+    const { from, to, data } = transactionsData[index];
+    const scheduledTransaction = new ScheduledTransaction({
+      index,
+      nonce,
+      chainId,
+      from,
+      to,
+      data,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      gasLimit: gasLimit[index]
+    });
+    const childIndex = index === transactionsData.length - 1 ? NO_CHILD_INDEX : index + 1;
+    const successLimit = index === 0 ? 0 : 1;
+    multiple.addTransaction(scheduledTransaction, childIndex, successLimit);
+    transactions.push(scheduledTransaction);
+  }
+  return { multiple, transactions };
+};
+
+/**
+ * Creates a {MultipleTransaction} containing one or more {ScheduledTransaction}
+ * instances that will be executed parallel.
+ * Used in the {NeonProxyRpcApi.createMultipleTransaction} method.
+ *
+ * @param {MultipleTransactionData} multipleData - the data used to create the MultipleTransaction
+ */
+export const createMultipleTransactionParallel: MultipleTransactionMethod = (multipleData: MultipleTransactionData): MultipleTransactionResult => {
+  const { nonce, chainId, transactionsData, transactionGas } = multipleData;
+  const { maxFeePerGas, maxPriorityFeePerGas, gasLimit } = transactionGas;
+  const multiple = new MultipleTransaction(nonce, maxFeePerGas, maxPriorityFeePerGas);
+  const transactions: ScheduledTransaction[] = [];
+  for (let index = 0; index < transactionsData.length; index++) {
+    const { from, to, data } = transactionsData[index];
+    const scheduledTransaction = new ScheduledTransaction({
+      index,
+      nonce,
+      chainId,
+      from,
+      to,
+      data,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      gasLimit: gasLimit[index]
+    });
+    multiple.addTransaction(scheduledTransaction, NO_CHILD_INDEX, 0);
+    transactions.push(scheduledTransaction);
+  }
+  return { multiple, transactions };
+};
+
+/**
+ * Creates a {MultipleTransaction} containing one or more {ScheduledTransaction} instances,
+ * where all transactions will be executed in parallel after the last transaction in the list is completed.
+ * Used in the {NeonProxyRpcApi.createMultipleTransaction} method.
+ *
+ * @param {MultipleTransactionData} multipleData - the data used to create the MultipleTransaction
+ */
+export const createMultipleTransactionDependLast: MultipleTransactionMethod = (multipleData: MultipleTransactionData): MultipleTransactionResult => {
+  const { nonce, chainId, transactionsData, transactionGas } = multipleData;
+  const { maxFeePerGas, maxPriorityFeePerGas, gasLimit } = transactionGas;
+  const multiple = new MultipleTransaction(nonce, maxFeePerGas, maxPriorityFeePerGas);
+  const transactions: ScheduledTransaction[] = [];
+  for (let index = 0; index < transactionsData.length - 1; index++) {
+    const { from, to, data } = transactionsData[index];
+    const scheduledTransaction = new ScheduledTransaction({
+      index,
+      nonce,
+      chainId,
+      from,
+      to,
+      data,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      gasLimit: gasLimit[index]
+    });
+    const childIndex = transactionsData.length - 1;
+    const successLimit = 0;
+    multiple.addTransaction(scheduledTransaction, childIndex, successLimit);
+    transactions.push(scheduledTransaction);
+  }
+  const index = transactionsData.length - 1;
+  const { from, to, data } = transactionsData[index];
+  const scheduledTransaction = new ScheduledTransaction({
+    index,
+    nonce,
+    chainId,
+    from,
+    to,
+    data,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+    gasLimit: gasLimit[index]
+  });
+  multiple.addTransaction(scheduledTransaction, NO_CHILD_INDEX, index);
+  transactions.push(scheduledTransaction);
+  return { multiple, transactions };
+};
+
+/**
+ * Selects one of the transaction execution strategies (DependLast, Parallel, Sequential).
+ *
+ * @param {MultipleTransactionType} type - enum indicating the intended transaction execution type (defaults to sequential)
+ */
+export function selectMultipleTransactionMethod(type?: MultipleTransactionType): MultipleTransactionMethod {
+  switch (type) {
+    case MultipleTransactionType.DependLast:
+      return createMultipleTransactionDependLast;
+    case MultipleTransactionType.Parallel:
+      return createMultipleTransactionParallel;
+    case MultipleTransactionType.Sequential:
+    default:
+      return createMultipleTransactionSequential;
+  }
 }

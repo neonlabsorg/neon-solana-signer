@@ -1,8 +1,10 @@
-import { PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import build from 'fetch-retry';
 import { JsonRpcProvider } from 'ethers';
 import {
   BlockByNumber,
+  CreateMultipleTransaction,
+  CreateScheduledTransaction,
   EstimatedScheduledGasPayData,
   EstimatedScheduledGasPayResponse,
   GasToken,
@@ -10,33 +12,65 @@ import {
   MaxFeePerGas,
   NeonAddress,
   NeonAddressResponse,
+  NeonEvmParams,
   NeonGasPrice,
-  NeonProgramStatus,
+  NeonProxyRpcInitData,
   NeonProxyRpcOptions,
   PendingTransactions,
   ProxyApiState,
+  RPCRequest,
   RPCResponse,
   RPCUrl,
+  ScheduledTransactionResult,
+  ScheduledTransactionsResult,
   ScheduledTransactionStatus,
   ScheduledTreeAccount,
   SolanaAddress,
   SolanaSignature,
-  TransactionByHash
+  TransactionByHash,
+  TransactionGas
 } from '../models';
-import { delay, getGasToken, log, prepareHeaders, uuid } from '../utils';
-import { MAX_PRIORITY_FEE_PER_GAS_DEFAULT } from '../neon';
+import { delay, getGasToken, log, logJson, prepareHeaders, uuid } from '../utils';
+import { MAX_PRIORITY_FEE_PER_GAS_DEFAULT, ScheduledTransaction } from '../neon';
+import {
+  createScheduledNeonEvmMultipleTransaction,
+  createScheduledNeonEvmTransaction,
+  selectMultipleTransactionMethod,
+  SolanaNeonAccount
+} from '../solana';
 
 const neonProxyRpcOptionsDefault: NeonProxyRpcOptions = {
   showRequestLog: true,
-  space: undefined
+  space: undefined,
+  retries: 5,
+  retryDelay: 1e3
 };
 
 export class NeonProxyRpcApi {
+  chainId: number;
+  programAddress: PublicKey;
+  tokenMintAddress: PublicKey;
+  params: NeonEvmParams;
+  provider: JsonRpcProvider;
+  private _solanaUser: SolanaNeonAccount | null;
+
   readonly rpcUrl: RPCUrl;
   private readonly options?: NeonProxyRpcOptions;
 
-  async evmParams(): Promise<NeonProgramStatus> {
-    return this.neonRpc<NeonProgramStatus>('neon_getEvmParams', []).then(({ result }) => result);
+  get solanaUser(): SolanaNeonAccount {
+    if (this._solanaUser instanceof SolanaNeonAccount) {
+      return this._solanaUser;
+    } else {
+      throw new Error(`SolanaNeonAccount is not initialized`);
+    }
+  }
+
+  set solanaUser(solanaUser: SolanaNeonAccount) {
+    this._solanaUser = solanaUser;
+  }
+
+  async evmParams(): Promise<NeonEvmParams> {
+    return this.neonRpc<NeonEvmParams>('neon_getEvmParams', []).then(({ result }) => result);
   }
 
   getAccount(account: NeonAddress, nonce: number): Promise<RPCResponse<NeonAddressResponse>> {
@@ -67,20 +101,13 @@ export class NeonProxyRpcApi {
     return this.neonRpc<string>('neon_estimateScheduledTransaction', [transaction]);
   }
 
-  async sendRawScheduledTransactions(transactions: HexString[]): Promise<RPCResponse<HexString>[]> {
-    const result: RPCResponse<HexString>[] = [];
-    for (const transaction of transactions) {
-      result.push(await this.sendRawScheduledTransaction(transaction));
-    }
-    return result;
-  }
-
   getPendingTransactions(solanaWallet: PublicKey): Promise<RPCResponse<PendingTransactions>> {
     return this.neonRpc<PendingTransactions>('neon_getPendingTransactions', [solanaWallet.toBase58()]);
   }
 
-  getTransactionCount(neonWallet: NeonAddress): Promise<string> {
-    return this.neonRpc<string>('eth_getTransactionCount', [neonWallet, 'latest']).then(({ result }) => result);
+  async getTransactionCount(neonWallet: NeonAddress): Promise<string> {
+    const { result } = await this.neonRpc<string>('eth_getTransactionCount', [neonWallet, 'latest']);
+    return result;
   }
 
   getTransactionByHash(signature: SolanaSignature): Promise<RPCResponse<TransactionByHash>> {
@@ -156,14 +183,204 @@ export class NeonProxyRpcApi {
     return this.neonRpc<string>('eth_getTransactionReceipt', [transaction]);
   }
 
-  async neonRpc<T>(method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
-    return NeonProxyRpcApi.rpc<T>(this.rpcUrl, method, params, this.options);
+  /**
+   * Sends ScheduledTransactions to the Proxy for subsequent execution.
+   * @param {HexString[]} transactions - an array of {ScheduledTransaction} in hex format
+   * @return {RPCResponse<HexString>[]} - an array of {RPCResponse} containing a list of transactions for NeonEVM
+   * that can potentially be executed and found in the explorer.
+   * @example
+   * ```typescript
+   * const transactionsData: TransactionData[] = [{
+   *   from: solanaUser.neonWallet,
+   *   to: contractAddress_0,
+   *   data: contractData_0
+   * }, {
+   *   from: solanaUser.neonWallet,
+   *   to: contractAddress_1,
+   *   data: contractData_1
+   * }];
+   * const transactionGas = await proxyApi.estimateScheduledTransactionGas({
+   *   scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+   *   transactions: transactionsData
+   * });
+   * const { scheduledTransaction, transactions } = await proxyApi.createMultipleTransaction({
+   *   transactionsData,
+   *   transactionGas
+   * });
+   * const result = await proxyApi.sendRawScheduledTransactions(transactions.map(i => i.serialize()));
+   * console.log(result)
+   * ```
+  */
+  async sendRawScheduledTransactions(transactions: HexString[]): Promise<RPCResponse<HexString>[]> {
+    const method = `neon_sendRawScheduledTransaction`;
+    const body: RPCRequest[] = transactions.map(tx => {
+      const id = uuid();
+      return { id, jsonrpc: '2.0', method, params: [tx] };
+    });
+    return this.neonMethodsRpc<HexString>(body);
   }
 
-  static async rpc<T>(url: string, method: string, params: unknown[] = [], options?: NeonProxyRpcOptions): Promise<RPCResponse<T>> {
+  /**
+   * Calculates the gas fee
+   *
+   * @param {EstimatedScheduledGasPayData} data - transaction data used for gas fee estimation
+   * @return {TransactionGas}
+   */
+  async estimateScheduledTransactionGas(data: EstimatedScheduledGasPayData): Promise<TransactionGas> {
+    let { maxPriorityFeePerGas, maxFeePerGas } = await this.getMaxFeePerGas();
+    let gasLimit = data.transactions.map(_ => 1e7);
+    try {
+      const { result, error } = await this.estimateScheduledGas(data);
+      logJson(error);
+      if (result) {
+        logJson(result);
+        maxFeePerGas = parseInt(result.maxFeePerGas, 16);
+        maxPriorityFeePerGas = parseInt(result.maxPriorityFeePerGas, 16);
+        gasLimit = result.gasList.map(i => parseInt(i, 16));
+      }
+    } catch (e) {
+      log(e);
+    }
+    return { gasLimit, maxFeePerGas, maxPriorityFeePerGas };
+  }
+
+  /**
+   * A simple way to create a {ScheduledTransaction}
+   *
+   * @param {CreateScheduledTransaction} createData - data used to create the transaction
+   * @return {ScheduledTransactionResult}
+   */
+  async createScheduledTransaction(createData: CreateScheduledTransaction): Promise<ScheduledTransactionResult> {
+    const { transactionGas, transactionData } = createData;
+    const solanaUser = createData.solanaUser ? createData.solanaUser : this.solanaUser;
+    const nonce = createData.nonce ? createData.nonce : await this.provider.getTransactionCount(solanaUser.neonWallet);
+    const instructions = createData.solanaInstructions ? createData.solanaInstructions : [];
+    const chainId = this.chainId;
+    const { from, to, data } = transactionData;
+    const { maxFeePerGas, maxPriorityFeePerGas, gasLimit } = transactionGas;
+    const transaction = new ScheduledTransaction({
+      chainId,
+      nonce,
+      from,
+      to,
+      data,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      gasLimit: gasLimit[0]
+    });
+
+    const scheduledTransaction = createScheduledNeonEvmTransaction({
+      chainId,
+      signerAddress: solanaUser.publicKey,
+      tokenMintAddress: this.tokenMintAddress,
+      neonEvmProgram: this.programAddress,
+      neonWallet: solanaUser.neonWallet,
+      neonWalletNonce: nonce,
+      neonTransaction: transaction.serialize()
+    });
+
+    if (instructions.length > 0) {
+      for (const instruction of instructions) {
+        scheduledTransaction.instructions.unshift(instruction);
+      }
+    }
+
+    return { scheduledTransaction, transaction };
+  }
+
+  /**
+   * A simple way to create a {MultipleTransaction}
+   *
+   * @param {CreateScheduledTransaction} createData - data used to create the transaction
+   * @return {ScheduledTransactionsResult}
+   */
+  async createMultipleTransaction(createData: CreateMultipleTransaction): Promise<ScheduledTransactionsResult> {
+    const { transactionGas, transactionsData } = createData;
+    const solanaUser = createData.solanaUser ? createData.solanaUser : this.solanaUser;
+    const nonce = createData.nonce ? createData.nonce : await this.provider.getTransactionCount(solanaUser.neonWallet);
+    const instructions = createData.solanaInstructions ? createData.solanaInstructions : [];
+    const chainId = this.chainId;
+    const selectedMethod = typeof createData.method === 'function' ?
+      createData.method : selectMultipleTransactionMethod(createData.method);
+    const { multiple, transactions } = selectedMethod({ nonce, chainId, transactionsData, transactionGas });
+
+    // [1] scheduled trxs
+    const scheduledTransaction = createScheduledNeonEvmMultipleTransaction({
+      chainId,
+      neonWalletNonce: nonce,
+      neonEvmProgram: this.programAddress,
+      neonTransaction: multiple.data,
+      signerAddress: solanaUser.publicKey,
+      tokenMintAddress: solanaUser.tokenMint,
+      neonWallet: solanaUser.neonWallet
+    });
+
+    if (instructions.length > 0) {
+      for (const instruction of instructions) {
+        scheduledTransaction.instructions.unshift(instruction);
+      }
+    }
+
+    return {
+      scheduledTransaction,
+      transactions
+    };
+  }
+
+  /**
+   * Initializes all necessary components for creating a {ScheduledTransaction}.
+   * Retrieves {chainId}, {NeonEvmParams}, {neonProgramAddress}, {tokenMintAddress}, and {JsonRpcProvider}.
+   *
+   * @param {PublicKey | Keypair} solanaAddress - (optional) if provided, creates a {SolanaNeonAccount} used in the {ScheduledTransaction}
+   * @return {NeonProxyRpcInitData}
+   */
+  async init(solanaAddress?: PublicKey | Keypair): Promise<NeonProxyRpcInitData> {
+    this.provider = new JsonRpcProvider(this.rpcUrl);
+    const requests: RPCRequest[] = [
+      { jsonrpc: '2.0', id: uuid(), method: 'eth_chainId', params: [] },
+      { jsonrpc: '2.0', id: uuid(), method: 'neon_getEvmParams', params: [] },
+      { jsonrpc: '2.0', id: uuid(), method: 'neon_getNativeTokenList', params: [] }
+    ];
+    const [{ result: chainId }, { result: evmParams }, { result: nativeTokenList }] = await this.neonMethodsRpc(requests);
+    this.chainId = Number(chainId);
+    this.params = evmParams as NeonEvmParams;
+    this.programAddress = new PublicKey(this.params.neonEvmProgramId);
+    const { tokenMintAddress } = getGasToken(nativeTokenList as GasToken[], this.chainId);
+    this.tokenMintAddress = tokenMintAddress;
+    if (solanaAddress) {
+      if (solanaAddress instanceof PublicKey) {
+        this._solanaUser = new SolanaNeonAccount(solanaAddress, this.programAddress, this.tokenMintAddress, this.chainId);
+      }
+      if (solanaAddress instanceof Keypair) {
+        this._solanaUser = SolanaNeonAccount.fromKeypair(solanaAddress, this.programAddress, this.tokenMintAddress, this.chainId);
+      }
+    }
+    return {
+      provider: this.provider,
+      chainId: this.chainId,
+      params: this.params,
+      programAddress: this.programAddress,
+      tokenMintAddress: this.tokenMintAddress,
+      solanaUser: this.solanaUser
+    };
+  }
+
+  async neonRpc<T>(method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
+    return NeonProxyRpcApi.rpc<RPCResponse<T>>(this.rpcUrl, method, params, this.options);
+  }
+
+  async neonMethodsRpc<T>(methods: RPCRequest[]): Promise<RPCResponse<T>[]> {
+    return NeonProxyRpcApi.fetch<RPCResponse<T>[]>(this.rpcUrl, methods, this.options);
+  }
+
+  static async rpc<T>(url: string, method: string, params: unknown[] = [], options?: NeonProxyRpcOptions): Promise<T> {
     const id = uuid();
+    return NeonProxyRpcApi.fetch<T>(url, { id, jsonrpc: '2.0', method, params }, options);
+  }
+
+  static async fetch<T>(url: string, request: RPCRequest | RPCRequest[], options?: NeonProxyRpcOptions): Promise<T> {
     const [headers, headersString] = prepareHeaders({});
-    const body = JSON.stringify({ id, jsonrpc: '2.0', method, params }, null, options?.space);
+    const body = JSON.stringify(request, null, options?.space);
     const fetchData: RequestInit = {
       headers,
       body,
@@ -173,7 +390,7 @@ export class NeonProxyRpcApi {
     if (options?.showRequestLog) {
       log(`curl ${url} -X POST ${headersString} -d '${body}' | jq .`);
     }
-    const retry = build(fetch, { retries: 5, retryDelay: 1e3 });
+    const retry = build(fetch, { retries: options?.retries || 5, retryDelay: options?.retryDelay || 1e3 });
     const response = await retry(url, fetchData);
     const result = await response.text();
     return JSON.parse(result);

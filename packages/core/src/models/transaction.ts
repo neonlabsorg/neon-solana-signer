@@ -1,25 +1,28 @@
-import { HexString, TransactionStatus } from './api';
+import { HexString, TransactionData, TransactionStatus } from './api';
+import { Transaction, TransactionInstruction } from '@solana/web3.js';
+import { MultipleTransaction, ScheduledTransaction } from '../neon';
+import { SolanaNeonAccount } from '../solana';
 
-export interface ScheduledTransactionGas{
+export interface ScheduledTransactionGas {
   gasLimit?: number;
   maxFeePerGas?: number;
   maxPriorityFeePerGas?: number;
 }
 
 export interface ScheduledTransactionData {
-  payer: string;
-  sender: string;
   nonce: number | string;
   index: number | string;
-  intent: string;
-  intentCallData: string;
-  target: string;
-  callData: string;
+  from: string;
+  to: string;
+  data: string;
+  sender: string;
   value: number | string;
   chainId: number | string;
   gasLimit: number | string;
   maxFeePerGas: number | string;
   maxPriorityFeePerGas: number | string;
+  intent: string;
+  intentCallData: string;
   hash?: string;
 }
 
@@ -57,4 +60,57 @@ export interface PendingTransaction {
 
 export interface PendingTransactions {
   [nonce: string]: PendingTransaction[];
+}
+
+export interface TransactionGas {
+  gasLimit: number[];
+  maxFeePerGas: number;
+  maxPriorityFeePerGas: number;
+}
+
+export interface CreateScheduledTransaction {
+  transactionGas: TransactionGas;
+  transactionData: TransactionData;
+  solanaInstructions?: TransactionInstruction[];
+  solanaUser?: SolanaNeonAccount;
+  nonce?: number;
+}
+
+export interface CreateMultipleTransaction {
+  transactionGas: TransactionGas;
+  transactionsData: TransactionData[];
+  solanaInstructions?: TransactionInstruction[];
+  solanaUser?: SolanaNeonAccount;
+  nonce?: number;
+  method?: MultipleTransactionType | MultipleTransactionMethod;
+}
+
+export const enum MultipleTransactionType {
+  Sequential = 0,
+  Parallel = 1,
+  DependLast = 2
+}
+
+export type MultipleTransactionMethod = (data: MultipleTransactionData) => MultipleTransactionResult;
+
+export interface MultipleTransactionData {
+  nonce: number;
+  chainId: number;
+  transactionsData: TransactionData[];
+  transactionGas: TransactionGas;
+}
+
+export interface MultipleTransactionResult {
+  multiple: MultipleTransaction;
+  transactions: ScheduledTransaction[];
+}
+
+export interface ScheduledTransactionResult {
+  scheduledTransaction: Transaction;
+  transaction: ScheduledTransaction;
+}
+
+export interface ScheduledTransactionsResult {
+  scheduledTransaction: Transaction;
+  transactions: ScheduledTransaction[];
 }

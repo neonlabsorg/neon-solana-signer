@@ -2,6 +2,7 @@ export * from './buffer';
 export * from './consts';
 export * from './delay';
 export * from './faucet';
+export * from './transaction';
 export * from './log';
 export * from './proxy';
 export * from './rest';
