@@ -210,15 +210,15 @@ export class NeonProxyRpcApi {
    *   transactionsData,
    *   transactionGas
    * });
-   * const result = await proxyApi.sendRawScheduledTransactions(transactions.map(i => i.serialize()));
+   * const result = await proxyApi.sendRawScheduledTransactions(transactions);
    * console.log(result)
    * ```
    */
-  async sendRawScheduledTransactions(transactions: HexString[]): Promise<RPCResponse<HexString>[]> {
+  async sendRawScheduledTransactions(transactions: ScheduledTransaction[]): Promise<RPCResponse<HexString>[]> {
     const method = `neon_sendRawScheduledTransaction`;
     const body: RPCRequest[] = transactions.map(tx => {
       const id = uuid();
-      return { id, jsonrpc: '2.0', method, params: [tx] };
+      return { id, jsonrpc: '2.0', method, params: [tx.serialize()] };
     });
     return this.neonMethodsRpc<HexString>(body);
   }
@@ -258,7 +258,9 @@ export class NeonProxyRpcApi {
     const solanaUser = createData.solanaUser ? createData.solanaUser : this.solanaUser;
     const nonce = createData.nonce ? createData.nonce : await this.provider.getTransactionCount(solanaUser.neonWallet);
     const instructions = createData.solanaInstructions ? createData.solanaInstructions : [];
-    const chainId = this.chainId;
+    const chainId = createData.chainId ? createData.chainId : this.chainId;
+    const programAddress = createData.programAddress ? createData.programAddress : this.programAddress;
+    const tokenMintAddress = createData.tokenMintAddress ? createData.tokenMintAddress : this.tokenMintAddress;
     const { from, to, data } = transactionData;
     const { maxFeePerGas, maxPriorityFeePerGas, gasLimit } = transactionGas;
     const transaction = new ScheduledTransaction({
@@ -275,8 +277,8 @@ export class NeonProxyRpcApi {
     const scheduledTransaction = createScheduledNeonEvmTransaction({
       chainId,
       signerAddress: solanaUser.publicKey,
-      tokenMintAddress: this.tokenMintAddress,
-      neonEvmProgram: this.programAddress,
+      neonEvmProgram: programAddress,
+      tokenMintAddress: tokenMintAddress,
       neonWallet: solanaUser.neonWallet,
       neonWalletNonce: nonce,
       neonTransaction: transaction.serialize()
@@ -302,19 +304,20 @@ export class NeonProxyRpcApi {
     const solanaUser = createData.solanaUser ? createData.solanaUser : this.solanaUser;
     const nonce = createData.nonce ? createData.nonce : await this.provider.getTransactionCount(solanaUser.neonWallet);
     const instructions = createData.solanaInstructions ? createData.solanaInstructions : [];
-    const chainId = this.chainId;
+    const chainId = createData.chainId ? createData.chainId : this.chainId;
+    const programAddress = createData.programAddress ? createData.programAddress : this.programAddress;
+    const tokenMintAddress = createData.tokenMintAddress ? createData.tokenMintAddress : this.tokenMintAddress;
     const selectedMethod = typeof createData.method === 'function' ?
       createData.method : selectMultipleTransactionMethod(createData.method);
     const { multiple, transactions } = selectedMethod({ nonce, chainId, transactionsData, transactionGas });
 
-    // [1] scheduled trxs
     const scheduledTransaction = createScheduledNeonEvmMultipleTransaction({
       chainId,
       neonWalletNonce: nonce,
-      neonEvmProgram: this.programAddress,
+      neonEvmProgram: programAddress,
       neonTransaction: multiple.data,
       signerAddress: solanaUser.publicKey,
-      tokenMintAddress: solanaUser.tokenMint,
+      tokenMintAddress: tokenMintAddress,
       neonWallet: solanaUser.neonWallet
     });
 
@@ -338,7 +341,6 @@ export class NeonProxyRpcApi {
    * @return {NeonProxyRpcInitData}
    */
   async init(solanaAddress?: PublicKey | Keypair): Promise<NeonProxyRpcInitData> {
-    this.provider = new JsonRpcProvider(this.rpcUrl);
     const requests: RPCRequest[] = [
       { jsonrpc: '2.0', id: uuid(), method: 'eth_chainId', params: [] },
       { jsonrpc: '2.0', id: uuid(), method: 'neon_getEvmParams', params: [] },
@@ -401,6 +403,7 @@ export class NeonProxyRpcApi {
 
   constructor(url: RPCUrl, options: NeonProxyRpcOptions = {}) {
     this.rpcUrl = url;
+    this.provider = new JsonRpcProvider(this.rpcUrl);
     this.options = { ...neonProxyRpcOptionsDefault, ...options };
   }
 }

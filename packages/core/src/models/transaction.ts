@@ -1,5 +1,5 @@
 import { HexString, TransactionData, TransactionStatus } from './api';
-import { Transaction, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { MultipleTransaction, ScheduledTransaction } from '../neon';
 import { SolanaNeonAccount } from '../solana';
 
@@ -74,6 +74,9 @@ export interface CreateScheduledTransaction {
   solanaInstructions?: TransactionInstruction[];
   solanaUser?: SolanaNeonAccount;
   nonce?: number;
+  chainId?: number;
+  programAddress?: PublicKey;
+  tokenMintAddress?: PublicKey;
 }
 
 export interface CreateMultipleTransaction {
@@ -82,6 +85,9 @@ export interface CreateMultipleTransaction {
   solanaInstructions?: TransactionInstruction[];
   solanaUser?: SolanaNeonAccount;
   nonce?: number;
+  chainId?: number;
+  programAddress?: PublicKey;
+  tokenMintAddress?: PublicKey;
   method?: MultipleTransactionType | MultipleTransactionMethod;
 }
 

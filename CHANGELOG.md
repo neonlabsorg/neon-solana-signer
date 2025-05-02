@@ -1,11 +1,6 @@
 # Neon EVM Solana Signer SDK Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.1.0] (2024-10-26)
-
-### Added
-
-* Independent Core package
 ## [0.2.0] (2025-5-1)
 
 ### Added
@@ -18,6 +13,14 @@ All notable changes to this project will be documented in this file.
 
 * Renamed `MultipleTransactions` to `MultipleTransaction`
 * Renamed fields in `ScheduledTransaction` (to match the naming conventions used in **ethers.js**)
-    * `payer` -> `from`
-    * `target` -> `to`
-    * `callData` -> `data`
+  * `payer` -> `from`
+  * `target` -> `to`
+  * `callData` -> `data`
+
+
+## [0.2.1] (2025-5-2)
+
+### Changed
+
+* NeonProxyRpcApi – `init()` method
+* NeonProxyRpcApi – `createScheduledTransaction`, `createMultipleTransaction` methods

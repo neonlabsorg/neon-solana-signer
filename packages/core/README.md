@@ -132,7 +132,7 @@ const { scheduledTransaction, transactions } = await proxyApi.createMultipleTran
 
 At this stage, you need to pass the Scheduled transaction to a specific method in the Neon Proxy RPC. If everything is done correctly, the Neon Proxy RPC will return the hash of the transaction.
 ```typescript
-const result = await proxyApi.sendRawScheduledTransactions(transactions.map(i => i.serialize()));
+const result = await proxyApi.sendRawScheduledTransactions(transactions);
 ```
 
 Next, you need to wait for the transaction to be executed.
