@@ -220,7 +220,7 @@ export interface PreparatorySolanaTransaction {
 }
 
 export interface EstimatedScheduledGasPayData {
-  scheduledSolanaPayer: string;
+  solanaPayer: PublicKey;
   transactions: TransactionData[];
   preparatorySolanaTransactions?: PreparatorySolanaTransaction[];
 }

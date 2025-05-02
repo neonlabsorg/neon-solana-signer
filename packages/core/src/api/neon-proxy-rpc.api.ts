@@ -157,7 +157,10 @@ export class NeonProxyRpcApi {
     return this.neonRpc<ScheduledTreeAccount | null>('neon_getScheduledTreeAccount', [address, nonce, 'latest']);
   }
 
-  estimateScheduledGas(data: EstimatedScheduledGasPayData): Promise<RPCResponse<EstimatedScheduledGasPayResponse>> {
+  estimateScheduledGas(estimatedData: EstimatedScheduledGasPayData): Promise<RPCResponse<EstimatedScheduledGasPayResponse>> {
+    const { solanaPayer, transactions, preparatorySolanaTransactions } = estimatedData;
+    const scheduledSolanaPayer = solanaPayer.toBase58();
+    const data = { scheduledSolanaPayer, transactions, preparatorySolanaTransactions };
     return this.neonRpc<EstimatedScheduledGasPayResponse>('neon_estimateScheduledGas', [data]);
   }
 
@@ -210,7 +213,7 @@ export class NeonProxyRpcApi {
    * const result = await proxyApi.sendRawScheduledTransactions(transactions.map(i => i.serialize()));
    * console.log(result)
    * ```
-  */
+   */
   async sendRawScheduledTransactions(transactions: HexString[]): Promise<RPCResponse<HexString>[]> {
     const method = `neon_sendRawScheduledTransaction`;
     const body: RPCRequest[] = transactions.map(tx => {

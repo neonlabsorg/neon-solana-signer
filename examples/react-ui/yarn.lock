@@ -429,10 +429,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@neonevm/solana-sign@^0.1.9":
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/@neonevm/solana-sign/-/solana-sign-0.1.9.tgz#de41f6c7e16dd63051a330d4a5fac937205606d1"
-  integrity sha512-T/dqqcfUZdwt/u9oG0NUQ0LGylLIPkwsMYvABv6731cO/9ICUmmmt0qkLebxbIFZ+zx+iA0lGODmKyyHqGgecw==
+"@neonevm/solana-sign@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@neonevm/solana-sign/-/solana-sign-0.2.0.tgz#9fd4ff7a143f7f5eb9646d1ec7a0d6e82db22cd0"
+  integrity sha512-ND/Ji2tq384NjDhqqINeis9s3dd51Sy6gRlPruco0+t/1ZL2n/l7n3+d2nTUNvmKW1jA9Npgx78Ofa95bjhx8w==
   dependencies:
     "@solana/spl-token" "0.4.9"
     "@solana/web3.js" "^1.98.0"

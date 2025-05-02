@@ -55,7 +55,7 @@ const transactionData = {
 };
 
 const transactionGas = await proxyApi.estimateScheduledTransactionGas({
-  scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+  solanaPayer: solanaUser.publicKey,
   transactions: [transactionData],
 });
 
@@ -118,7 +118,7 @@ const transactionsData = [{
 }];
 
 const transactionGas = await proxyApi.estimateScheduledTransactionGas({
-  scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+  solanaPayer: solanaUser.publicKey,
   transactions: transactionsData
 });
 

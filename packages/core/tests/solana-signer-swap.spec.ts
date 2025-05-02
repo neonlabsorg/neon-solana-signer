@@ -86,7 +86,7 @@ describe('Check Swap with Solana singer', () => {
     const approveInstruction = await approveTokenV2Instruction(solanaUser, neonEvmProgram, wsol, amount);
 
     const transactionGas = await proxyApi.estimateScheduledTransactionGas({
-      scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+      solanaPayer: solanaUser.publicKey,
       transactions: transactionsData,
       preparatorySolanaTransactions: [{ instructions: prepareSolanaInstructions([approveInstruction]) }]
     });

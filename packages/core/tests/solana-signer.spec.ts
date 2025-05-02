@@ -76,7 +76,7 @@ describe('Check Solana signer instructions', () => {
     };
 
     const transactionGas = await proxyApi.estimateScheduledTransactionGas({
-      scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+      solanaPayer: solanaUser.publicKey,
       transactions: [transactionData]
     });
 
@@ -113,7 +113,7 @@ describe('Check Solana signer instructions', () => {
     };
 
     const transactionGas = await proxyApi.estimateScheduledTransactionGas({
-      scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+      solanaPayer: solanaUser.publicKey,
       transactions: [transactionData]
     });
 
@@ -155,7 +155,7 @@ describe('Check Solana signer instructions', () => {
     }];
 
     const transactionGas = await proxyApi.estimateScheduledTransactionGas({
-      scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+      solanaPayer: solanaUser.publicKey,
       transactions: transactionsData
     });
 
@@ -196,7 +196,7 @@ describe('Check Solana signer instructions', () => {
     }
 
     const transactionGas = await proxyApi.estimateScheduledTransactionGas({
-      scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+      solanaPayer: solanaUser.publicKey,
       transactions: transactionsData
     });
 

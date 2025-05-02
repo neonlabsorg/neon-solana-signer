@@ -41,7 +41,7 @@ export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: Sola
 }> {
   const { maxPriorityFeePerGas: maxPriorityFee, maxFeePerGas: maxFee } = await proxyRpcApi.getMaxFeePerGas();
   const { result, error } = await proxyRpcApi.estimateScheduledGas({
-    scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
+    solanaPayer: solanaUser.publicKey,
     transactions: [{
       from: solanaUser.neonWallet,
       to: toAddress,
@@ -83,11 +83,7 @@ export async function createAndSendScheduledTransaction({ chainId, scheduledTran
 export async function sendMultipleScheduledTransaction(transaction: Transaction, transactions: ScheduledTransaction[], { proxyRpcApi, solanaUser, connection, signMethod }: Omit<CreateScheduledTransactionParams, 'nonce' | 'chainId' | 'scheduledTransaction' | 'neonEvmProgram'>): Promise<string> {
   const scheduledTransactionSignature = await sendSolanaTransaction(connection, transaction, signMethod, solanaUser.publicKey, true);
   console.log(`Scheduled tx signature: ${scheduledTransactionSignature} \nhttps://explorer.solana.com/tx/${scheduledTransactionSignature}?cluster=devnet`);
-  const results = [];
-  for (const transaction of transactions) {
-    results.push(proxyRpcApi.sendRawScheduledTransaction(`0x${transaction.serialize()}`));
-  }
-  const resultsHash = await Promise.all(results);
+  const resultsHash = await proxyRpcApi.sendRawScheduledTransactions(transactions.map(t => t.serialize()));
   await delay(7e3);
   return resultsHash ? resultsHash.map(({ result }) => {
     return `transactionHash: ${result} <br>check transaction status on: <a style="color: #14F195; text-decoration: underline;" href="https://neon-devnet.blockscout.com/tx/${result}" target="_blank">blockscout</a>`;
