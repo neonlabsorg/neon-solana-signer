@@ -28,12 +28,13 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref, toRaw } from 'vue';
+import { computed, onMounted, ref, toRaw } from 'vue'
 import { useWallet } from 'solana-wallets-vue'
-import { NeonProxyRpcApi, ScheduledTransaction, SolanaNeonAccount } from '@neonevm/solana-sign'
+import { NeonProxyRpcApi, SolanaNeonAccount } from '@neonevm/solana-sign'
+import type { TransactionData } from '@neonevm/solana-sign'
 import { useProxyStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import { CounterContract, createAndSendScheduledTransaction, estimateFee } from '@/utils'
+import { CounterContract, createAndSendScheduledTransaction } from '@/utils'
 import { JsonRpcProvider } from 'ethers'
 import { Connection, PublicKey } from '@solana/web3.js'
 
@@ -57,8 +58,7 @@ const counterContract = computed(() => {
 })
 
 const getCount = async () => {
-  const counter = await counterContract.value.getCount()
-  count.value = counter
+  count.value = await counterContract.value.getCount()
 }
 
 onMounted(() => {
@@ -75,28 +75,28 @@ const handleTransaction = async (action: string) => {
 
     const data = counterContract.value.transactionData(action)
 
-    const { maxPriorityFeePerGas, gasLimit, maxFeePerGas } = await estimateFee(
-      proxyRpcApi.value!,
-      <SolanaNeonAccount>solanaUser.value,
-      data,
-      counterContract.value.address,
-    )
+    const rawProxyApi = toRaw(proxyRpcApi.value)
 
-    const scheduledTransaction = new ScheduledTransaction({
-      nonce,
-      payer: solanaUser.value.neonWallet,
-      target: counterContract.value.address,
-      callData: data,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      gasLimit: gasLimit[0],
-      chainId: chainId.value,
+    const transactionData: TransactionData = {
+      from: solanaUser.value.neonWallet,
+      to: counterContract.value.address,
+      data: data
+    }
+
+    const transactionGas = await rawProxyApi?.estimateScheduledTransactionGas({
+      solanaPayer: solanaUser.value.publicKey,
+      transactions: [transactionData]
+    })
+
+    const { transaction } = await rawProxyApi?.createScheduledTransaction({
+      transactionGas,
+      transactionData
     })
 
     try {
       responseLog.value = await createAndSendScheduledTransaction({
         chainId: chainId.value,
-        scheduledTransaction,
+        scheduledTransaction: transaction,
         neonEvmProgram: <PublicKey>neonEvmProgram.value,
         proxyRpcApi: <NeonProxyRpcApi>proxyRpcApi.value,
         solanaUser: <SolanaNeonAccount>solanaUser.value,

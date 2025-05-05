@@ -1,13 +1,10 @@
 import { defineStore } from 'pinia'
 import { Connection, PublicKey } from '@solana/web3.js';
 import {
-  getGasToken,
-  getProxyState,
   NeonProxyRpcApi,
   SolanaNeonAccount
 } from '@neonevm/solana-sign';
 import { JsonRpcProvider } from 'ethers';
-import { toRaw } from 'vue';
 import { NEON_CORE_API_RPC_URL, SOLANA_URL } from '@/utils';
 
 type ProxyState = {
@@ -33,14 +30,13 @@ export default defineStore('proxy-store', {
   actions: {
     async initProxyData(wallet: PublicKey): Promise<undefined> {
       if (!this._provider) return;
-      const { chainId: id } = await toRaw(this._provider)?.getNetwork();
-      const { evmProgramAddress, proxyApi, tokensList } = await getProxyState(NEON_CORE_API_RPC_URL);
-      this._neonEvmProgram = evmProgramAddress;
-      this._proxyRpcApi = proxyApi;
-      this._chainId = Number(id);
-      const token = getGasToken(tokensList, this._chainId);
-      this._tokenMint = token.tokenMintAddress;
-      this._solanaUser = new SolanaNeonAccount(wallet, evmProgramAddress, token.tokenMintAddress, this._chainId);
+      const proxyApi = new NeonProxyRpcApi(NEON_CORE_API_RPC_URL)
+      const { chainId, solanaUser, tokenMintAddress, programAddress } = await proxyApi.init(wallet!)
+      this._proxyRpcApi = proxyApi
+      this._chainId = chainId
+      this._tokenMint = tokenMintAddress
+      this._solanaUser = solanaUser
+      this._neonEvmProgram = programAddress
     }
   },
   getters: {
