@@ -165,3 +165,6 @@ yarn build:docs
 # or
 npm run build:docs
 ```
+
+### Using with React
+To integrate this library in a React application, see our React demo in `examples/react-ui` folder. A [live demo](https://codesandbox.io/p/devbox/neon-solana-signer-demo-forked-27lnss) is also available.
