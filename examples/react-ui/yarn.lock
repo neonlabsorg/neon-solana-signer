@@ -595,16 +595,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@neonevm/solana-sign@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "@neonevm/solana-sign@npm:0.2.0"
+"@neonevm/solana-sign@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "@neonevm/solana-sign@npm:0.2.1"
   dependencies:
     "@solana/spl-token": "npm:0.4.9"
     "@solana/web3.js": "npm:^1.98.0"
     big.js: "npm:^6.2.2"
     ethers: "npm:^6.13.5"
     fetch-retry: "npm:^6.0.0"
-  checksum: 10c0/effc19a87719076f0028c5e3a4c3705fd628d2aa4d3caced725644ae9c94c811b679d314c98353280117ac890749a31fa895e49d560162160ff0c78914e75168
+  checksum: 10c0/c502e4b84db7543bbffc46558be31660fe0bfc3d60997172097494e0f3fe7b72021d4f9def2cac75298eac08d162b3f365c83752c4469041aaf08f80ab5f162b
   languageName: node
   linkType: hard
 
@@ -5481,7 +5481,7 @@ __metadata:
   resolution: "vite-react-typescript-starter@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.19.0"
-    "@neonevm/solana-sign": "npm:^0.2.0"
+    "@neonevm/solana-sign": "npm:^0.2.1"
     "@neonevm/token-transfer-core": "npm:^4.4.2"
     "@neonevm/token-transfer-ethers": "npm:^4.4.2"
     "@solana/spl-token": "npm:^0.4.9"
