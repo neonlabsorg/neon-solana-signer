@@ -13,6 +13,35 @@ cd packages/core
 yarn test
 ```
 
+## RPC URL Configuration
+
+To interact with the Neon EVM Proxy RPC and Solana RPC correctly, you **must use `/sol` endpoints** for the `neon_proxy_rpc_url`.
+
+Using `https://devnet.neonevm.org` (without `/sol`) will not work as expected.
+
+### Recommended URLs
+
+#### Devnet
+
+* `neon_proxy_rpc_url`: `https://devnet.neonevm.org/sol`
+* `solana_rpc_url`: `https://api.devnet.solana.com`
+
+#### Mainnet
+
+* `neon_proxy_rpc_url`:
+
+    * `https://neon-proxy-mainnet.solana.p2p.org/sol`
+    * `https://neon-mainnet.everstake.one/sol`
+* `solana_rpc_url`: `https://api.mainnet-beta.solana.com`
+
+Ensure your code uses these full `/sol` paths when initializing `NeonProxyRpcApi`:
+
+```ts
+const proxyApi = new NeonProxyRpcApi('https://devnet.neonevm.org/sol');
+```
+
+---
+
 ## How to use it in code
 
 ### Install the package
@@ -46,7 +75,7 @@ await solanaAirdrop(connection, solanaUser.publicKey, 1e9);
 We create a Scheduled transaction and send it, embedding the contract address and the method call data. Additionally, we retrieve the nonce for the Neon wallet and include this information in the Scheduled transaction.
 
 ```typescript
-const nonce = Number(await neonProxyRpcApi.getTransactionCount(solanaUser.neonWallet));
+const nonce = Number(await proxyApi.getTransactionCount(solanaUser.neonWallet));
 
 const transactionData = {
   from: solanaUser.neonWallet,
@@ -81,8 +110,8 @@ Sign and send the transaction to the Solana network.
 
 ```typescript 
 const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-transaction.recentBlockhash = blockhash;
-transaction.sign({ publicKey: solanaUser.publicKey, secretKey: solanaUser.keypair });
+scheduledTransaction.recentBlockhash = blockhash;
+scheduledTransaction.sign({ publicKey: solanaUser.publicKey, secretKey: solanaUser.keypair });
 const signature = await connection.sendRawTransaction(scheduledTransaction.serialize());
 console.log('Transaction signature', signature);
 ```
@@ -90,12 +119,12 @@ console.log('Transaction signature', signature);
 Wait for the Scheduled transaction to execute on the Neon EVM and display the results.
 
 ```typescript
-const transactionStatus = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 1e5);
+const transactionStatus = await proxyApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 1e5);
 console.log(transactionStatus);
 
 console.log(`Scheduled transactions result`, transactionStatus);
 for (const { transactionHash, status } of transactionStatus) {
-  const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+  const { result } = await proxyApi.getTransactionReceipt(transactionHash);
   console.log(result);
 }
 ```
@@ -136,12 +165,12 @@ const result = await proxyApi.sendRawScheduledTransactions(transactions);
 Next, you need to wait for the transaction to be executed.
 
 ```typescript
-const transactionsStatus = await neonProxyRpcApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 1e5);
+const transactionsStatus = await proxyApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 1e5);
 console.log(transactionsStatus);
 
 console.log(`Scheduled transactions result`, transactionsStatus);
 for (const { transactionHash, status } of transactionsStatus) {
-  const { result } = await neonProxyRpcApi.getTransactionReceipt(transactionHash);
+  const { result } = await proxyApi.getTransactionReceipt(transactionHash);
   console.log(result);
 }
 ```
