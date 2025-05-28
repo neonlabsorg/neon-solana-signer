@@ -159,6 +159,22 @@ const { scheduledTransaction, transactions } = await proxyApi.createMultipleTran
 });
 ```
 
+The `TransactionData` interface defines the structure of a single transaction to be scheduled and executed on the Neon EVM. It is used when constructing scheduled transactions or multiple scheduled transactions.
+
+```typescript
+export interface TransactionData {
+  from?: HexString;
+  to: HexString;
+  data: HexString;
+  childTransaction?: HexString;
+}
+```
+
+`childTransaction` is an identifier that links this transaction as a child to another transaction in a dependent execution structure.
+This field is useful when multiple transactions are part of a complex flow and are not just sequential, but may need to be executed in parallel or in a specific dependency order.
+
+For example, in scenarios involving three different scheduled tree accounts, where one transaction must only be executed after or in parallel with a specific peer transaction, the `childTransaction` field helps the proxy service estimate and arrange the execution properly.
+
 At this stage, you need to pass the Scheduled transaction to a specific method in the Neon Proxy RPC. If everything is done correctly, the Neon Proxy RPC will return the hash of the transaction.
 ```typescript
 const result = await proxyApi.sendRawScheduledTransactions(transactions);
@@ -176,5 +192,47 @@ for (const { transactionHash, status } of transactionsStatus) {
   console.log(result);
 }
 ```
+
+### Solana approving
+
+The Solana approving process is a crucial step in the transaction lifecycle. It ensures that the transaction is valid and authorized by the necessary parties before it is executed on the Neon EVM.
+
+This creates additional requirements for executing `ScheduledTransactions`, without Solana approving `estimateScheduledTransactionGas` won't work, and the transaction itself may be rejected by Neon EVM.
+
+#### Example of Solana approving
+
+```typescript
+const tokenATA = getAssociatedTokenAddressSync(mintAddress, solanaUser.publicKey);
+const [delegateAddress] = PublicKey.findProgramAddressSync([accountSeeds], programAddress);
+const approveInstruction = createApproveInstruction(tokenATA, delegateAddress, solanaUser.publicKey, approveAmount);
+
+const transactionGas = await proxyApi.estimateScheduledTransactionGas({
+  solanaPayer: solanaUser.publicKey,
+  transactions: transactionsData,
+  preparatorySolanaTransactions: [{ instructions: prepareSolanaInstructions([approveInstruction]) }]
+});
+
+const { scheduledTransaction, transactions } = await proxyApi.createMultipleTransaction({
+  nonce,
+  transactionsData,
+  transactionGas,
+  solanaInstructions: [approveInstruction]
+});
+```
+
+To submit and receive the transaction hash of a single scheduled transaction, you can use the RPC method `neon_sendRawScheduledTransaction`. This method returns the Neon EVM transaction hash, which can be used to track the transaction status.
+
+```json
+{
+  "jsonrpc": "2.0",
+          "id": 1,
+          "method": "neon_sendRawScheduledTransaction",
+          "params": [
+    "<serialized_scheduled_transaction_hex>"
+  ]
+}
+```
+
+The result is the transaction hash.
 
 By following these steps, you can create and execute a batch of Multiple Scheduled Transactions on Solana using Neon Proxy RPC.
