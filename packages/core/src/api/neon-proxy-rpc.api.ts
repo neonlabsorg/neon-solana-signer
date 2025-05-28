@@ -105,8 +105,8 @@ export class NeonProxyRpcApi {
     return this.neonRpc<PendingTransactions>('neon_getPendingTransactions', [solanaWallet.toBase58()]);
   }
 
-  async getTransactionCount(neonWallet: NeonAddress): Promise<string> {
-    const { result } = await this.neonRpc<string>('eth_getTransactionCount', [neonWallet, 'latest']);
+  async getTransactionCount(neonWallet: NeonAddress, block = 'latest'): Promise<string> {
+    const { result } = await this.neonRpc<string>('eth_getTransactionCount', [neonWallet, block]);
     return result;
   }
 

@@ -2,11 +2,8 @@ import { Connection, Transaction, PublicKey } from '@solana/web3.js';
 import type { Commitment } from '@solana/web3.js';
 import {
   createScheduledNeonEvmTransaction,
-  NeonProxyRpcApi,
-  SolanaNeonAccount
 } from '@neonevm/solana-sign';
-import type { PreparatorySolanaTransaction } from '@neonevm/solana-sign';
-import type { ScheduledTransactionStatus, HexString } from '@neonevm/solana-sign';
+import type { ScheduledTransactionStatus } from '@neonevm/solana-sign';
 import { Big } from 'big.js';
 import type { CreateScheduledTransactionParams } from '@/models';
 
@@ -31,32 +28,6 @@ export function scheduledTransactionsLog(transactions: ScheduledTransactionStatu
 
 export function balanceView(amount: string | bigint | number, decimals: number): number {
   return (new Big(amount.toString()).div(Big(10).pow(decimals))).toNumber();
-}
-
-export async function estimateFee(proxyRpcApi: NeonProxyRpcApi, solanaUser: SolanaNeonAccount, transactionData: string, toAddress: string, preparatorySolanaTransactions?: PreparatorySolanaTransaction[]): Promise<{
-  maxFeePerGas: HexString | number;
-  maxPriorityFeePerGas: HexString | number;
-  gasLimit: number[];
-}> {
-  const { maxPriorityFeePerGas: maxPriorityFee, maxFeePerGas: maxFee } = await proxyRpcApi.getMaxFeePerGas();
-  const { result, error } = await proxyRpcApi.estimateScheduledGas({
-    scheduledSolanaPayer: solanaUser.publicKey.toBase58(),
-    transactions: [{
-      from: solanaUser.neonWallet,
-      to: toAddress,
-      data: transactionData
-    }],
-    preparatorySolanaTransactions
-  });
-  if(error) {
-    console.error('Error estimateScheduledGas: ', error);
-  }
-  console.log(`Max fee per Gas: ${result} \n${maxPriorityFee} \n${maxFee}`);
-
-  const maxFeePerGas = parseInt(result?.maxFeePerGas, 16) || maxFee;
-  const maxPriorityFeePerGas = parseInt(result?.maxPriorityFeePerGas, 16) || maxPriorityFee;
-  const gasLimit = result?.gasList.map(i => parseInt(i, 16)) || [1e7];
-  return { maxFeePerGas, maxPriorityFeePerGas, gasLimit }
 }
 
 export async function createAndSendScheduledTransaction({ chainId, scheduledTransaction, neonEvmProgram, proxyRpcApi, solanaUser, nonce, connection, signMethod, approveInstruction }: CreateScheduledTransactionParams): Promise<string> {
