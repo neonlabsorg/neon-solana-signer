@@ -51,8 +51,8 @@ export interface BalanceAccountRaw {
   type: number;
   headerVersion: number;
   address: HexString;
-  chainId: bigint;
-  nonce: bigint;
+  chainId: number;
+  nonce: number;
   balance: number;
 }
 

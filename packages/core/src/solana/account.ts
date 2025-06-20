@@ -172,18 +172,18 @@ export function neonWalletProgramAddress(neonWallet: NeonAddress, neonEvmProgram
  *
  * @example
  * ```typescript
- * const nonce = await balanceAccountNonce(connection, "0x1234567890abcdef1234567890abcdef12345678", neonEvmProgram, 245022926);
+ * const [balanceAddress, nonce] = await balanceAccountNonce(connection, "0x1234567890abcdef1234567890abcdef12345678", neonEvmProgram, 245022926);
  * console.log("Balance Account Nonce:", nonce);
  * ```
  */
-export async function balanceAccountNonce(connection: Connection, neonWallet: NeonAddress, neonEvmProgram: PublicKey, chainId: number): Promise<bigint> {
+export async function balanceAccountNonce(connection: Connection, neonWallet: NeonAddress, neonEvmProgram: PublicKey, chainId: number): Promise<[PublicKey, number]> {
   const [neonWalletBalanceAddress] = neonBalanceProgramAddressSync(neonWallet, neonEvmProgram, chainId);
   const neonWalletBalanceAccount = await connection.getAccountInfo(neonWalletBalanceAddress);
   if (neonWalletBalanceAccount) {
     const balanceAccountLayout = BalanceAccountLayout.decode(neonWalletBalanceAccount.data as Uint8Array);
-    return balanceAccountLayout.nonce;
+    return [neonWalletBalanceAddress, balanceAccountLayout.nonce];
   }
-  return BigInt(0);
+  return [neonWalletBalanceAddress, 0];
 }
 
 /**
