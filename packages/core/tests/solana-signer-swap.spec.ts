@@ -7,7 +7,7 @@ import {
   NeonProxyRpcApi,
   prepareSolanaInstructions,
   sendSolanaTransaction,
-  SolanaNeonAccount, solanaTransactionLog,
+  SolanaNeonAccount,
   TransactionData
 } from '@neonevm/solana-sign';
 import { splTokenBalance } from '@neonevm/contracts-deployer';
