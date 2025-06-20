@@ -126,7 +126,7 @@ describe('Check Solana signer instructions', () => {
     await sendSolanaTransaction(connection, scheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
     await delay(2e3);
 
-    const result = await proxyApi.sendRawScheduledTransactions(transactions.map(i => i.serialize()));
+    const result = await proxyApi.sendRawScheduledTransactions(transactions);
     logJson(result);
 
     const transactionsStatus = await proxyApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);
@@ -168,7 +168,7 @@ describe('Check Solana signer instructions', () => {
     await sendSolanaTransaction(connection, scheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
     await delay(2e3);
 
-    const result = await proxyApi.sendRawScheduledTransactions(transactions.map(i => i.serialize()));
+    const result = await proxyApi.sendRawScheduledTransactions(transactions);
 
     logJson(result);
 
@@ -209,7 +209,7 @@ describe('Check Solana signer instructions', () => {
     await sendSolanaTransaction(connection, scheduledTransaction, [solanaUser.signer!], true, { skipPreflight }, 'scheduled');
     await delay(2e3);
 
-    const result = await proxyApi.sendRawScheduledTransactions(transactions.map(t => t.serialize()));
+    const result = await proxyApi.sendRawScheduledTransactions(transactions);
     logJson(result);
 
     const transactionsStatus = await proxyApi.waitTransactionTreeExecution(solanaUser.neonWallet, nonce, 7e3);

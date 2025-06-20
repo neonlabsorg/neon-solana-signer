@@ -44,9 +44,9 @@ beforeAll(async () => {
   chainGptContract = new Contract(CHAINGPT_CONTRACT_ADDRESS, chainGptContractAbi, provider);
 
   // Solana wallet should be funded
-  log(`Solana wallet: ${solanaUser.publicKey.toBase58()}; ${bs58.encode(solanaUser.keypair.secretKey)}`);
-  log(`Neon wallet: ${solanaUser.neonWallet}; Balance Account: ${solanaUser.balanceAddress.toBase58()}`);
-  log(`ChainGPT Contract: ${CHAINGPT_CONTRACT_ADDRESS}`);
+  log(`Solana wallet: ${solanaUser.publicKey.toBase58()}
+Neon wallet: ${solanaUser.neonWallet}; Balance Account: ${solanaUser.balanceAddress.toBase58()}
+ChainGPT Contract: ${CHAINGPT_CONTRACT_ADDRESS}`);
 });
 
 afterEach(async () => {
@@ -63,8 +63,7 @@ describe('ChainGPT Check-in Contract Test', () => {
   it('Should simulate user wallet connection and check-in flow signed with Solana wallet', async () => {
     const nonce = Number(await proxyApi.getTransactionCount(solanaUser.neonWallet));
 
-    log(`Starting check-in flow for wallet: ${solanaUser.neonWallet}`);
-    log(`Current nonce: ${nonce}`);
+    log(`Starting check-in flow for wallet: ${solanaUser.neonWallet}\nCurrent nonce: ${nonce}`);
 
     // Step 1: Get initial check-in count
     const initialCheckInCount = await chainGptContract.getTotalCheckIns(solanaUser.neonWallet);

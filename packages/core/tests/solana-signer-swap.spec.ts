@@ -7,7 +7,7 @@ import {
   NeonProxyRpcApi,
   prepareSolanaInstructions,
   sendSolanaTransaction,
-  SolanaNeonAccount,
+  SolanaNeonAccount, solanaTransactionLog,
   TransactionData
 } from '@neonevm/solana-sign';
 import { splTokenBalance } from '@neonevm/contracts-deployer';
@@ -100,7 +100,7 @@ describe('Check Swap with Solana singer', () => {
 
     await sendSolanaTransaction(connection, scheduledTransaction, [signer!], true, { skipPreflight }, 'scheduled');
 
-    const result = await proxyApi.sendRawScheduledTransactions(transactions.map(i => i.serialize()));
+    const result = await proxyApi.sendRawScheduledTransactions(transactions);
 
     logJson(result);
 
