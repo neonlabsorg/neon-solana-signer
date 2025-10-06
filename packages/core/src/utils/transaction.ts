@@ -1,8 +1,9 @@
 import { Transaction } from '@solana/web3.js';
 import bs58 from 'bs58';
+import { log } from './log';
 
 export function solanaTransactionLog(transaction: Transaction): void {
-  console.log(transaction.instructions.map(({ programId, keys, data }, index) => {
+  log(transaction.instructions.map(({ programId, keys, data }, index) => {
     return `[${index}] programId: ${programId.toBase58()}
 keys:
 ${keys.map(k => `${k.pubkey.toBase58()} [${k.isSigner ? 'signer' : ''}${k.isSigner && k.isWritable ? ', ' : ''}${k.isWritable ? 'writer' : ''}]`).join('\n')}

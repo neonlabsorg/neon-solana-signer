@@ -2,7 +2,7 @@ import { AccountInfo, Connection, Keypair, PublicKey, Signer } from '@solana/web
 import { dataSlice, keccak256 } from 'ethers';
 import {
   hexToBuffer,
-  isValidHex,
+  isValidHex, log,
   numberToBuffer,
   stringToBuffer,
   toBytes64LE,
@@ -403,7 +403,7 @@ export class SolanaNeonAccount {
       await connection.confirmTransaction({ signature, lastValidBlockHeight, blockhash }, 'finalized');
       account = await connection.getAccountInfo(this.balanceAddress);
       if (account) {
-        console.log(BalanceAccountLayout.decode(account.data as any));
+        log(BalanceAccountLayout.decode(account.data as any));
       }
     }
     return account;

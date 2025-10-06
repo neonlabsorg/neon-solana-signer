@@ -958,6 +958,17 @@
     ethers "^6.13.4"
     solc "^0.8.28"
 
+"@neonevm/solana-sign@^0.1.0-a2":
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/@neonevm/solana-sign/-/solana-sign-0.1.9.tgz#de41f6c7e16dd63051a330d4a5fac937205606d1"
+  integrity sha512-T/dqqcfUZdwt/u9oG0NUQ0LGylLIPkwsMYvABv6731cO/9ICUmmmt0qkLebxbIFZ+zx+iA0lGODmKyyHqGgecw==
+  dependencies:
+    "@solana/spl-token" "0.4.9"
+    "@solana/web3.js" "^1.98.0"
+    big.js "^6.2.2"
+    ethers "^6.13.5"
+    fetch-retry "^6.0.0"
+
 "@neonevm/token-transfer-core@4.4.2", "@neonevm/token-transfer-core@^4.4.2":
   version "4.4.2"
   resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-core/-/token-transfer-core-4.4.2.tgz#bb6f2300aa249f001464ad0d30db62f6898cef66"
